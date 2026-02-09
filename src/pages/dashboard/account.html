@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beauty Hub - Minha Conta</title>
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="../../styles/main.css">
+    <link rel="stylesheet" href="../../styles/dashboard.css">
+    <link rel="stylesheet" href="../../styles/components.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Page-specific styles only */
+        .page-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 2rem;
+        }
+
+        .account-layout {
+            display: flex;
+            gap: 2rem;
+            align-items: flex-start;
+        }
+
+        .settings-menu {
+            background: white;
+            border-radius: 12px;
+            padding: 1rem 0;
+            width: 280px;
+            box-shadow: var(--shadow);
+            flex-shrink: 0;
+        }
+
+        .settings-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 15px 2rem;
+            color: var(--text-dark);
+            text-decoration: none;
+            font-weight: 500;
+            transition: 0.2s;
+            cursor: pointer;
+        }
+
+        .settings-link:hover {
+            color: var(--primary-color);
+        }
+
+        .settings-link.active {
+            background-color: rgba(32, 178, 170, 0.08);
+            color: var(--primary-color);
+            border-left: 3px solid var(--primary-color);
+        }
+
+        .settings-link i {
+            width: 20px;
+            text-align: center;
+        }
+
+        .settings-content {
+            flex: 1;
+            background: white;
+            border-radius: 12px;
+            padding: 3rem;
+            box-shadow: var(--shadow);
+            min-height: 500px;
+        }
+
+        .content-header h2 {
+            font-size: 1.5rem;
+            color: var(--text-dark);
+            margin: 0 0 0.5rem 0;
+        }
+
+        .content-header p {
+            color: var(--text-muted);
+            margin-bottom: 2rem;
+        }
+
+        .profile-photo-section {
+            margin-bottom: 2rem;
+        }
+
+        .large-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background-image: url('https://i.pravatar.cc/300?img=5');
+            background-size: cover;
+            border: 4px solid #f5f5f5;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 1rem;
+            color: var(--text-dark);
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .btn-save {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 40px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 1rem;
+            margin-top: 1rem;
+            float: right;
+            transition: background 0.3s;
+        }
+
+        .btn-save:hover {
+            background-color: var(--hover-color);
+        }
+
+        .security-list-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .security-list-item:first-child {
+            padding-top: 0;
+        }
+
+        .security-label {
+            width: 150px;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .security-value {
+            flex: 1;
+            color: var(--text-dark);
+            font-weight: 500;
+        }
+
+        .security-action {
+            color: #ccc;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .security-action:hover {
+            color: var(--text-dark);
+        }
+
+        .delete-account {
+            display: block;
+            margin-top: 2rem;
+            color: #20B2AA;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .delete-account:hover {
+            text-decoration: underline;
+        }
+
+        .payment-card {
+            border: 1px solid #eee;
+            border-radius: 8px;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            transition: box-shadow 0.2s;
+        }
+
+        .payment-card:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .payment-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .card-icon {
+            font-size: 2rem;
+            color: #1a237e;
+        }
+
+        .card-details h4 {
+            margin: 0;
+            color: var(--text-dark);
+        }
+
+        .card-details p {
+            margin: 4px 0 0 0;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .btn-add-card {
+            background-color: transparent;
+            border: 1px dashed #ccc;
+            color: var(--text-muted);
+            width: 100%;
+            padding: 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: 0.2s;
+        }
+
+        .btn-add-card:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+            background-color: rgba(32, 178, 170, 0.05);
+        }
+
+        .notification-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .notification-info h4 {
+            margin: 0 0 5px 0;
+            color: var(--text-dark);
+        }
+
+        .notification-info p {
+            margin: 0;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 900px) {
+            .account-layout {
+                flex-direction: column;
+            }
+
+            .settings-menu {
+                width: 100%;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-text">
+                    <span style="color: var(--primary-color); font-size: 1.8rem;">BEAUTY</span> HUB
+                </div>
+            </div>
+
+            <nav class="sidebar-menu">
+                <a href="professional.html" class="menu-item">
+                    <i class="fas fa-home"></i> Início
+                </a>
+                <a href="#" class="menu-item">
+                    <i class="fas fa-users"></i> Clientes
+                </a>
+                <a href="#" class="menu-item">
+                    <i class="fas fa-calendar-alt"></i> Agendamentos
+                </a>
+                <a href="#" class="menu-item">
+                    <i class="fas fa-dollar-sign"></i> Financeiro
+                </a>
+                <a href="#" class="menu-item">
+                    <i class="fas fa-eye"></i> Consult ProLash
+                </a>
+                <a href="#" class="menu-item">
+                    <i class="fas fa-box"></i> Estoque
+                </a>
+                <a href="#" class="menu-item">
+                    <i class="fas fa-cut"></i> Serviços
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <a href="#" class="btn-whatsapp-sidebar" style="margin-bottom: 10px;">
+                    <i class="fab fa-whatsapp"></i> Suporte Whatsapp
+                </a>
+                <a href="../auth/login.html" class="logout-link">
+                    <i class="fas fa-sign-out-alt"></i> Sair
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="top-bar">
+                <div class="greeting">
+                    <!-- Placeholder -->
+                    <span class="user-name"></span>
+                </div>
+
+                <div class="greeting" style="position: absolute; right: 100px; top: 35px;">
+                    Olá, <span class="user-name" style="color: var(--primary-color);">teste</span>
+                </div>
+
+                <div class="user-profile" onclick="window.toggleProfileMenu()">
+                    <div class="avatar"
+                        style="background-image: url('https://i.pravatar.cc/150?img=5'); background-size: cover; text-indent: -9999px;">
+                        A</div>
+
+                    <!-- Dropdown Menu -->
+                    <div class="profile-dropdown" id="profileDropdown">
+                        <a href="account.html"><i class="far fa-user"></i> Minha conta</a>
+                        <a href="../auth/login.html"><i class="fas fa-sign-out-alt"></i> Sair</a>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content-wrapper">
+                <h1 class="page-title">Minha conta</h1>
+
+                <div class="account-layout">
+                    <!-- Left Menu -->
+                    <div class="settings-menu">
+                        <div id="link-profile" class="settings-link active" onclick="window.switchTab('profile')">
+                            <i class="far fa-user"></i> Meu perfil
+                        </div>
+                        <div id="link-security" class="settings-link" onclick="window.switchTab('security')">
+                            <i class="fas fa-shield-alt"></i> Segurança
+                        </div>
+                        <div id="link-payments" class="settings-link" onclick="window.switchTab('payments')">
+                            <i class="far fa-credit-card"></i> Pagamentos
+                        </div>
+                        <div id="link-notifications" class="settings-link" onclick="window.switchTab('notifications')">
+                            <i class="far fa-bell"></i> Notificações
+                        </div>
+                        <a href="professional.html" class="settings-link"
+                            style="margin-top: 1rem; border-top: 1px solid #eee;">
+                            <i class="fas fa-arrow-left"></i> Voltar
+                        </a>
+                    </div>
+
+                    <!-- Right Content -->
+                    <div class="settings-content">
+
+                        <!-- Profile Section -->
+                        <div id="content-profile">
+                            <div class="content-header">
+                                <h2>Perfil</h2>
+                                <p>Atualize as informações da sua conta</p>
+                            </div>
+
+                            <div class="profile-photo-section">
+                                <div class="large-avatar"></div>
+                            </div>
+
+                            <form onsubmit="event.preventDefault(); alert('Dados salvos!');">
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label>Primeiro nome</label>
+                                        <input type="text" value="test">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Sobrenome</label>
+                                        <input type="text" value="testw">
+                                    </div>
+                                </div>
+                                <button class="btn-save">Salvar</button>
+                            </form>
+                        </div>
+
+                        <!-- Security Section -->
+                        <div id="content-security" style="display: none;">
+                            <div class="content-header">
+                                <h2>Segurança</h2>
+                                <p>Gerencie os detalhes da sua conta abaixo</p>
+                            </div>
+
+                            <div class="security-list">
+                                <div class="security-list-item">
+                                    <span class="security-label">Email</span>
+                                    <span class="security-value">teste@gmail.com</span>
+                                    <i class="fas fa-pencil-alt security-action"
+                                        onclick="window.openModal('email')"></i>
+                                </div>
+                                <div class="security-list-item">
+                                    <span class="security-label">Senha</span>
+                                    <span class="security-value">•••••••••••</span>
+                                    <i class="fas fa-pencil-alt security-action"
+                                        onclick="window.openModal('password')"></i>
+                                </div>
+                                <div class="security-list-item">
+                                    <span class="security-label">Telefone</span>
+                                    <span class="security-value">99999999999</span>
+                                    <i class="fas fa-pencil-alt security-action"
+                                        onclick="window.openModal('phone')"></i>
+                                </div>
+                            </div>
+
+                            <a href="#" class="delete-account">Deletar minha conta</a>
+                        </div>
+
+                        <!-- Payments Section -->
+                        <div id="content-payments" style="display: none;">
+                            <div class="content-header">
+                                <h2>Pagamentos</h2>
+                                <p>Gerencie seus métodos de pagamento</p>
+                            </div>
+
+                            <div class="payment-card">
+                                <div class="payment-info">
+                                    <i class="fab fa-cc-visa card-icon"></i>
+                                    <div class="card-details">
+                                        <h4>Visa terminando em 4242</h4>
+                                        <p>Expira em 12/28</p>
+                                    </div>
+                                </div>
+                                <i class="fas fa-ellipsis-v" style="color: #ccc; cursor: pointer;"></i>
+                            </div>
+
+                            <button class="btn-add-card" onclick="alert('Funcionalidade de adicionar cartão')">
+                                <i class="fas fa-plus"></i> Adicionar novo método de pagamento
+                            </button>
+                        </div>
+
+                        <!-- Notifications Section -->
+                        <div id="content-notifications" style="display: none;">
+                            <div class="content-header">
+                                <h2>Notificações</h2>
+                                <p>Gerencie como você recebe atualizações</p>
+                            </div>
+
+                            <div class="notification-list">
+                                <div class="notification-item">
+                                    <div class="notification-info">
+                                        <h4>Atualizações por E-mail</h4>
+                                        <p>Receba novidades e atualizações sobre sua conta.</p>
+                                    </div>
+                                    <label class="switch">
+                                        <input type="checkbox" checked>
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+
+                                <div class="notification-item">
+                                    <div class="notification-info">
+                                        <h4>Lembretes SMS</h4>
+                                        <p>Seja notificado sobre agendamentos via SMS.</p>
+                                    </div>
+                                    <label class="switch">
+                                        <input type="checkbox">
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+
+                                <div class="notification-item">
+                                    <div class="notification-info">
+                                        <h4>Promoções e Ofertas</h4>
+                                        <p>Receba ofertas exclusivas de parceiros.</p>
+                                    </div>
+                                    <label class="switch">
+                                        <input type="checkbox" checked>
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modals -->
+
+    <!-- Email Modal -->
+    <div id="modal-email" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Atualizar e-mail</h2>
+            </div>
+            <p class="modal-description">Para alterar seu e-mail atual, preencha os campos abaixo.</p>
+
+            <div class="modal-field">
+                <label class="modal-label">Current email</label>
+                <span class="modal-value">teste@gmail.com</span>
+            </div>
+
+            <div class="modal-field">
+                <label class="modal-label">Novo email</label>
+                <input type="email" class="modal-input">
+            </div>
+
+            <div class="modal-field">
+                <label class="modal-label">Digite novamente seu email (por segurança)</label>
+                <input type="email" class="modal-input">
+            </div>
+
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="window.closeModal('email')">Cancel</button>
+                <button class="btn-update"
+                    onclick="alert('Email atualizado!'); window.closeModal('email')">Update</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Password Modal -->
+    <div id="modal-password" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Atualizar senha</h2>
+            </div>
+            <p class="modal-description">Defina uma nova senha para sua conta.</p>
+
+            <div class="modal-field">
+                <label class="modal-label">Nova senha</label>
+                <input type="password" class="modal-input">
+            </div>
+
+            <div class="modal-field">
+                <label class="modal-label">Confirmar nova senha</label>
+                <input type="password" class="modal-input">
+            </div>
+
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="window.closeModal('password')">Cancel</button>
+                <button class="btn-update"
+                    onclick="alert('Senha atualizada!'); window.closeModal('password')">Update</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Phone Modal -->
+    <div id="modal-phone" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Atualizar telefone</h2>
+            </div>
+            <p class="modal-description">Mantenha seu contato atualizado.</p>
+
+            <div class="modal-field">
+                <label class="modal-label">Telefone atual</label>
+                <span class="modal-value">99999999999</span>
+            </div>
+
+            <div class="modal-field">
+                <label class="modal-label">Novo telefone</label>
+                <input type="tel" class="modal-input">
+            </div>
+
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="window.closeModal('phone')">Cancel</button>
+                <button class="btn-update"
+                    onclick="alert('Telefone atualizado!'); window.closeModal('phone')">Update</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { toggleProfileMenu, openModal, closeModal, switchTab, initUI } from '../../scripts/utils/ui.js';
+
+        // Make functions globally available
+        window.toggleProfileMenu = toggleProfileMenu;
+        window.openModal = openModal;
+        window.closeModal = closeModal;
+        window.switchTab = switchTab;
+
+        // Initialize UI handlers
+        initUI();
+    </script>
+</body>
+
+</html>

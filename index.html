@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="manifest" href="/manifest.json">
+    <title>Beauty Hub - Gestão Completa para Salões</title>
+    <link rel="stylesheet" href="src/styles/main.css">
+    <style>
+        :root {
+            --primary-color: #20B2AA;
+            --hover-color: #008B8B;
+            --text-dark: #333333;
+            --text-muted: #666666;
+            --white: #ffffff;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            text-align: center;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            margin: 0;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .hero {
+            background: white;
+            padding: 3rem;
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+            max-width: 600px;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            font-size: 2.5rem;
+        }
+
+        p {
+            color: var(--text-muted);
+            margin-bottom: 2rem;
+        }
+
+        .cta-button {
+            display: inline-block;
+            padding: 1rem 2rem;
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: 50px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: 0.3s;
+            text-decoration: none;
+        }
+
+        .cta-button:hover {
+            background-color: var(--hover-color);
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="hero">
+        <h2
+            style="font-family: 'Montserrat', sans-serif; font-size: 2rem; font-weight: 700; color: #20B2AA; margin-bottom: 1rem;">
+            BEAUTY HUB</h2>
+        <h1>Bem-vindo ao Beauty Hub</h1>
+        <p>A solução definitiva para a gestão do seu salão de beleza e estética.</p>
+        <a href="/src/pages/auth/login.html" class="cta-button">Ir para o Sistema</a>
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,16 @@
+{
+  "name": "Beauty Hub",
+  "short_name": "BeautyHub",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#20B2AA",
+  "description": "Gestão Completa para Salões de Beleza e Estética",
+  "icons": [
+    {
+      "src": "/src/assets/logos/logo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ]
+}

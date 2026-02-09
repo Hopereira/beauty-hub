@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agendamentos - Beauty Hub</title>
+    <link rel="stylesheet" href="../../styles/main.css">
+    <link rel="stylesheet" href="../../styles/dashboard.css">
+    <link rel="stylesheet" href="../../styles/components.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <style>
+        /* Appointments Page Specific Styles */
+        .appointments-header {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            align-items: center;
+            margin-bottom: 2rem;
+            gap: 1rem;
+        }
+
+        .date-filter {
+            padding: 10px 16px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            cursor: pointer;
+            background: white;
+            flex-shrink: 0;
+            min-width: 150px;
+            box-sizing: border-box;
+            height: 44px;
+            vertical-align: middle;
+        }
+
+        .btn-add-appointment {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            transition: background 0.3s;
+            height: 44px;
+            flex-shrink: 0;
+            white-space: nowrap;
+        }
+
+        .btn-add-appointment:hover {
+            background: #17726d;
+        }
+
+        /* Empty State */
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 4rem 2rem;
+            text-align: center;
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+        }
+
+        .empty-state h3 {
+            color: var(--text-dark);
+            margin-bottom: 0.5rem;
+            font-size: 1.25rem;
+        }
+
+        .empty-state p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        /* Appointments List (for future use) */
+        .appointments-list {
+            display: none;
+            /* Hidden until we have data */
+        }
+
+        .appointment-card {
+            background: white;
+            border: 1px solid #e5e5e5;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: box-shadow 0.3s;
+        }
+
+        .appointment-card:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .appointment-info h4 {
+            color: var(--text-dark);
+            margin-bottom: 0.5rem;
+        }
+
+        .appointment-details {
+            display: flex;
+            gap: 1.5rem;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .appointment-details span {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .appointment-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-icon {
+            background: none;
+            border: 1px solid #ddd;
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+
+        .btn-icon:hover {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        @media (max-width: 768px) {
+            .appointments-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .search-filter-group {
+                max-width: 100%;
+                flex-direction: column;
+            }
+
+            .btn-add-appointment {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        /* Modal Styles */
+        .appointment-modal .modal-content {
+            max-width: 500px;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-muted);
+            transition: color 0.2s;
+        }
+
+        .modal-close:hover {
+            color: var(--text-dark);
+        }
+
+        .search-input-wrapper {
+            position: relative;
+        }
+
+        .search-input-wrapper i {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 12px 10px 36px;
+            border: 1px solid #ddd;
+            border-radius: 25px;
+            font-size: 0.9rem;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .btn-new-client {
+            background: #20B2AA;
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 25px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background 0.3s;
+        }
+
+        .btn-new-client:hover {
+            background: #17726d;
+        }
+
+        .modal-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-section label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-dark);
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .modal-section select,
+        .modal-section input[type="text"],
+        .modal-section input[type="date"],
+        .modal-section input[type="time"] {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-family: inherit;
+        }
+
+        .modal-section select:focus,
+        .modal-section input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .time-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .time-row input {
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .btn-confirm {
+            background: #20B2AA;
+            color: white;
+            border: none;
+            padding: 14px 40px;
+            border-radius: 25px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 1rem;
+            width: 100%;
+            transition: background 0.3s;
+        }
+
+        .btn-confirm:hover {
+            background: #17726d;
+        }
+
+        @media (max-width: 500px) {
+            .time-row {
+                grid-template-columns: 1fr;
+            }
+
+            .modal-section>div[style*="display: flex"] {
+                flex-direction: column !important;
+                align-items: stretch !important;
+            }
+
+            .btn-new-client {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-text">
+                    <span style="color: var(--primary-color); font-size: 1.8rem;">BEAUTY</span> HUB
+                </div>
+            </div>
+
+            <nav class="sidebar-menu">
+                <a href="professional.html" class="menu-item">
+                    <i class="fas fa-home"></i> Início
+                </a>
+                <a href="#" class="menu-item">
+                    <i class="fas fa-users"></i> Clientes
+                </a>
+                <a href="appointments.html" class="menu-item active">
+                    <i class="fas fa-calendar-alt"></i>
+                    <span>Agendamentos</span>
+                </a>
+                <a href="financial.html" class="menu-item">
+                    <i class="fas fa-dollar-sign"></i>
+                    <span>Financeiro</span>
+                </a>
+                <a href="#" class="menu-item">
+                    <i class="fas fa-chart-line"></i> Consult ProLash
+                </a>
+                <a href="#" class="menu-item">
+                    <i class="fas fa-box"></i> Estoque
+                </a>
+                <a href="#" class="menu-item">
+                    <i class="fas fa-cut"></i> Serviços
+                </a>
+                <a href="#" class="menu-item">
+                    <i class="fas fa-receipt"></i> Fichas
+                </a>
+                <a href="#" class="menu-item">
+                    <i class="fas fa-question-circle"></i> Como Utilizar
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <a href="#" class="logout-link">
+                    <i class="fas fa-download"></i> Baixar app
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="top-bar">
+                <div class="greeting">
+                    Olá, <span class="user-name">Teste</span>
+                </div>
+                <div class="user-profile" onclick="window.toggleProfileMenu()">
+                    <div class="avatar"
+                        style="background-image: url('https://i.pravatar.cc/150?img=5'); background-size: cover; text-indent: -9999px;">
+                        A</div>
+
+                    <!-- Dropdown Menu -->
+                    <div class="profile-dropdown" id="profileDropdown">
+                        <a href="account.html"><i class="far fa-user"></i> Minha conta</a>
+                        <a href="../../auth/login.html"><i class="fas fa-sign-out-alt"></i> Sair</a>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content-wrapper">
+                <!-- Page Header -->
+                <div class="appointments-header">
+                    <div></div>
+                    <input type="date" class="date-filter" value="2026-02-09">
+                    <button class="btn-add-appointment" onclick="window.openModal('appointment')"
+                        style="justify-self: end;">
+                        <i class="fas fa-plus"></i>
+                        Adicionar
+                    </button>
+                </div>
+
+                <!-- Empty State -->
+                <div class="empty-state">
+                    <div class="empty-state-icon">
+                        <i class="far fa-file-alt"></i>
+                    </div>
+                    <h3>Nenhum agendamento realizado</h3>
+                    <p>Clique em "Adicionar" para criar seu primeiro agendamento</p>
+                </div>
+
+                <!-- Appointments List (Hidden for now, will be populated with data) -->
+                <div class="appointments-list">
+                    <!-- Example appointment card structure for future use -->
+                    <div class="appointment-card">
+                        <div class="appointment-info">
+                            <h4>Maria Silva</h4>
+                            <div class="appointment-details">
+                                <span><i class="far fa-clock"></i> 14:00 - 15:30</span>
+                                <span><i class="fas fa-cut"></i> Extensão de Cílios</span>
+                                <span><i class="fas fa-dollar-sign"></i> R$ 150,00</span>
+                            </div>
+                        </div>
+                        <div class="appointment-actions">
+                            <button class="btn-icon" title="Editar">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn-icon" title="Excluir">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Appointment Modal (Same as professional.html) -->
+    <div id="modal-appointment" class="modal-overlay appointment-modal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="window.closeModal('appointment')">
+                <i class="fas fa-times"></i>
+            </button>
+
+            <div class="modal-header">
+                <h2>Novo agendamento</h2>
+            </div>
+
+            <!-- Cliente -->
+            <div class="modal-section">
+                <label>Cliente</label>
+                <div style="display: flex; gap: 0.75rem; align-items: center;">
+                    <div class="search-input-wrapper" style="flex: 1; margin-bottom: 0;">
+                        <i class="fas fa-search"></i>
+                        <input type="text" class="search-input" placeholder="Pesquisar cliente">
+                    </div>
+                    <button class="btn-new-client" style="flex-shrink: 0; white-space: nowrap;">Novo cliente</button>
+                </div>
+            </div>
+
+            <!-- Serviço -->
+            <div class="modal-section">
+                <label>Serviço</label>
+                <select>
+                    <option value="">Selecione o serviço</option>
+                    <option value="extensao">Extensão de Cílios</option>
+                    <option value="manicure">Manicure</option>
+                    <option value="pedicure">Pedicure</option>
+                    <option value="corte">Corte de Cabelo</option>
+                    <option value="coloracao">Coloração</option>
+                    <option value="maquiagem">Maquiagem</option>
+                </select>
+            </div>
+
+            <!-- Valor serviço -->
+            <div class="modal-section">
+                <label>Valor serviço</label>
+                <input type="text" placeholder="R$ 00,00" value="R$ 00,00">
+            </div>
+
+            <!-- Início -->
+            <div class="modal-section">
+                <label>Início</label>
+                <div class="time-row">
+                    <input type="date" value="2026-02-06">
+                    <input type="time" value="12:00">
+                </div>
+            </div>
+
+            <!-- Término -->
+            <div class="modal-section">
+                <label>Término</label>
+                <div class="time-row">
+                    <input type="date" value="2026-02-06">
+                    <input type="time" value="12:00">
+                </div>
+            </div>
+
+            <!-- Botões -->
+            <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                <button class="btn-cancel" onclick="window.closeModal('appointment')" style="flex: 1;">Cancelar</button>
+                <button class="btn-confirm" style="flex: 2;"
+                    onclick="alert('Agendamento criado!'); window.closeModal('appointment')">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { toggleProfileMenu, openModal, closeModal, initUI } from '../../scripts/utils/ui.js';
+
+        // Make functions globally available
+        window.toggleProfileMenu = toggleProfileMenu;
+        window.openModal = openModal;
+        window.closeModal = closeModal;
+
+        // Initialize UI handlers
+        initUI();
+    </script>
+</body>
+
+</html>
