@@ -1,94 +1,133 @@
 # Beauty Hub 💅
 
-Sistema de gestão para profissionais de beleza, com foco em agendamentos, controle financeiro e gestão de clientes.
+Sistema de gestão completo para profissionais de beleza — **SPA (Single Page Application)** com Vanilla JavaScript e persistência via `localStorage`.
 
 ## 🚀 Tecnologias
 
-- **Vite** - Build tool e dev server
-- **Vanilla JavaScript** (ES6 Modules)
-- **HTML5 & CSS3** (Modern)
-- **Font Awesome** - Ícones
+- **Vite 5** — Build tool e dev server
+- **Vanilla JavaScript** (ES6 Modules) — Zero frameworks
+- **HTML5 & CSS3** — Design system moderno
+- **Font Awesome 6** — Ícones
+- **localStorage** — Persistência de dados (simula backend)
 
 ## 📁 Estrutura do Projeto
 
 ```
 beatyhub/
+├── index.html                    # SPA entry point (único HTML)
+├── vite.config.js
 ├── src/
-│   ├── pages/
-│   │   ├── auth/              # Autenticação
-│   │   │   ├── login.html
-│   │   │   └── register.html
-│   │   └── dashboard/         # Dashboard
-│   │       ├── professional.html
-│   │       ├── appointments.html
-│   │       ├── financial.html
-│   │       └── account.html
-│   ├── styles/
-│   │   ├── main.css          # Design system
-│   │   ├── auth.css
-│   │   ├── dashboard.css
-│   │   └── components.css
 │   ├── scripts/
-│   │   ├── components/       # Componentes JS
-│   │   └── utils/            # Utilitários
+│   │   ├── main.js               # Bootstrap da aplicação
+│   │   ├── router.js             # SPA Router (History API)
+│   │   ├── state.js              # State management + event bus
+│   │   ├── auth.js               # Login / Registro / Logout
+│   │   ├── components/
+│   │   │   ├── shell.js          # Dashboard layout (sidebar + header)
+│   │   │   ├── modal.js          # Sistema de modais (ESC, click-outside)
+│   │   │   ├── sidebar.js        # Sidebar (legado)
+│   │   │   └── header.js         # Header (legado)
+│   │   ├── pages/
+│   │   │   ├── landing.js        # Página inicial
+│   │   │   ├── login.js          # Login
+│   │   │   ├── register.js       # Cadastro multi-perfil
+│   │   │   ├── dashboard.js      # Dashboard + calendário interativo
+│   │   │   ├── appointments.js   # CRUD agendamentos
+│   │   │   ├── financial.js      # CRUD financeiro + cálculos
+│   │   │   ├── clients.js        # CRUD clientes + busca + paginação
+│   │   │   └── account.js        # Minha Conta (perfil, segurança, notif.)
+│   │   └── utils/
+│   │       ├── localStorage.js   # CRUD helpers + seed data
+│   │       ├── validation.js     # Validação de formulários + formatação
+│   │       └── toast.js          # Notificações toast
+│   ├── styles/
+│   │   ├── main.css              # Design system (tokens, reset, utilities)
+│   │   ├── auth.css              # Estilos de autenticação
+│   │   ├── dashboard.css         # Layout do dashboard
+│   │   └── components.css        # Componentes compartilhados
 │   └── assets/
+│       └── logos/
 ├── docs/
-│   └── architecture.md       # Documentação técnica
-└── index.html                # Landing page
+│   ├── architecture.md
+│   ├── components.md
+│   └── project_overview.md
+└── src/pages/                    # HTML estáticos (legado, mantidos como ref.)
 ```
 
-## ✨ Funcionalidades Implementadas
+## ✨ Funcionalidades
 
 ### 🔐 Autenticação
-- [x] Login com validação
-- [x] Registro multi-role (Master, Estabelecimento, Profissional)
-- [x] Redirecionamento baseado em role
+- [x] Login com validação e feedback (toast)
+- [x] Registro multi-perfil (Estabelecimento, Profissional, Cliente)
+- [x] Logout com limpeza de sessão
+- [x] Guarda de rotas (redirect se não autenticado)
+- [x] Persistência de sessão via `localStorage`
 
-### 📊 Dashboard Profissional
-- [x] Cards de estatísticas
-- [x] Calendário de agendamentos
-- [x] Navegação lateral
-- [x] Profile dropdown
+### 📊 Dashboard
+- [x] Calendário interativo com navegação mês a mês
+- [x] Eventos de agendamentos no calendário
+- [x] Cards de ganhos (Hoje / Semana / Mês)
+- [x] FAB para agendar rapidamente
+- [x] Sidebar com navegação SPA
 
-### 📅 Agendamentos
-- [x] Filtro de data centralizado
-- [x] Botão adicionar agendamento
-- [x] Modal de novo agendamento
-- [x] Empty state
+### 📅 Agendamentos (CRUD completo)
+- [x] Listagem com filtro por data e status
+- [x] Criar novo agendamento (modal)
+- [x] Editar agendamento existente
+- [x] Excluir com confirmação
+- [x] Seleção de cliente, serviço, valor, horário, status, pagamento
 
-### 💰 Financeiro
-- [x] **3 Cards de Resumo**:
-  - Forma de Pagamento (Dinheiro, Crédito, Débito, Pix)
-  - Financeiro Aberto (A receber, A pagar)
-  - Financeiro Concluído (Entradas, Saídas)
-- [x] **Filtros de Data** (Data início/final)
-- [x] **Seção Entradas**: Tabela com transações de clientes
-- [x] **Seção Saídas**: Tabela com despesas
-- [x] **Action Menus**: Dropdown Editar/Cancelar
-- [x] **Modal Nova Saída**: Formulário completo
-- [x] **Botão Gerar Relatório**
+### 💰 Financeiro (CRUD completo)
+- [x] **3 Cards de Resumo**: Forma de Pagamento, Em Aberto, Concluído
+- [x] Cálculos automáticos por método de pagamento
+- [x] **Filtros de Data** (início/final)
+- [x] **Tabela Entradas**: receitas com status e ações
+- [x] **Tabela Saídas**: despesas com CRUD completo
+- [x] Modal para adicionar/editar saídas
+- [x] Exclusão com confirmação
+
+### 👥 Clientes (CRUD completo)
+- [x] Tabela com nome, telefone, email, data de cadastro
+- [x] Busca em tempo real (debounce)
+- [x] Paginação
+- [x] Criar / Editar / Excluir clientes
 
 ### ⚙️ Minha Conta
-- [x] Tabs: Perfil, Segurança, Notificações, Pagamentos
-- [x] Edição de informações
-- [x] Alteração de senha
-- [x] Configurações de notificações
+- [x] Tabs: Perfil, Segurança, Pagamentos, Notificações
+- [x] Edição de nome (salva em localStorage + sessão)
+- [x] Alteração de email com confirmação
+- [x] Alteração de senha com validação
+- [x] Alteração de telefone
+- [x] Toggle de notificações (persistido)
+
+### 🛠️ Infraestrutura SPA
+- [x] Router com History API (sem reload de página)
+- [x] Lazy loading de módulos de página
+- [x] State management centralizado com event bus
+- [x] Sistema de modais padronizado (ESC, click-outside, focus trap)
+- [x] Toast notifications (success, error, warning, info)
+- [x] Validação de formulários com feedback visual
+- [x] Formatação de moeda (R$) e datas (dd/mm/yyyy)
+- [x] Seed data automático na primeira execução
 
 ## 🎨 Design System
 
 ### Cores
-- **Teal** `#20B2AA` - Primary (botões, links)
-- **Blue** `#2196F3` - Informações
-- **Pink** `#E91E63` - Alertas, saídas
-- **Green** `#4CAF50` - Sucesso
-- **Orange** `#F57C00` - Pendente
+- **Teal** `#20B2AA` — Primary (botões, links, destaques)
+- **Blue** `#2196F3` — Informações
+- **Pink** `#E91E63` — Alertas, saídas, exclusão
+- **Green** `#4CAF50` — Sucesso, concluído
+- **Orange** `#F57C00` — Pendente, avisos
 
 ### Componentes
-- Cards com sombras suaves
-- Botões arredondados (8px)
-- Modais com overlay
+- Cards com sombras suaves (`box-shadow`)
+- Botões arredondados (8px / 50px pill)
+- Modais com overlay e animação fadeIn
 - Dropdowns animados
 - Badges de status coloridos
+- Toast notifications com slide-in
+- Paginação estilizada
+- Formulários com estados de erro/sucesso
 
 ## 🚀 Como Executar
 
@@ -101,52 +140,57 @@ npm install
 ```bash
 npm run dev
 ```
-Acesse: `http://localhost:5173`
+Acesse: `http://localhost:3000`
 
 ### Build para Produção
 ```bash
 npm run build
+npm run preview
 ```
 
 ## 🔑 Credenciais de Teste
 
-### Admin
-- Email: `adm@adm`
-- Senha: `123456`
+| Perfil | Email | Senha |
+|--------|-------|-------|
+| Admin | `adm@adm` | `123456` |
+| Profissional | `prof@prof` | `123456` |
 
-### Profissional
-- Email: `prof@prof`
-- Senha: `123456`
+> Novos usuários podem ser criados via tela de Cadastro.
 
-## 📱 Páginas
+## 📱 Rotas SPA
 
-| Página | Rota | Descrição |
-|--------|------|-----------|
-| Landing | `/` | Página inicial |
-| Login | `/auth/login.html` | Autenticação |
-| Registro | `/auth/register.html` | Cadastro |
-| Dashboard | `/src/pages/dashboard/professional.html` | Visão geral |
-| Agendamentos | `/src/pages/dashboard/appointments.html` | Gestão de agendamentos |
-| Financeiro | `/src/pages/dashboard/financial.html` | Controle financeiro |
-| Minha Conta | `/src/pages/dashboard/account.html` | Configurações |
+| Página | Rota | Auth |
+|--------|------|------|
+| Landing | `/` | Não |
+| Login | `/login` | Não |
+| Registro | `/register` | Não |
+| Dashboard | `/dashboard` | Sim |
+| Agendamentos | `/appointments` | Sim |
+| Financeiro | `/financial` | Sim |
+| Clientes | `/clients` | Sim |
+| Minha Conta | `/account` | Sim |
 
 ## 🏗️ Arquitetura
 
-- **Componentes Reutilizáveis**: CSS e JS modularizados
-- **ES6 Modules**: Imports nativos do navegador
-- **Mobile-First**: Design responsivo
-- **Zero Dependencies**: Vanilla JS puro
+- **SPA Router** — Navegação client-side com History API
+- **Modular ES6** — Cada página é um módulo com `render()` e `init()`
+- **Component Shell** — Layout dashboard reutilizável (sidebar + header)
+- **Event-driven State** — Estado centralizado com listeners
+- **localStorage CRUD** — Helpers genéricos para coleções
+- **Zero Dependencies** — Vanilla JS puro (sem React, Vue, etc.)
+- **Mobile-First** — Design responsivo
 
 ## 📝 Próximos Passos
 
 - [ ] Backend integration (API REST)
 - [ ] Autenticação real (JWT)
-- [ ] Banco de dados
-- [ ] Upload de imagens
+- [ ] Banco de dados (PostgreSQL / MongoDB)
+- [ ] Upload de imagens (avatar)
 - [ ] Notificações push
 - [ ] Relatórios em PDF
-- [ ] Gráficos financeiros
-- [ ] PWA offline
+- [ ] Gráficos financeiros (Chart.js)
+- [ ] PWA offline completo
+- [ ] Testes automatizados
 
 ## 📄 Licença
 
