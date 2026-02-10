@@ -6,77 +6,52 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="manifest" href="/manifest.json">
     <title>Beauty Hub - Gestão Completa para Salões</title>
-    <link rel="stylesheet" href="src/styles/main.css">
-    <style>
-        :root {
-            --primary-color: #20B2AA;
-            --hover-color: #008B8B;
-            --text-dark: #333333;
-            --text-muted: #666666;
-            --white: #ffffff;
-            --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-        }
 
-        body {
+    <!-- Design System & Styles -->
+    <link rel="stylesheet" href="/src/styles/main.css">
+    <link rel="stylesheet" href="/src/styles/dashboard.css">
+    <link rel="stylesheet" href="/src/styles/components.css">
+    <link rel="stylesheet" href="/src/styles/auth.css">
+
+    <!-- Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        /* SPA loading state */
+        #app:empty {
             display: flex;
-            flex-direction: column;
             align-items: center;
             justify-content: center;
             height: 100vh;
-            text-align: center;
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            margin: 0;
-            font-family: 'Montserrat', sans-serif;
         }
-
-        .hero {
-            background: white;
-            padding: 3rem;
-            border-radius: 20px;
-            box-shadow: var(--shadow);
-            max-width: 600px;
+        #app:empty::after {
+            content: '';
+            width: 40px;
+            height: 40px;
+            border: 4px solid #e0e0e0;
+            border-top-color: #20B2AA;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
         }
+        @keyframes spin { to { transform: rotate(360deg); } }
 
-        h1 {
-            color: var(--primary-color);
-            margin-bottom: 1rem;
-            font-size: 2.5rem;
-        }
-
-        p {
-            color: var(--text-muted);
-            margin-bottom: 2rem;
-        }
-
-        .cta-button {
-            display: inline-block;
-            padding: 1rem 2rem;
-            background-color: var(--primary-color);
-            color: white;
-            border-radius: 50px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            transition: 0.3s;
-            text-decoration: none;
-        }
-
-        .cta-button:hover {
-            background-color: var(--hover-color);
-            transform: scale(1.05);
+        /* Hide brand-section on mobile (auth pages) */
+        @media (max-width: 992px) {
+            .brand-section { display: none !important; }
+            .login-section { flex: 1 !important; }
         }
     </style>
 </head>
 
 <body>
-    <div class="hero">
-        <h2
-            style="font-family: 'Montserrat', sans-serif; font-size: 2rem; font-weight: 700; color: #20B2AA; margin-bottom: 1rem;">
-            BEAUTY HUB</h2>
-        <h1>Bem-vindo ao Beauty Hub</h1>
-        <p>A solução definitiva para a gestão do seu salão de beleza e estética.</p>
-        <a href="/src/pages/auth/login.html" class="cta-button">Ir para o Sistema</a>
-    </div>
+    <!-- SPA Root -->
+    <div id="app"></div>
+
+    <!-- Application Entry Point -->
+    <script type="module" src="/src/scripts/main.js"></script>
 </body>
 
 </html>
