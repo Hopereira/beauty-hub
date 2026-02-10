@@ -6,28 +6,43 @@ Este documento resume o estado atual, funcionalidades, modelos de dados e roadma
 
 ## Objetivo
 
-O Beauty Hub é um **sistema de gestão completo para salões de beleza e estética**, construído como uma **Single Page Application (SPA)** com Vanilla JavaScript. Utiliza `localStorage` para persistência de dados, simulando um backend completo. Foco em alta performance (Vite 5), design premium (paleta Teal) e experiência mobile-first.
+O Beauty Hub é um **sistema de gestão completo para salões de beleza e estética**, composto por:
+
+- **Frontend SPA** — Vanilla JavaScript (ES6 Modules) com Vite 5, design premium (paleta Teal), mobile-first
+- **Backend API REST** — Node.js 20 + Express + Sequelize + PostgreSQL 15
+- **Infraestrutura Docker** — Docker Compose com Nginx, Backend e PostgreSQL
+
+Atualmente o frontend usa `localStorage` para persistência. O backend está implementado e rodando, mas a **integração frontend ↔ backend ainda não foi feita**.
 
 ---
 
 ## Hierarquia de Acesso (Roles)
 
-O sistema suporta 3 perfis de acesso no cadastro, com possibilidade de expansão:
+| Perfil | Role Frontend | Role Backend | Visão | Permissões |
+|--------|--------------|-------------|-------|------------|
+| **Master** | - | `MASTER` | Tudo | Superadmin (apenas backend) |
+| **Estabelecimento** | `admin` | `ADMIN` | Seu salão | Gerencia profissionais, clientes, financeiro, estoque |
+| **Profissional** | `professional` | `PROFESSIONAL` | Seus agendamentos | Agenda, clientes, financeiro pessoal |
+| **Cliente** | `client` | `CLIENT` | Agendamento online | Agendar horários, ver histórico (futuro) |
 
-| Perfil | Role (interno) | Visão | Permissões |
-|--------|---------------|-------|------------|
-| **Estabelecimento** | `admin` | Seu salão | Gerencia profissionais, clientes, financeiro, estoque |
-| **Profissional** | `professional` | Seus agendamentos | Agenda, clientes, financeiro pessoal |
-| **Cliente** | `client` | Agendamento online | Agendar horários, ver histórico (futuro) |
+### Credenciais de Teste
 
-### Credenciais de Teste (Seed Data)
+**Frontend (localStorage):**
 
 | Perfil | Email | Senha |
 |--------|-------|-------|
 | Admin | `adm@adm` | `123456` |
 | Profissional | `prof@prof` | `123456` |
 
-> Novos usuários podem ser criados via `/register`.
+**Backend (PostgreSQL — seed data):**
+
+| Perfil | Email | Senha |
+|--------|-------|-------|
+| Master | `master@master.com` | `123456` |
+| Admin | `admin@admin.com` | `123456` |
+| Profissional | `prof@prof.com` | `123456` |
+
+> Novos usuários podem ser criados via `/register` (frontend) ou `POST /api/auth/register` (backend).
 
 ---
 
@@ -226,33 +241,77 @@ O sistema suporta 3 perfis de acesso no cadastro, com possibilidade de expansão
 
 ## Como Executar
 
+### Opção 1: Docker Compose (recomendado)
+
 ```bash
-# Instalar dependências
+# Copiar variáveis de ambiente
+cp .env.example .env
+
+# Build do frontend
 npm install
-
-# Servidor de desenvolvimento (http://localhost:3000)
-npm run dev
-
-# Build para produção
 npm run build
 
-# Preview do build
-npm run preview
+# Subir todos os serviços
+docker-compose up -d
+
+# Rodar migrations e seeds (primeira vez)
+docker exec beautyhub_backend npx sequelize-cli db:migrate
+docker exec beautyhub_backend npx sequelize-cli db:seed:all
 ```
+
+Acesse:
+- **Frontend**: http://localhost:8080
+- **Backend API**: http://localhost:5001/api/health
+- **PostgreSQL**: localhost:5433
+
+### Opção 2: Frontend apenas (dev)
+
+```bash
+npm install
+npm run dev
+```
+
+Acesse: http://localhost:3000
+
+### Comandos Docker úteis
+
+```bash
+docker logs beautyhub_backend -f     # Logs do backend
+docker logs beautyhub_nginx -f       # Logs do Nginx
+docker-compose down                  # Parar tudo
+docker-compose down -v               # Parar + apagar banco
+docker exec beautyhub_backend npx sequelize-cli db:migrate:undo:all  # Reset migrations
+```
+
+---
+
+## Estado Atual do Projeto
+
+| Componente | Status | Detalhes |
+|-----------|--------|----------|
+| Frontend SPA | ✅ Completo | 8 páginas, CRUD completo, localStorage |
+| Backend API | ✅ Completo | 50+ endpoints, JWT, Joi, Winston |
+| Docker Compose | ✅ Completo | Nginx + Backend + PostgreSQL |
+| Migrations | ✅ Completo | 10 tabelas com soft delete |
+| Seed Data | ✅ Completo | 3 users, 1 establishment, 2 profs, 5 services, 10 clients, 10 appointments, 11 financial |
+| **Integração Frontend ↔ Backend** | ❌ Pendente | Frontend ainda usa localStorage |
 
 ---
 
 ## Roadmap (Próximos Passos)
 
-| Prioridade | Feature | Descrição |
-|-----------|---------|-----------|
-| Alta | Backend API | API REST (Node.js/Express ou similar) |
-| Alta | Autenticação JWT | Substituir localStorage por tokens reais |
-| Alta | Banco de dados | PostgreSQL ou MongoDB |
-| Média | Upload de imagens | Avatar do usuário e fotos de serviços |
-| Média | Gráficos financeiros | Chart.js para visualização de dados |
-| Média | Relatórios PDF | Exportação de relatórios financeiros |
-| Média | Notificações push | Web Push API |
-| Baixa | PWA offline | Service Worker completo |
-| Baixa | Testes automatizados | Vitest + Playwright |
-| Baixa | Estoque e Serviços | Páginas de gestão de estoque e catálogo de serviços |
+| Prioridade | Feature | Status | Descrição |
+|-----------|---------|--------|----------|
+| ~~Alta~~ | ~~Backend API~~ | ✅ Feito | API REST Node.js/Express com 50+ endpoints |
+| ~~Alta~~ | ~~Banco de dados~~ | ✅ Feito | PostgreSQL 15 com Sequelize ORM |
+| ~~Alta~~ | ~~Docker~~ | ✅ Feito | Docker Compose com Nginx + Backend + PostgreSQL |
+| **Alta** | **Integração Auth** | ❌ Pendente | Substituir localStorage auth por JWT do backend |
+| **Alta** | **API Client (fetch)** | ❌ Pendente | Criar módulo `api.js` com fetch wrapper + token management |
+| **Alta** | **Integração CRUD** | ❌ Pendente | Substituir localStorage CRUD por chamadas REST |
+| Média | Upload de imagens | ❌ Pendente | Avatar do usuário e fotos de serviços |
+| Média | Gráficos financeiros | ❌ Pendente | Chart.js para visualização de dados |
+| Média | Relatórios PDF | ❌ Pendente | Exportação de relatórios financeiros |
+| Média | Notificações push | ❌ Pendente | Web Push API |
+| Baixa | PWA offline | ❌ Pendente | Service Worker completo |
+| Baixa | Testes automatizados | ❌ Pendente | Vitest + Playwright |
+| Baixa | Estoque e Serviços | ❌ Pendente | Páginas de gestão de estoque e catálogo de serviços |

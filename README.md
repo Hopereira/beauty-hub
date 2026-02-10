@@ -1,22 +1,39 @@
 # Beauty Hub 💅
 
-Sistema de gestão completo para profissionais de beleza — **SPA (Single Page Application)** com Vanilla JavaScript e persistência via `localStorage`.
+Sistema de gestão completo para profissionais de beleza — **Full-Stack** com SPA frontend, API REST backend e infraestrutura Docker.
 
 ## 🚀 Tecnologias
 
+### Frontend
 - **Vite 5** — Build tool e dev server
 - **Vanilla JavaScript** (ES6 Modules) — Zero frameworks
 - **HTML5 & CSS3** — Design system moderno
 - **Font Awesome 6** — Ícones
-- **localStorage** — Persistência de dados (simula backend)
+
+### Backend
+- **Node.js 20 LTS** + **Express.js** — API REST
+- **Sequelize 6** — ORM
+- **PostgreSQL 15** — Banco de dados
+- **JWT** + **bcrypt** — Autenticação
+- **Joi** — Validação de dados
+- **Winston** — Logging estruturado
+
+### Infraestrutura
+- **Docker Compose** — Orquestração
+- **Nginx** — Reverse proxy + static files
+- **PostgreSQL 15** — Banco persistente com volume
 
 ## 📁 Estrutura do Projeto
 
 ```
 beatyhub/
-├── index.html                    # SPA entry point (único HTML)
+├── index.html                    # SPA entry point
 ├── vite.config.js
-├── src/
+├── docker-compose.yml            # Nginx + Backend + PostgreSQL
+├── .env.example                  # Template de variáveis de ambiente
+├── nginx/nginx.conf              # Reverse proxy config
+│
+├── src/                          # Frontend SPA
 │   ├── scripts/
 │   │   ├── main.js               # Bootstrap da aplicação
 │   │   ├── router.js             # SPA Router (History API)
@@ -24,9 +41,7 @@ beatyhub/
 │   │   ├── auth.js               # Login / Registro / Logout
 │   │   ├── components/
 │   │   │   ├── shell.js          # Dashboard layout (sidebar + header)
-│   │   │   ├── modal.js          # Sistema de modais (ESC, click-outside)
-│   │   │   ├── sidebar.js        # Sidebar (legado)
-│   │   │   └── header.js         # Header (legado)
+│   │   │   └── modal.js          # Sistema de modais (ESC, click-outside)
 │   │   ├── pages/
 │   │   │   ├── landing.js        # Página inicial
 │   │   │   ├── login.js          # Login
@@ -41,17 +56,23 @@ beatyhub/
 │   │       ├── validation.js     # Validação de formulários + formatação
 │   │       └── toast.js          # Notificações toast
 │   ├── styles/
-│   │   ├── main.css              # Design system (tokens, reset, utilities)
-│   │   ├── auth.css              # Estilos de autenticação
-│   │   ├── dashboard.css         # Layout do dashboard
-│   │   └── components.css        # Componentes compartilhados
-│   └── assets/
-│       └── logos/
-├── docs/
-│   ├── architecture.md
-│   ├── components.md
-│   └── project_overview.md
-└── src/pages/                    # HTML estáticos (legado, mantidos como ref.)
+│   └── assets/logos/
+│
+├── backend/                      # API REST
+│   ├── Dockerfile
+│   ├── server.js                 # Entry point
+│   └── src/
+│       ├── app.js                # Express app (middleware + routes)
+│       ├── config/               # env.js, database.js
+│       ├── models/               # 10 Sequelize models
+│       ├── controllers/          # 8 controllers
+│       ├── routes/               # 10 route files
+│       ├── middleware/            # auth, validation, errorHandler
+│       ├── utils/                # jwt, logger, validators
+│       ├── migrations/           # 10 migration files
+│       └── seeders/              # Seed data
+│
+└── docs/                         # Documentação
 ```
 
 ## ✨ Funcionalidades
@@ -131,31 +152,46 @@ beatyhub/
 
 ## 🚀 Como Executar
 
-### Instalação
+### Docker Compose (recomendado)
 ```bash
-npm install
+cp .env.example .env
+npm install && npm run build
+docker-compose up -d
+docker exec beautyhub_backend npx sequelize-cli db:migrate
+docker exec beautyhub_backend npx sequelize-cli db:seed:all
 ```
 
-### Desenvolvimento
+| Serviço | URL |
+|---------|-----|
+| Frontend | http://localhost:8080 |
+| Backend API | http://localhost:5001/api/health |
+| PostgreSQL | localhost:5433 |
+
+### Frontend apenas (dev)
 ```bash
+npm install
 npm run dev
 ```
 Acesse: `http://localhost:3000`
 
-### Build para Produção
-```bash
-npm run build
-npm run preview
-```
-
 ## 🔑 Credenciais de Teste
+
+**Frontend (localStorage):**
 
 | Perfil | Email | Senha |
 |--------|-------|-------|
 | Admin | `adm@adm` | `123456` |
 | Profissional | `prof@prof` | `123456` |
 
-> Novos usuários podem ser criados via tela de Cadastro.
+**Backend (PostgreSQL):**
+
+| Perfil | Email | Senha |
+|--------|-------|-------|
+| Master | `master@master.com` | `123456` |
+| Admin | `admin@admin.com` | `123456` |
+| Profissional | `prof@prof.com` | `123456` |
+
+> Novos usuários podem ser criados via tela de Cadastro ou `POST /api/auth/register`.
 
 ## 📱 Rotas SPA
 
@@ -176,19 +212,23 @@ npm run preview
 - **Modular ES6** — Cada página é um módulo com `render()` e `init()`
 - **Component Shell** — Layout dashboard reutilizável (sidebar + header)
 - **Event-driven State** — Estado centralizado com listeners
-- **localStorage CRUD** — Helpers genéricos para coleções
-- **Zero Dependencies** — Vanilla JS puro (sem React, Vue, etc.)
+- **Backend API REST** — 50+ endpoints com JWT + role-based auth
+- **PostgreSQL** — 10 tabelas com Sequelize ORM + soft delete
+- **Docker Compose** — Nginx + Backend + PostgreSQL
+- **Zero Frontend Dependencies** — Vanilla JS puro
 - **Mobile-First** — Design responsivo
 
-## 📝 Próximos Passos
+## 📝 Estado & Próximos Passos
 
-- [ ] Backend integration (API REST)
-- [ ] Autenticação real (JWT)
-- [ ] Banco de dados (PostgreSQL / MongoDB)
+- [x] Frontend SPA completo (8 páginas, CRUD, localStorage)
+- [x] Backend API REST (50+ endpoints, JWT, Joi, Winston)
+- [x] Docker Compose (Nginx + Backend + PostgreSQL)
+- [x] Migrations + Seed data
+- [ ] **Integração frontend ↔ backend** (substituir localStorage por API)
 - [ ] Upload de imagens (avatar)
-- [ ] Notificações push
-- [ ] Relatórios em PDF
 - [ ] Gráficos financeiros (Chart.js)
+- [ ] Relatórios em PDF
+- [ ] Notificações push
 - [ ] PWA offline completo
 - [ ] Testes automatizados
 

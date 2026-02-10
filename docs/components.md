@@ -7,17 +7,15 @@ Este documento descreve todos os componentes JavaScript, utilitários e módulos
 ## 📁 Estrutura de Arquivos
 
 ```
-src/scripts/
+src/scripts/                        # Frontend
 ├── main.js                     # Bootstrap da aplicação
 ├── router.js                   # SPA Router
 ├── state.js                    # State management
-├── auth.js                     # Autenticação
+├── auth.js                     # Autenticação (localStorage)
 │
 ├── components/
 │   ├── shell.js                # Layout dashboard (sidebar + header)
-│   ├── modal.js                # Sistema de modais
-│   ├── sidebar.js              # Sidebar (legado)
-│   └── header.js               # Header (legado)
+│   └── modal.js                # Sistema de modais
 │
 ├── pages/
 │   ├── landing.js              # Página inicial
@@ -33,6 +31,17 @@ src/scripts/
     ├── localStorage.js         # Persistência + CRUD helpers
     ├── validation.js           # Validação + formatação
     └── toast.js                # Notificações toast
+
+backend/src/                        # Backend API
+├── app.js                      # Express app (middleware + routes)
+├── config/                     # env.js, database.js
+├── models/                     # 10 Sequelize models + index.js
+├── controllers/                # 8 controllers (auth, user, profile, etc.)
+├── routes/                     # 10 route files
+├── middleware/                 # auth.js, validation.js, errorHandler.js
+├── utils/                      # jwt.js, logger.js, validators.js
+├── migrations/                 # 10 migration files
+└── seeders/                    # 1 comprehensive seeder
 ```
 
 ---
@@ -117,9 +126,47 @@ closeAllModals();                // fecha todos
 
 ---
 
-### Sidebar e Header (legado)
+---
 
-Os arquivos `sidebar.js` e `header.js` são mantidos como referência do design original. Na SPA, o `shell.js` substitui ambos.
+## 🚀 Backend Components (`backend/src/`)
+
+### Controllers
+
+| Controller | Endpoints | Descrição |
+|------------|-----------|----------|
+| `authController.js` | register, login, refresh-token, me | Autenticação JWT |
+| `userController.js` | CRUD + changePassword + changeRole | Gestão de usuários (MASTER/ADMIN) |
+| `profileController.js` | get, update, changePassword | Perfil do usuário logado |
+| `establishmentController.js` | CRUD + professionals + services | Gestão de estabelecimentos |
+| `professionalController.js` | CRUD + appointments | Gestão de profissionais |
+| `serviceController.js` | CRUD | Catálogo de serviços |
+| `clientController.js` | CRUD + search + appointments | Gestão de clientes |
+| `appointmentController.js` | CRUD + calendar + overlap check | Agendamentos |
+| `financialController.js` | Summary + Entries/Exits CRUD + Payment Methods | Financeiro |
+| `notificationController.js` | list, markAsRead, remove | Notificações |
+
+### Middleware
+
+| Middleware | Descrição |
+|------------|----------|
+| `auth.js` | `authenticate` (JWT verify) + `authorize(...roles)` (role check) |
+| `validation.js` | `validate(schema, source)` — valida body/query com Joi |
+| `errorHandler.js` | Global error handler com tratamento de Sequelize errors |
+
+### Models (Sequelize)
+
+| Model | Tabela | Associações |
+|-------|--------|-------------|
+| User | users | hasOne Establishment, hasOne Professional, hasMany Notification |
+| Establishment | establishments | belongsTo User, hasMany Professional/Service/Client/Appointment |
+| Professional | professionals | belongsTo User + Establishment, hasMany Appointment |
+| Service | services | belongsTo Establishment, hasMany Appointment |
+| Client | clients | belongsTo Establishment, hasMany Appointment/FinancialEntry |
+| Appointment | appointments | belongsTo Establishment/Client/Professional/Service |
+| PaymentMethod | payment_methods | hasMany FinancialEntry |
+| FinancialEntry | financial_entries | belongsTo Establishment/Appointment/Client/PaymentMethod |
+| FinancialExit | financial_exits | belongsTo Establishment |
+| Notification | notifications | belongsTo User |
 
 ---
 

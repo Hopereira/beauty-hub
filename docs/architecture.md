@@ -1,10 +1,12 @@
 # Arquitetura do Sistema
 
-O Beauty Hub é uma **Single Page Application (SPA)** construída com Vanilla JavaScript e ES6 Modules, sem dependência de frameworks. A aplicação utiliza `localStorage` para persistência de dados, simulando um backend completo.
+O Beauty Hub é uma aplicação **full-stack** composta por um **frontend SPA** (Vanilla JavaScript) e um **backend API REST** (Node.js/Express), orquestrados via **Docker Compose** com Nginx como reverse proxy e PostgreSQL como banco de dados.
 
 ---
 
 ## Stack Tecnológico
+
+### Frontend
 
 | Camada | Tecnologia | Versão |
 |--------|-----------|--------|
@@ -14,8 +16,30 @@ O Beauty Hub é uma **Single Page Application (SPA)** construída com Vanilla Ja
 | Estilos | CSS3 (Custom Properties) | - |
 | Ícones | Font Awesome | 6.4 |
 | Fonte | Montserrat (Google Fonts) | 400–800 |
-| Persistência | localStorage | Web API |
+| Persistência (atual) | localStorage | Web API |
 | PWA | manifest.json | - |
+
+### Backend
+
+| Camada | Tecnologia | Versão |
+|--------|-----------|--------|
+| Runtime | Node.js | 20 LTS |
+| Framework | Express.js | 4.x |
+| ORM | Sequelize | 6.x |
+| Banco de Dados | PostgreSQL | 15 |
+| Autenticação | JWT (jsonwebtoken) + bcryptjs | - |
+| Validação | Joi | 17.x |
+| Logging | Winston | 3.x |
+| Rate Limiting | express-rate-limit | 7.x |
+| Segurança | Helmet + CORS | - |
+
+### Infraestrutura
+
+| Camada | Tecnologia | Versão |
+|--------|-----------|--------|
+| Containerização | Docker + Docker Compose | - |
+| Reverse Proxy | Nginx | stable-alpine |
+| Orquestração | docker-compose.yml | 3.8 |
 
 ---
 
@@ -23,24 +47,87 @@ O Beauty Hub é uma **Single Page Application (SPA)** construída com Vanilla Ja
 
 ```bash
 beatyhub/
-├── index.html                          # Único HTML — SPA entry point
+├── index.html                          # SPA entry point
 ├── vite.config.js                      # Vite config (SPA mode)
-├── package.json
+├── package.json                        # Frontend dependencies
 ├── manifest.json                       # PWA manifest
+├── docker-compose.yml                  # Orquestração: Nginx + Backend + PostgreSQL
+├── .env.example                        # Variáveis de ambiente (template)
+├── .env                                # Variáveis de ambiente (local, gitignored)
 │
-├── src/
+├── nginx/
+│   └── nginx.conf                      # Reverse proxy + static file server
+│
+├── public/                             # Assets estáticos copiados para dist/ pelo Vite
+│   ├── manifest.json
+│   └── src/assets/logos/logo.png
+│
+├── dist/                               # Build de produção (gerado por `npm run build`)
+│
+├── backend/
+│   ├── Dockerfile                      # Container Node.js 20 Alpine
+│   ├── package.json                    # Backend dependencies
+│   ├── .sequelizerc                    # Sequelize CLI paths
+│   ├── server.js                       # Entry point (DB connect + listen)
+│   └── src/
+│       ├── app.js                      # Express app (middleware + routes)
+│       ├── config/
+│       │   ├── env.js                  # Environment variables loader
+│       │   └── database.js             # Sequelize DB config (dev/test/prod)
+│       ├── models/                     # 10 Sequelize models + index.js
+│       │   ├── index.js                # Model loader + associations
+│       │   ├── User.js
+│       │   ├── Establishment.js
+│       │   ├── Professional.js
+│       │   ├── Service.js
+│       │   ├── Client.js
+│       │   ├── Appointment.js
+│       │   ├── PaymentMethod.js
+│       │   ├── FinancialEntry.js
+│       │   ├── FinancialExit.js
+│       │   └── Notification.js
+│       ├── controllers/                # 8 controllers
+│       │   ├── authController.js
+│       │   ├── userController.js
+│       │   ├── profileController.js
+│       │   ├── establishmentController.js
+│       │   ├── professionalController.js
+│       │   ├── serviceController.js
+│       │   ├── clientController.js
+│       │   ├── appointmentController.js
+│       │   ├── financialController.js
+│       │   └── notificationController.js
+│       ├── routes/                     # 10 route files
+│       │   ├── auth.js
+│       │   ├── users.js
+│       │   ├── profile.js
+│       │   ├── establishments.js
+│       │   ├── professionals.js
+│       │   ├── services.js
+│       │   ├── clients.js
+│       │   ├── appointments.js
+│       │   ├── financial.js
+│       │   └── notifications.js
+│       ├── middleware/
+│       │   ├── auth.js                 # JWT authenticate + role authorize
+│       │   ├── validation.js           # Joi schema validation
+│       │   └── errorHandler.js         # Global error handler
+│       ├── utils/
+│       │   ├── jwt.js                  # Token generation + verification
+│       │   ├── logger.js               # Winston structured logging
+│       │   └── validators.js           # Joi schemas for all endpoints
+│       ├── migrations/                 # 10 migration files (ordered)
+│       └── seeders/                    # 1 comprehensive seeder
+│
+├── src/                                # Frontend source
 │   ├── scripts/
 │   │   ├── main.js                     # Bootstrap: init data → init modals → init router
 │   │   ├── router.js                   # SPA Router (History API)
 │   │   ├── state.js                    # State management + event bus
 │   │   ├── auth.js                     # Autenticação (login/register/logout)
-│   │   │
 │   │   ├── components/
 │   │   │   ├── shell.js                # Layout dashboard (sidebar + header + content)
-│   │   │   ├── modal.js                # Sistema de modais (ESC, click-outside)
-│   │   │   ├── sidebar.js              # Sidebar (legado, mantido como referência)
-│   │   │   └── header.js               # Header (legado, mantido como referência)
-│   │   │
+│   │   │   └── modal.js                # Sistema de modais (ESC, click-outside)
 │   │   ├── pages/                      # Módulos de página (lazy-loaded)
 │   │   │   ├── landing.js              # /
 │   │   │   ├── login.js                # /login
@@ -50,24 +137,17 @@ beatyhub/
 │   │   │   ├── financial.js            # /financial
 │   │   │   ├── clients.js              # /clients
 │   │   │   └── account.js              # /account
-│   │   │
 │   │   └── utils/
 │   │       ├── localStorage.js         # CRUD helpers + seed data + constantes
 │   │       ├── validation.js           # Validação de formulários + formatação
 │   │       └── toast.js                # Notificações toast
-│   │
 │   ├── styles/
 │   │   ├── main.css                    # Design system (tokens, reset, utilities)
 │   │   ├── auth.css                    # Layout de autenticação (split screen)
 │   │   ├── dashboard.css               # Layout do dashboard (sidebar + main)
-│   │   └── components.css              # Componentes compartilhados (dropdown, modal, toggle)
-│   │
-│   ├── assets/
-│   │   └── logos/
-│   │
-│   └── pages/                          # HTML estáticos (legado, mantidos como referência)
-│       ├── auth/
-│       └── dashboard/
+│   │   └── components.css              # Componentes compartilhados
+│   └── assets/
+│       └── logos/
 │
 └── docs/                               # Documentação
     ├── architecture.md                 # Este arquivo
@@ -353,18 +433,92 @@ Modais devem ter `id="modal-{tipo}"` e classe `modal-overlay`:
 
 ---
 
+## Arquitetura Docker
+
+```bash
+┌─────────────────────────────────────────────────────────────┐
+│                    Docker Compose                           │
+│                                                             │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────────┐  │
+│  │   Nginx      │  │   Backend    │  │   PostgreSQL     │  │
+│  │  :8080→:80   │  │  :5001→:5001 │  │  :5433→:5432     │  │
+│  │              │  │              │  │                  │  │
+│  │ Static files │──│ Express API  │──│ beautyhub_db     │  │
+│  │ (dist/)      │  │ 50+ endpoints│  │ 10 tabelas       │  │
+│  │              │  │ JWT + bcrypt │  │ Soft delete      │  │
+│  │ /api/* proxy │  │ Joi + Winston│  │ UUID PKs         │  │
+│  └──────────────┘  └──────────────┘  └──────────────────┘  │
+│                                                             │
+│  Network: beautyhub_network (bridge)                        │
+│  Volume: db_data (PostgreSQL persistent)                    │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Portas
+
+| Serviço | Host | Container | URL |
+|---------|------|-----------|-----|
+| Nginx (Frontend) | 8080 | 80 | http://localhost:8080 |
+| Backend (API) | 5001 | 5001 | http://localhost:5001/api/health |
+| PostgreSQL | 5433 | 5432 | localhost:5433 |
+
+---
+
+## Backend API
+
+### Formato de Resposta Padrão
+
+```json
+{
+  "success": true,
+  "message": "Descrição da operação.",
+  "data": { },
+  "pagination": { "total": 10, "page": 1, "limit": 10 }
+}
+```
+
+### Endpoints (50+)
+
+| Grupo | Endpoints | Auth | Roles |
+|-------|-----------|------|-------|
+| Auth | POST register, login, refresh-token; GET me | Parcial | Todos |
+| Profile | GET, PUT, PUT /password | Sim | Todos |
+| Users | GET list, GET/:id, PUT, DELETE, PUT /password, PUT /role | Sim | MASTER, ADMIN |
+| Establishments | CRUD + GET /professionals, /services | Sim | MASTER, ADMIN |
+| Professionals | CRUD + GET /appointments | Sim | MASTER, ADMIN, PROFESSIONAL |
+| Services | CRUD | Sim | Todos (write: MASTER, ADMIN) |
+| Clients | CRUD + GET /appointments + search | Sim | MASTER, ADMIN, PROFESSIONAL |
+| Appointments | CRUD + GET /calendar + overlap check | Sim | MASTER, ADMIN, PROFESSIONAL |
+| Financial | Summary + Entries CRUD + Exits CRUD + Payment Methods CRUD | Sim | MASTER, ADMIN |
+| Notifications | GET list, PUT /read, DELETE | Sim | Todos |
+| Health | GET /api/health | Não | - |
+
+### Segurança
+
+- **JWT**: Access token (1h) + Refresh token (7d)
+- **bcrypt**: Hash de senhas (salt rounds: 10)
+- **Helmet**: Headers de segurança
+- **Rate Limiting**: 200 req/15min geral, 20 req/15min para auth
+- **CORS**: Configurável via env
+- **Soft Delete**: Todas as tabelas usam `paranoid: true`
+- **Role-based Authorization**: MASTER > ADMIN > PROFESSIONAL > CLIENT
+
+---
+
 ## Performance
 
 - **Zero Frameworks**: Vanilla JS elimina overhead de React/Vue/Angular
 - **Lazy Loading**: Módulos de página carregados sob demanda via `import()` dinâmico
-- **Single Entry Point**: Apenas `index.html` — sem múltiplos HTML para o browser resolver
+- **Single Entry Point**: Apenas `index.html`
 - **CSS Variables**: Tema centralizado, sem pré-processadores
-- **Event Delegation**: Listeners no container pai em vez de em cada elemento
+- **Event Delegation**: Listeners no container pai
 - **Debounce**: Busca de clientes com debounce de 300ms
+- **Gzip**: Nginx comprime JS, CSS, JSON automaticamente
+- **Docker Health Checks**: Backend e DB com health checks automáticos
 
 ---
 
-## Diagrama de Dependências
+## Diagrama de Dependências (Frontend)
 
 ```bash
 main.js
@@ -382,3 +536,21 @@ main.js
         ├── utils/validation.js   ← formatação
         ├── utils/toast.js        ← feedback
         └── components/modal.js   ← openModal/closeModal
+```
+
+---
+
+## O Que Falta (Integração Frontend ↔ Backend)
+
+| Prioridade | Tarefa | Descrição |
+|-----------|--------|----------|
+| **Alta** | Integração Auth | Substituir `localStorage` auth por chamadas JWT ao backend |
+| **Alta** | API Client (fetch) | Criar módulo `api.js` com fetch wrapper + token management |
+| **Alta** | Integração CRUD | Substituir `localStorage` CRUD por chamadas REST |
+| Média | Upload de imagens | Avatar do usuário e fotos de serviços |
+| Média | Gráficos financeiros | Chart.js para visualização de dados |
+| Média | Relatórios PDF | Exportação de relatórios financeiros |
+| Média | Notificações push | Web Push API |
+| Baixa | PWA offline | Service Worker completo |
+| Baixa | Testes automatizados | Vitest + Playwright |
+| Baixa | Estoque e Serviços | Páginas de gestão de estoque e catálogo de serviços |
