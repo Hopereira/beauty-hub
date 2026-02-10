@@ -91,14 +91,14 @@ async function loadPageModule(page) {
     if (pageModules[page]) return pageModules[page];
 
     const moduleMap = {
-        'landing': () => import('./pages/landing.js'),
-        'login': () => import('./pages/login.js'),
-        'register': () => import('./pages/register.js'),
-        'dashboard': () => import('./pages/dashboard.js'),
-        'appointments': () => import('./pages/appointments.js'),
-        'financial': () => import('./pages/financial.js'),
-        'clients': () => import('./pages/clients.js'),
-        'account': () => import('./pages/account.js'),
+        'landing': () => import('../features/landing/pages/landing.js'),
+        'login': () => import('../features/auth/pages/login.js'),
+        'register': () => import('../features/auth/pages/register.js'),
+        'dashboard': () => import('../features/dashboard/pages/dashboard.js'),
+        'appointments': () => import('../features/appointments/pages/appointments.js'),
+        'financial': () => import('../features/financial/pages/financial.js'),
+        'clients': () => import('../features/clients/pages/clients.js'),
+        'account': () => import('../features/account/pages/account.js'),
     };
 
     const loader = moduleMap[page];

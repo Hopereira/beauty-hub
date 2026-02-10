@@ -219,23 +219,23 @@ Atualmente o frontend usa `localStorage` para persistência. O backend está imp
 
 > Para resetar os dados ao estado inicial, execute no console do browser:
 > ```javascript
-> import('/src/scripts/utils/localStorage.js').then(m => m.resetData())
+> import('/src/shared/utils/localStorage.js').then(m => m.resetData())
 > ```
 
 ---
 
 ## Rotas da Aplicação
 
-| Rota | Módulo | Auth | Descrição |
-|------|--------|------|-----------|
-| `/` | `landing.js` | Não | Página inicial com CTA |
-| `/login` | `login.js` | Não | Formulário de login |
-| `/register` | `register.js` | Não | Cadastro multi-perfil |
-| `/dashboard` | `dashboard.js` | Sim | Calendário + estatísticas |
-| `/appointments` | `appointments.js` | Sim | CRUD agendamentos |
-| `/financial` | `financial.js` | Sim | CRUD financeiro |
-| `/clients` | `clients.js` | Sim | CRUD clientes |
-| `/account` | `account.js` | Sim | Configurações da conta |
+| Rota | Feature / Módulo | Auth | Descrição |
+|------|-----------------|------|-----------|
+| `/` | `features/landing/pages/landing.js` | Não | Página inicial com CTA |
+| `/login` | `features/auth/pages/login.js` | Não | Formulário de login |
+| `/register` | `features/auth/pages/register.js` | Não | Cadastro multi-perfil |
+| `/dashboard` | `features/dashboard/pages/dashboard.js` | Sim | Calendário + estatísticas |
+| `/appointments` | `features/appointments/pages/appointments.js` | Sim | CRUD agendamentos |
+| `/financial` | `features/financial/pages/financial.js` | Sim | CRUD financeiro |
+| `/clients` | `features/clients/pages/clients.js` | Sim | CRUD clientes |
+| `/account` | `features/account/pages/account.js` | Sim | Configurações da conta |
 
 ---
 
@@ -290,10 +290,12 @@ docker exec beautyhub_backend npx sequelize-cli db:migrate:undo:all  # Reset mig
 | Componente | Status | Detalhes |
 |-----------|--------|----------|
 | Frontend SPA | ✅ Completo | 8 páginas, CRUD completo, localStorage |
+| Arquitetura Modular | ✅ Completo | core/ + shared/ + features/ com barrel exports |
 | Backend API | ✅ Completo | 50+ endpoints, JWT, Joi, Winston |
 | Docker Compose | ✅ Completo | Nginx + Backend + PostgreSQL |
 | Migrations | ✅ Completo | 10 tabelas com soft delete |
 | Seed Data | ✅ Completo | 3 users, 1 establishment, 2 profs, 5 services, 10 clients, 10 appointments, 11 financial |
+| HTTP Client | ✅ Pronto | `shared/utils/http.js` — fetch wrapper para integração |
 | **Integração Frontend ↔ Backend** | ❌ Pendente | Frontend ainda usa localStorage |
 
 ---
@@ -306,7 +308,7 @@ docker exec beautyhub_backend npx sequelize-cli db:migrate:undo:all  # Reset mig
 | ~~Alta~~ | ~~Banco de dados~~ | ✅ Feito | PostgreSQL 15 com Sequelize ORM |
 | ~~Alta~~ | ~~Docker~~ | ✅ Feito | Docker Compose com Nginx + Backend + PostgreSQL |
 | **Alta** | **Integração Auth** | ❌ Pendente | Substituir localStorage auth por JWT do backend |
-| **Alta** | **API Client (fetch)** | ❌ Pendente | Criar módulo `api.js` com fetch wrapper + token management |
+| ~~Alta~~ | ~~API Client (fetch)~~ | ✅ Feito | `shared/utils/http.js` com fetch wrapper + token management |
 | **Alta** | **Integração CRUD** | ❌ Pendente | Substituir localStorage CRUD por chamadas REST |
 | Média | Upload de imagens | ❌ Pendente | Avatar do usuário e fotos de serviços |
 | Média | Gráficos financeiros | ❌ Pendente | Chart.js para visualização de dados |

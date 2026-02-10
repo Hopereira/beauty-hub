@@ -3,12 +3,12 @@
  * Full CRUD for appointments with calendar view and list view
  */
 
-import { renderShell, getContentArea } from '../components/shell.js';
-import { getCurrentUser } from '../state.js';
-import { getCollection, addToCollection, updateInCollection, removeFromCollection, KEYS } from '../utils/localStorage.js';
-import { formatCurrency, formatDate, parseCurrency } from '../utils/validation.js';
-import { openModal, closeModal } from '../components/modal.js';
-import { showToast } from '../utils/toast.js';
+import { renderShell, getContentArea } from '../../../shared/components/shell/shell.js';
+import { getCurrentUser } from '../../../core/state.js';
+import { getCollection, addToCollection, updateInCollection, removeFromCollection, KEYS } from '../../../shared/utils/localStorage.js';
+import { formatCurrency, formatDate, parseCurrency } from '../../../shared/utils/validation.js';
+import { openModal, closeModal } from '../../../shared/components/modal/modal.js';
+import { showToast } from '../../../shared/utils/toast.js';
 
 let editingId = null;
 

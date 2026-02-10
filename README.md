@@ -33,29 +33,21 @@ beatyhub/
 ├── .env.example                  # Template de variáveis de ambiente
 ├── nginx/nginx.conf              # Reverse proxy config
 │
-├── src/                          # Frontend SPA
-│   ├── scripts/
-│   │   ├── main.js               # Bootstrap da aplicação
-│   │   ├── router.js             # SPA Router (History API)
-│   │   ├── state.js              # State management + event bus
-│   │   ├── auth.js               # Login / Registro / Logout
-│   │   ├── components/
-│   │   │   ├── shell.js          # Dashboard layout (sidebar + header)
-│   │   │   └── modal.js          # Sistema de modais (ESC, click-outside)
-│   │   ├── pages/
-│   │   │   ├── landing.js        # Página inicial
-│   │   │   ├── login.js          # Login
-│   │   │   ├── register.js       # Cadastro multi-perfil
-│   │   │   ├── dashboard.js      # Dashboard + calendário interativo
-│   │   │   ├── appointments.js   # CRUD agendamentos
-│   │   │   ├── financial.js      # CRUD financeiro + cálculos
-│   │   │   ├── clients.js        # CRUD clientes + busca + paginação
-│   │   │   └── account.js        # Minha Conta (perfil, segurança, notif.)
-│   │   └── utils/
-│   │       ├── localStorage.js   # CRUD helpers + seed data
-│   │       ├── validation.js     # Validação de formulários + formatação
-│   │       └── toast.js          # Notificações toast
-│   ├── styles/
+├── src/                          # Frontend SPA (modular feature-based)
+│   ├── main.js                   # Entry point da aplicação
+│   ├── core/                     # Núcleo: router, state, auth, config
+│   ├── shared/                   # Código compartilhado
+│   │   ├── components/           # shell/, modal/ (UI reutilizável)
+│   │   ├── styles/               # main.css, components.css
+│   │   └── utils/                # localStorage, validation, toast, http
+│   ├── features/                 # Módulos de negócio (por domínio)
+│   │   ├── landing/              # Página inicial
+│   │   ├── auth/                 # Login + Registro + styles
+│   │   ├── dashboard/            # Dashboard + calendário + styles
+│   │   ├── appointments/         # CRUD agendamentos
+│   │   ├── financial/            # CRUD financeiro
+│   │   ├── clients/              # CRUD clientes
+│   │   └── account/              # Minha Conta
 │   └── assets/logos/
 │
 ├── backend/                      # API REST
@@ -208,10 +200,12 @@ Acesse: `http://localhost:3000`
 
 ## 🏗️ Arquitetura
 
-- **SPA Router** — Navegação client-side com History API
-- **Modular ES6** — Cada página é um módulo com `render()` e `init()`
+- **Feature-Based Modules** — Frontend organizado por domínio (`core/`, `shared/`, `features/`)
+- **SPA Router** — Navegação client-side com History API + lazy loading
+- **Barrel Exports** — `index.js` em cada módulo para importações limpas
 - **Component Shell** — Layout dashboard reutilizável (sidebar + header)
 - **Event-driven State** — Estado centralizado com listeners
+- **HTTP Client** — `shared/utils/http.js` preparado para integração backend
 - **Backend API REST** — 50+ endpoints com JWT + role-based auth
 - **PostgreSQL** — 10 tabelas com Sequelize ORM + soft delete
 - **Docker Compose** — Nginx + Backend + PostgreSQL
@@ -224,6 +218,7 @@ Acesse: `http://localhost:3000`
 - [x] Backend API REST (50+ endpoints, JWT, Joi, Winston)
 - [x] Docker Compose (Nginx + Backend + PostgreSQL)
 - [x] Migrations + Seed data
+- [x] Refatoração modular (core/ + shared/ + features/)
 - [ ] **Integração frontend ↔ backend** (substituir localStorage por API)
 - [ ] Upload de imagens (avatar)
 - [ ] Gráficos financeiros (Chart.js)

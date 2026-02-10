@@ -3,12 +3,12 @@
  * Profile editing, security (email/password/phone), payments, notifications
  */
 
-import { renderShell, getContentArea } from '../components/shell.js';
-import { getCurrentUser, setCurrentUser } from '../state.js';
-import { getCollection, updateInCollection, KEYS, getItem, saveItem } from '../utils/localStorage.js';
-import { openModal, closeModal } from '../components/modal.js';
-import { showToast } from '../utils/toast.js';
-import { navigateTo } from '../router.js';
+import { renderShell, getContentArea } from '../../../shared/components/shell/shell.js';
+import { getCurrentUser, setCurrentUser } from '../../../core/state.js';
+import { getCollection, updateInCollection, KEYS, getItem, saveItem } from '../../../shared/utils/localStorage.js';
+import { openModal, closeModal } from '../../../shared/components/modal/modal.js';
+import { showToast } from '../../../shared/utils/toast.js';
+import { navigateTo } from '../../../core/router.js';
 
 let activeTab = 'profile';
 

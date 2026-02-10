@@ -119,33 +119,54 @@ beatyhub/
 │       ├── migrations/                 # 10 migration files (ordered)
 │       └── seeders/                    # 1 comprehensive seeder
 │
-├── src/                                # Frontend source
-│   ├── scripts/
-│   │   ├── main.js                     # Bootstrap: init data → init modals → init router
-│   │   ├── router.js                   # SPA Router (History API)
+├── src/                                # Frontend source (modular feature-based)
+│   ├── main.js                         # Entry point: init data → modals → router
+│   │
+│   ├── core/                           # Núcleo da aplicação
+│   │   ├── index.js                    # Barrel export
+│   │   ├── config.js                   # Configurações globais (API_BASE_URL, ROLES)
+│   │   ├── router.js                   # SPA Router (History API, Auth Guard)
 │   │   ├── state.js                    # State management + event bus
-│   │   ├── auth.js                     # Autenticação (login/register/logout)
+│   │   └── auth.js                     # Autenticação (login/register/logout)
+│   │
+│   ├── shared/                         # Código compartilhado entre features
 │   │   ├── components/
-│   │   │   ├── shell.js                # Layout dashboard (sidebar + header + content)
-│   │   │   └── modal.js                # Sistema de modais (ESC, click-outside)
-│   │   ├── pages/                      # Módulos de página (lazy-loaded)
-│   │   │   ├── landing.js              # /
-│   │   │   ├── login.js                # /login
-│   │   │   ├── register.js             # /register
-│   │   │   ├── dashboard.js            # /dashboard
-│   │   │   ├── appointments.js         # /appointments
-│   │   │   ├── financial.js            # /financial
-│   │   │   ├── clients.js              # /clients
-│   │   │   └── account.js              # /account
+│   │   │   ├── index.js                # Barrel export
+│   │   │   ├── shell/shell.js          # Layout dashboard (sidebar + header + content)
+│   │   │   └── modal/modal.js          # Sistema de modais (ESC, click-outside)
+│   │   ├── styles/
+│   │   │   ├── main.css                # Design system (tokens, reset, utilities)
+│   │   │   └── components.css          # Componentes CSS compartilhados
 │   │   └── utils/
+│   │       ├── index.js                # Barrel export
 │   │       ├── localStorage.js         # CRUD helpers + seed data + constantes
-│   │       ├── validation.js           # Validação de formulários + formatação
-│   │       └── toast.js                # Notificações toast
-│   ├── styles/
-│   │   ├── main.css                    # Design system (tokens, reset, utilities)
-│   │   ├── auth.css                    # Layout de autenticação (split screen)
-│   │   ├── dashboard.css               # Layout do dashboard (sidebar + main)
-│   │   └── components.css              # Componentes compartilhados
+│   │       ├── validation.js           # Validação de formulários
+│   │       ├── formatting.js           # Formatação (moeda, data) — re-export
+│   │       ├── toast.js                # Notificações toast
+│   │       └── http.js                 # Fetch wrapper (para integração backend)
+│   │
+│   ├── features/                       # Módulos de negócio (por domínio)
+│   │   ├── landing/pages/landing.js    # /
+│   │   ├── auth/
+│   │   │   ├── pages/login.js          # /login
+│   │   │   ├── pages/register.js       # /register
+│   │   │   └── styles/auth.css         # Estilos de autenticação
+│   │   ├── dashboard/
+│   │   │   ├── pages/dashboard.js      # /dashboard
+│   │   │   └── styles/dashboard.css    # Estilos do dashboard
+│   │   ├── appointments/
+│   │   │   ├── pages/appointments.js   # /appointments
+│   │   │   └── styles/                 # (futuro)
+│   │   ├── financial/
+│   │   │   ├── pages/financial.js      # /financial
+│   │   │   └── styles/                 # (futuro)
+│   │   ├── clients/
+│   │   │   ├── pages/clients.js        # /clients
+│   │   │   └── styles/                 # (futuro)
+│   │   └── account/
+│   │       ├── pages/account.js        # /account
+│   │       └── styles/                 # (futuro)
+│   │
 │   └── assets/
 │       └── logos/
 │
@@ -161,15 +182,15 @@ beatyhub/
 
 ```bash
 index.html
-  └─ <script type="module" src="/src/scripts/main.js">
-       ├─ 1. initializeData()       → Seed localStorage se vazio
-       ├─ 2. initModalSystem()      → Registra ESC + click-outside global
-       └─ 3. initRouter()           → Lê URL → carrega módulo de página
+  └─ <script type="module" src="/src/main.js">
+       ├─ 1. initializeData()       → shared/utils/localStorage.js (seed se vazio)
+       ├─ 2. initModalSystem()      → shared/components/modal/modal.js (ESC + click-outside)
+       └─ 3. initRouter()           → core/router.js
                                        ├─ Registra popstate listener
                                        ├─ Intercepta clicks em <a>
                                        └─ loadRoute(path)
                                             ├─ Auth guard (redirect /login)
-                                            ├─ import('./pages/xxx.js')  ← lazy
+                                            ├─ import('../features/xxx/pages/xxx.js')  ← lazy
                                             ├─ mod.render()  → injeta HTML no #app
                                             └─ mod.init()    → bind eventos, retorna cleanup
 ```
@@ -181,7 +202,7 @@ index.html
 Cada página é um módulo ES6 que exporta duas funções:
 
 ```javascript
-// src/scripts/pages/exemplo.js
+// src/features/{feature}/pages/{feature}.js
 
 export function render() {
     // Injeta HTML no DOM
@@ -521,22 +542,31 @@ Modais devem ter `id="modal-{tipo}"` e classe `modal-overlay`:
 ## Diagrama de Dependências (Frontend)
 
 ```bash
-main.js
-├── utils/localStorage.js  ← initializeData()
-├── components/modal.js    ← initModalSystem()
-└── router.js              ← initRouter()
-    ├── state.js           ← isAuthenticated(), setCurrentPage()
-    └── pages/*.js         ← import() dinâmico
-        ├── components/shell.js  ← renderShell()
-        │   ├── state.js         ← getCurrentUser()
-        │   ├── auth.js          ← handleLogout()
-        │   ├── router.js        ← navigateTo()
-        │   └── components/modal.js
-        ├── utils/localStorage.js ← CRUD
-        ├── utils/validation.js   ← formatação
-        ├── utils/toast.js        ← feedback
-        └── components/modal.js   ← openModal/closeModal
+src/main.js
+├── shared/utils/localStorage.js       ← initializeData()
+├── shared/components/modal/modal.js   ← initModalSystem()
+└── core/router.js                     ← initRouter()
+    ├── core/state.js                  ← isAuthenticated(), setCurrentPage()
+    └── features/*/pages/*.js          ← import() dinâmico (lazy)
+        ├── shared/components/shell/shell.js  ← renderShell()
+        │   ├── core/state.js                 ← getCurrentUser()
+        │   ├── core/auth.js                  ← handleLogout()
+        │   ├── core/router.js                ← navigateTo()
+        │   └── shared/components/modal/modal.js
+        ├── shared/utils/localStorage.js      ← CRUD
+        ├── shared/utils/validation.js        ← formatação
+        ├── shared/utils/toast.js             ← feedback
+        └── shared/components/modal/modal.js  ← openModal/closeModal
 ```
+
+### Princípios da Arquitetura Modular
+
+- **core/**: Funcionalidades essenciais da SPA (router, state, auth, config)
+- **shared/**: Componentes e utilitários reutilizáveis entre features
+- **features/**: Módulos de negócio organizados por domínio
+- Cada feature contém `pages/`, `styles/`, e futuramente `components/`
+- Barrel exports (`index.js`) facilitam importações limpas
+- `shared/utils/http.js` preparado para integração com backend API
 
 ---
 

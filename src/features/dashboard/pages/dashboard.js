@@ -3,11 +3,11 @@
  * Shows stats, calendar with appointments, and quick actions
  */
 
-import { renderShell, getContentArea } from '../components/shell.js';
-import { getCurrentUser } from '../state.js';
-import { getCollection, KEYS } from '../utils/localStorage.js';
-import { formatCurrency } from '../utils/validation.js';
-import { navigateTo } from '../router.js';
+import { renderShell, getContentArea } from '../../../shared/components/shell/shell.js';
+import { getCurrentUser } from '../../../core/state.js';
+import { getCollection, KEYS } from '../../../shared/utils/localStorage.js';
+import { formatCurrency } from '../../../shared/utils/validation.js';
+import { navigateTo } from '../../../core/router.js';
 
 let currentMonth = null;
 let currentYear = null;

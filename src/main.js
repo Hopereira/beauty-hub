@@ -3,9 +3,9 @@
  * Initializes data, modal system, and SPA router
  */
 
-import { initializeData } from './utils/localStorage.js';
-import { initModalSystem } from './components/modal.js';
-import { initRouter } from './router.js';
+import { initializeData } from './shared/utils/localStorage.js';
+import { initModalSystem } from './shared/components/modal/modal.js';
+import { initRouter } from './core/router.js';
 
 // Initialize seed data if first run
 initializeData();

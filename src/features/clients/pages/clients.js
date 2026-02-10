@@ -3,11 +3,11 @@
  * Full CRUD for client management with search and pagination
  */
 
-import { renderShell, getContentArea } from '../components/shell.js';
-import { getCollection, addToCollection, updateInCollection, removeFromCollection, KEYS } from '../utils/localStorage.js';
-import { formatDate } from '../utils/validation.js';
-import { openModal, closeModal } from '../components/modal.js';
-import { showToast } from '../utils/toast.js';
+import { renderShell, getContentArea } from '../../../shared/components/shell/shell.js';
+import { getCollection, addToCollection, updateInCollection, removeFromCollection, KEYS } from '../../../shared/utils/localStorage.js';
+import { formatDate } from '../../../shared/utils/validation.js';
+import { openModal, closeModal } from '../../../shared/components/modal/modal.js';
+import { showToast } from '../../../shared/utils/toast.js';
 
 let editingId = null;
 let searchTerm = '';

@@ -2,10 +2,10 @@
  * Login Page Module
  */
 
-import { handleLogin } from '../auth.js';
-import { navigateTo } from '../router.js';
-import { showToast } from '../utils/toast.js';
-import { validateForm, validateRequired, validateEmail } from '../utils/validation.js';
+import { handleLogin } from '../../../core/auth.js';
+import { navigateTo } from '../../../core/router.js';
+import { showToast } from '../../../shared/utils/toast.js';
+import { validateForm, validateRequired, validateEmail } from '../../../shared/utils/validation.js';
 
 export function render() {
     const app = document.getElementById('app');

@@ -3,9 +3,9 @@
  * Handles login, register, logout with localStorage-backed user store
  */
 
-import { getCollection, addToCollection, findByField, KEYS } from './utils/localStorage.js';
+import { getCollection, addToCollection, findByField, KEYS } from '../shared/utils/localStorage.js';
 import { setCurrentUser, logout as stateLogout } from './state.js';
-import { showToast } from './utils/toast.js';
+import { showToast } from '../shared/utils/toast.js';
 
 // ============================================
 // LOGIN

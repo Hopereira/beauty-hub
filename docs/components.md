@@ -7,30 +7,42 @@ Este documento descreve todos os componentes JavaScript, utilitários e módulos
 ## 📁 Estrutura de Arquivos
 
 ```
-src/scripts/                        # Frontend
-├── main.js                     # Bootstrap da aplicação
-├── router.js                   # SPA Router
-├── state.js                    # State management
-├── auth.js                     # Autenticação (localStorage)
+src/                                # Frontend (modular feature-based)
+├── main.js                         # Entry point da aplicação
 │
-├── components/
-│   ├── shell.js                # Layout dashboard (sidebar + header)
-│   └── modal.js                # Sistema de modais
+├── core/                           # Núcleo da aplicação
+│   ├── index.js                    # Barrel export
+│   ├── config.js                   # Configurações globais (API_BASE_URL, ROLES)
+│   ├── router.js                   # SPA Router (History API, Auth Guard)
+│   ├── state.js                    # State management + event bus
+│   └── auth.js                     # Autenticação (localStorage)
 │
-├── pages/
-│   ├── landing.js              # Página inicial
-│   ├── login.js                # Login
-│   ├── register.js             # Cadastro
-│   ├── dashboard.js            # Dashboard + calendário
-│   ├── appointments.js         # CRUD agendamentos
-│   ├── financial.js            # CRUD financeiro
-│   ├── clients.js              # CRUD clientes
-│   └── account.js              # Minha Conta
+├── shared/                         # Código compartilhado
+│   ├── components/
+│   │   ├── index.js                # Barrel export
+│   │   ├── shell/shell.js          # Layout dashboard (sidebar + header)
+│   │   └── modal/modal.js          # Sistema de modais
+│   ├── styles/
+│   │   ├── main.css                # Design system (tokens, reset, utilities)
+│   │   └── components.css          # Componentes CSS compartilhados
+│   └── utils/
+│       ├── index.js                # Barrel export
+│       ├── localStorage.js         # Persistência + CRUD helpers
+│       ├── validation.js           # Validação de formulários
+│       ├── formatting.js           # Formatação (moeda, data)
+│       ├── toast.js                # Notificações toast
+│       └── http.js                 # Fetch wrapper (para integração backend)
 │
-└── utils/
-    ├── localStorage.js         # Persistência + CRUD helpers
-    ├── validation.js           # Validação + formatação
-    └── toast.js                # Notificações toast
+├── features/                       # Módulos de negócio (por domínio)
+│   ├── landing/pages/landing.js
+│   ├── auth/pages/{login,register}.js + styles/auth.css
+│   ├── dashboard/pages/dashboard.js + styles/dashboard.css
+│   ├── appointments/pages/appointments.js
+│   ├── financial/pages/financial.js
+│   ├── clients/pages/clients.js
+│   └── account/pages/account.js
+│
+└── assets/logos/
 
 backend/src/                        # Backend API
 ├── app.js                      # Express app (middleware + routes)
@@ -46,14 +58,15 @@ backend/src/                        # Backend API
 
 ---
 
-## 🧩 Componentes (`components/`)
+## 🧩 Componentes (`shared/components/`)
 
-### Shell (`shell.js`)
+### Shell (`shared/components/shell/shell.js`)
 
 Layout padrão do dashboard — sidebar, header e área de conteúdo. Usado por todas as páginas autenticadas.
 
 ```javascript
-import { renderShell, getContentArea, setContent } from '../components/shell.js';
+import { renderShell, getContentArea, setContent } from '../../../shared/components/shell/shell.js';
+// Ou via barrel: import { renderShell, getContentArea, setContent } from '../../../shared/components';
 
 // Renderiza o shell completo no #app (sidebar + header + content vazio)
 renderShell('dashboard');  // 'dashboard' = item ativo na sidebar
@@ -84,12 +97,13 @@ setContent('<h1>Olá</h1>');
 
 ---
 
-### Modal (`modal.js`)
+### Modal (`shared/components/modal/modal.js`)
 
 Sistema padronizado de modais com suporte a ESC, click-outside e stack.
 
 ```javascript
-import { openModal, closeModal, closeTopModal, closeAllModals, initModalSystem } from '../components/modal.js';
+import { openModal, closeModal, closeTopModal, closeAllModals, initModalSystem } from '../../../shared/components/modal/modal.js';
+// Ou via barrel: import { openModal, closeModal } from '../../../shared/components';
 
 // Inicializar (feito uma vez no main.js)
 initModalSystem();
@@ -170,9 +184,9 @@ closeAllModals();                // fecha todos
 
 ---
 
-## 🛠️ Utilitários (`utils/`)
+## 🛠️ Utilitários (`shared/utils/`)
 
-### localStorage (`localStorage.js`)
+### localStorage (`shared/utils/localStorage.js`)
 
 Camada de persistência com helpers CRUD genéricos.
 
@@ -184,7 +198,8 @@ import {
     filterCollection, generateId,
     initializeData, resetData,
     KEYS
-} from '../utils/localStorage.js';
+} from '../../../shared/utils/localStorage.js';
+// Ou via barrel: import { getCollection, KEYS } from '../../../shared/utils';
 ```
 
 **Constantes de chaves (`KEYS`):**
@@ -228,7 +243,7 @@ resetData();
 
 ---
 
-### Validation (`validation.js`)
+### Validation (`shared/utils/validation.js`)
 
 Validadores de formulário e funções de formatação.
 
@@ -240,7 +255,8 @@ import {
     showValidationError, clearValidationError, showValidationSuccess,
     clearAllErrors, validateForm,
     parseCurrency, formatCurrency, formatDate, formatDateISO
-} from '../utils/validation.js';
+} from '../../../shared/utils/validation.js';
+// Formatação também disponível via: import { formatCurrency } from '../../../shared/utils/formatting.js';
 ```
 
 **Validadores:**
@@ -309,12 +325,36 @@ formatDateISO('09/02/2026')  // → '2026-02-09'
 
 ---
 
-### Toast (`toast.js`)
+### HTTP Client (`shared/utils/http.js`) — **NOVO**
+
+Fetch wrapper preparado para integração com o backend API.
+
+```javascript
+import { api } from '../../../shared/utils/http.js';
+
+// GET
+const users = await api.get('/users');
+
+// POST
+const result = await api.post('/auth/login', { email, password });
+
+// PUT
+await api.put('/users/123', { name: 'Novo Nome' });
+
+// DELETE
+await api.delete('/users/123');
+```
+
+> **Nota**: Este módulo será usado quando a integração frontend ↔ backend for implementada.
+
+---
+
+### Toast (`shared/utils/toast.js`)
 
 Notificações não-bloqueantes com auto-dismiss.
 
 ```javascript
-import { showToast } from '../utils/toast.js';
+import { showToast } from '../../../shared/utils/toast.js';
 
 showToast('Salvo com sucesso!', 'success');          // Verde
 showToast('Erro ao salvar.', 'error');               // Vermelho
@@ -332,15 +372,15 @@ showToast('Custom duration', 'info', 5000);          // 5 segundos
 
 ---
 
-## 📄 Módulos de Página (`pages/`)
+## 📄 Módulos de Página (`features/*/pages/`)
 
 Cada módulo exporta `render()` e `init()`. O router chama ambos ao navegar.
 
 ### Padrão de implementação
 
 ```javascript
-// Páginas autenticadas
-import { renderShell, getContentArea } from '../components/shell.js';
+// Páginas autenticadas (ex: features/dashboard/pages/dashboard.js)
+import { renderShell, getContentArea } from '../../../shared/components/shell/shell.js';
 
 export function render() {
     renderShell('nomeDaPagina');  // Renderiza sidebar + header
@@ -409,12 +449,18 @@ Classes utilitárias globais:
 
 ---
 
-## 🔄 Como Criar uma Nova Página
+## 🔄 Como Criar uma Nova Feature
 
-1. **Criar módulo** em `src/scripts/pages/novapagina.js`:
+1. **Criar diretório** da feature:
+
+```bash
+mkdir -p src/features/novapagina/pages src/features/novapagina/styles
+```
+
+2. **Criar módulo** em `src/features/novapagina/pages/novapagina.js`:
 
 ```javascript
-import { renderShell, getContentArea } from '../components/shell.js';
+import { renderShell, getContentArea } from '../../../shared/components/shell/shell.js';
 
 export function render() {
     renderShell('novapagina');
@@ -427,17 +473,17 @@ export function init() {
 }
 ```
 
-2. **Registrar rota** em `src/scripts/router.js`:
+3. **Registrar rota** em `src/core/router.js`:
 
 ```javascript
 // Em routes:
 '/novapagina': { title: 'Nova Página - Beauty Hub', page: 'novapagina', auth: true },
 
 // Em moduleMap dentro de loadPageModule():
-'novapagina': () => import('./pages/novapagina.js'),
+'novapagina': () => import('../features/novapagina/pages/novapagina.js'),
 ```
 
-3. **Adicionar ao menu** em `src/scripts/components/shell.js`:
+4. **Adicionar ao menu** em `src/shared/components/shell/shell.js`:
 
 ```javascript
 // Em menuItems:

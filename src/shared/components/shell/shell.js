@@ -3,10 +3,10 @@
  * Renders sidebar + header + content area for authenticated pages
  */
 
-import { getCurrentUser } from '../state.js';
-import { handleLogout } from '../auth.js';
-import { navigateTo } from '../router.js';
-import { openModal, closeModal } from './modal.js';
+import { getCurrentUser } from '../../../core/state.js';
+import { handleLogout } from '../../../core/auth.js';
+import { navigateTo } from '../../../core/router.js';
+import { openModal, closeModal } from '../modal/modal.js';
 
 /**
  * Render the full dashboard shell into #app

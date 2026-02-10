@@ -2,9 +2,9 @@
  * Register Page Module
  */
 
-import { handleRegister } from '../auth.js';
-import { navigateTo } from '../router.js';
-import { showToast } from '../utils/toast.js';
+import { handleRegister } from '../../../core/auth.js';
+import { navigateTo } from '../../../core/router.js';
+import { showToast } from '../../../shared/utils/toast.js';
 
 let currentRole = '';
 

@@ -3,7 +3,7 @@
  * Centralized application state with event-driven updates
  */
 
-import { getItem, saveItem, removeItem, KEYS } from './utils/localStorage.js';
+import { getItem, saveItem, removeItem, KEYS } from '../shared/utils/localStorage.js';
 
 // ============================================
 // APP STATE
