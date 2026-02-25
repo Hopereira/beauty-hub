@@ -175,15 +175,21 @@ Acesse: `http://localhost:3000`
 | Admin | `adm@adm` | `123456` |
 | Profissional | `prof@prof` | `123456` |
 
-**Backend (PostgreSQL):**
+**Backend Multi-Tenant (PostgreSQL):**
 
-| Perfil | Email | Senha |
-|--------|-------|-------|
-| Master | `master@master.com` | `123456` |
-| Admin | `admin@admin.com` | `123456` |
-| Profissional | `prof@prof.com` | `123456` |
+| Perfil | Email | Senha | Tenant |
+|--------|-------|-------|--------|
+| MASTER | `master@beautyhub.com` | `123456` | — |
+| OWNER | `owner@belezapura.com` | `123456` | `beleza-pura` |
 
-> Novos usuários podem ser criados via tela de Cadastro ou `POST /api/auth/register`.
+**Self-Signup (trial de 14 dias):**
+```bash
+curl -X POST http://localhost:8080/api/signup \
+  -H "Content-Type: application/json" \
+  -d '{"tenantName":"Meu Salão","ownerName":"Maria","ownerEmail":"maria@email.com","ownerPassword":"123456","document":"12345678901"}'
+```
+
+> Novos tenants podem ser criados via self-signup ou `POST /api/master/tenants`.
 
 ## 📱 Rotas SPA
 
@@ -200,31 +206,68 @@ Acesse: `http://localhost:3000`
 
 ## 🏗️ Arquitetura
 
-- **Feature-Based Modules** — Frontend organizado por domínio (`core/`, `shared/`, `features/`)
+### Frontend
+- **Feature-Based Modules** — Organizado por domínio (`core/`, `shared/`, `features/`)
 - **SPA Router** — Navegação client-side com History API + lazy loading
-- **Barrel Exports** — `index.js` em cada módulo para importações limpas
 - **Component Shell** — Layout dashboard reutilizável (sidebar + header)
-- **Event-driven State** — Estado centralizado com listeners
 - **HTTP Client** — `shared/utils/http.js` preparado para integração backend
-- **Backend API REST** — 50+ endpoints com JWT + role-based auth
-- **PostgreSQL** — 10 tabelas com Sequelize ORM + soft delete
+
+### Backend (Multi-Tenant SaaS)
+- **Arquitetura Modular** — `modules/` (tenants, billing, users) + `shared/`
+- **Multi-Tenant** — Single DB, Shared Schema, `tenant_id` em todas as entidades
+- **RBAC Hierárquico** — MASTER → OWNER → ADMIN → PROFESSIONAL → CLIENT
+- **Billing Completo** — Planos, assinaturas, faturas, usage metering, Pagar.me integration
+- **Self-Signup** — Onboarding com trial automático de 14 dias
+- **Security** — Brute force protection, account lockout, rate limiting
+- **LGPD Compliance** — Data export, anonymization, retention policies
+- **Webhook Resilience** — Idempotency, DLQ, retry com backoff exponencial
+- **BaseRepository** — Escopo automático por tenant
+- **22 tabelas** — PostgreSQL com Sequelize ORM + soft delete
+
+### Infraestrutura
 - **Docker Compose** — Nginx + Backend + PostgreSQL
 - **Zero Frontend Dependencies** — Vanilla JS puro
-- **Mobile-First** — Design responsivo
 
-## 📝 Estado & Próximos Passos
+> 📖 Documentação completa: [`docs/MULTI_TENANT_ARCHITECTURE.md`](docs/MULTI_TENANT_ARCHITECTURE.md)
+
+## � API Endpoints Principais
+
+### Públicos (sem autenticação)
+| Método | Endpoint | Descrição |
+|--------|----------|-----------|
+| `GET` | `/api/health` | Health check |
+| `GET` | `/api/plans` | Listar planos disponíveis |
+| `POST` | `/api/signup` | Self-signup com trial |
+| `POST` | `/api/signup/autonomous` | Signup profissional autônomo |
+| `GET` | `/api/signup/check-email` | Verificar disponibilidade email |
+| `GET` | `/api/signup/check-document` | Verificar CPF/CNPJ |
+
+### Multi-Tenant SaaS (MASTER)
+| Método | Endpoint | Descrição |
+|--------|----------|-----------|
+| `GET` | `/api/master/tenants` | Listar todos os tenants |
+| `POST` | `/api/master/tenants` | Criar tenant |
+| `GET` | `/api/master/tenants/:id` | Detalhes do tenant |
+| `PUT` | `/api/master/tenants/:id` | Atualizar tenant |
+| `DELETE` | `/api/master/tenants/:id` | Excluir tenant |
+
+## �� Estado & Próximos Passos
 
 - [x] Frontend SPA completo (8 páginas, CRUD, localStorage)
 - [x] Backend API REST (50+ endpoints, JWT, Joi, Winston)
 - [x] Docker Compose (Nginx + Backend + PostgreSQL)
 - [x] Migrations + Seed data
-- [x] Refatoração modular (core/ + shared/ + features/)
+- [x] Refatoração modular frontend (core/ + shared/ + features/)
+- [x] **Arquitetura Multi-Tenant SaaS** (tenants, billing, RBAC)
+- [x] **Self-Signup & Onboarding** (trial automático)
+- [x] **Brute Force Protection** (rate limiting + account lockout)
+- [x] **LGPD Compliance** (data export, anonymization, retention)
+- [x] **Webhook Resilience** (idempotency, DLQ, retry)
+- [x] **Pagar.me Integration** (PIX, cartão, boleto)
 - [ ] **Integração frontend ↔ backend** (substituir localStorage por API)
 - [ ] Upload de imagens (avatar)
 - [ ] Gráficos financeiros (Chart.js)
-- [ ] Relatórios em PDF
 - [ ] Notificações push
-- [ ] PWA offline completo
 - [ ] Testes automatizados
 
 ## 📄 Licença

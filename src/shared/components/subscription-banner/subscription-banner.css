@@ -1,0 +1,111 @@
+/**
+ * Subscription Banner Styles
+ */
+
+.subscription-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 20px;
+    font-size: 14px;
+    font-weight: 500;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        transform: translateY(-100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.subscription-banner--info {
+    background: linear-gradient(90deg, #3b82f6, #6366f1);
+    color: white;
+}
+
+.subscription-banner--warning {
+    background: linear-gradient(90deg, #f59e0b, #d97706);
+    color: white;
+}
+
+.subscription-banner--error {
+    background: linear-gradient(90deg, #ef4444, #dc2626);
+    color: white;
+}
+
+.subscription-banner__content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+}
+
+.subscription-banner__icon {
+    font-size: 18px;
+}
+
+.subscription-banner__message {
+    flex: 1;
+}
+
+.subscription-banner__action {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 16px;
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 13px;
+    transition: background 0.2s;
+}
+
+.subscription-banner__action:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.subscription-banner__close {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 0 0 0 16px;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+}
+
+.subscription-banner__close:hover {
+    opacity: 1;
+}
+
+/* Mobile responsive */
+@media (max-width: 640px) {
+    .subscription-banner {
+        flex-direction: column;
+        gap: 8px;
+        padding: 12px 16px;
+    }
+
+    .subscription-banner__content {
+        flex-direction: column;
+        text-align: center;
+        gap: 8px;
+    }
+
+    .subscription-banner__close {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        padding: 0;
+    }
+}

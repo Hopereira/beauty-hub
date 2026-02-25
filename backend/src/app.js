@@ -73,6 +73,50 @@ app.get('/api/health', (req, res) => {
   res.json({ success: true, message: 'Beauty Hub API is running.', data: { uptime: process.uptime(), timestamp: new Date().toISOString() } });
 });
 
+// ── Billing public routes ──
+const { sequelize } = require('./models');
+const SubscriptionPlan = require('./modules/billing/subscriptionPlan.model')(sequelize);
+const Subscription = require('./modules/billing/subscription.model')(sequelize);
+const Invoice = require('./modules/billing/invoice.model')(sequelize);
+const Tenant = require('./modules/tenants/tenant.model')(sequelize);
+
+// Initialize mock billing controller
+const MockBillingController = require('./modules/billing/controllers/mock.controller');
+const { createMockBillingRoutes } = require('./modules/billing/routes/mock.routes');
+
+const billingModels = { Subscription, SubscriptionPlan, Invoice, Tenant };
+const mockController = new MockBillingController(billingModels, null, null);
+const mockRoutes = createMockBillingRoutes(mockController, null);
+
+// Mount mock routes (only works when PAYMENT_PROVIDER=mock)
+app.use('/api/billing/mock', mockRoutes);
+
+app.get('/api/billing/plans', async (req, res) => {
+  try {
+    const plans = await SubscriptionPlan.findAll({
+      where: { is_active: true, is_public: true },
+      order: [['sort_order', 'ASC']],
+    });
+    res.json({ success: true, data: plans });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+app.get('/api/billing/plans/:slug', async (req, res) => {
+  try {
+    const plan = await SubscriptionPlan.findOne({
+      where: { slug: req.params.slug, is_active: true },
+    });
+    if (!plan) {
+      return res.status(404).json({ success: false, message: 'Plano não encontrado' });
+    }
+    res.json({ success: true, data: plan });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 // ── API Routes ──
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);

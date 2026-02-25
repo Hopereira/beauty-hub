@@ -4,6 +4,7 @@
  */
 
 import { getItem, saveItem, removeItem, KEYS } from '../shared/utils/localStorage.js';
+import { USER_KEY, SUBSCRIPTION_STATUS } from './config.js';
 
 // ============================================
 // APP STATE
@@ -12,6 +13,8 @@ import { getItem, saveItem, removeItem, KEYS } from '../shared/utils/localStorag
 const appState = {
     currentUser: null,
     currentPage: '',
+    subscription: null,
+    subscriptionBannerDismissed: false,
 };
 
 // Simple event bus for state changes
@@ -60,9 +63,73 @@ export function getUserRole() {
 
 export function logout() {
     appState.currentUser = null;
+    appState.subscription = null;
     removeItem(KEYS.CURRENT_USER);
     emit('userChanged', null);
+    emit('subscriptionChanged', null);
     emit('logout');
+}
+
+// ============================================
+// SUBSCRIPTION STATE
+// ============================================
+
+export function getSubscriptionStatus() {
+    return appState.subscription;
+}
+
+export function setSubscriptionStatus(subscription) {
+    appState.subscription = subscription;
+    emit('subscriptionChanged', subscription);
+}
+
+export function isSubscriptionActive() {
+    const sub = appState.subscription;
+    if (!sub) return true; // No subscription info = allow (for backwards compat)
+    return [SUBSCRIPTION_STATUS.ACTIVE, SUBSCRIPTION_STATUS.TRIAL].includes(sub.status);
+}
+
+export function isSubscriptionBlocked() {
+    const sub = appState.subscription;
+    if (!sub) return false;
+    return [
+        SUBSCRIPTION_STATUS.SUSPENDED, 
+        SUBSCRIPTION_STATUS.CANCELLED, 
+        SUBSCRIPTION_STATUS.EXPIRED
+    ].includes(sub.status);
+}
+
+export function getSubscriptionMessage() {
+    const sub = appState.subscription;
+    if (!sub) return null;
+
+    switch (sub.status) {
+        case SUBSCRIPTION_STATUS.TRIAL:
+            const daysLeft = sub.daysRemaining || 0;
+            return daysLeft <= 7 
+                ? `Seu período de teste termina em ${daysLeft} dias. Assine agora!`
+                : null;
+        case SUBSCRIPTION_STATUS.PAST_DUE:
+            return 'Pagamento pendente. Regularize para evitar suspensão.';
+        case SUBSCRIPTION_STATUS.SUSPENDED:
+            return 'Conta suspensa por falta de pagamento.';
+        case SUBSCRIPTION_STATUS.EXPIRED:
+            return 'Seu período de teste expirou. Assine para continuar.';
+        case SUBSCRIPTION_STATUS.CANCELLED:
+            return 'Assinatura cancelada.';
+        default:
+            return null;
+    }
+}
+
+export function dismissSubscriptionBanner() {
+    appState.subscriptionBannerDismissed = true;
+    emit('subscriptionBannerDismissed');
+}
+
+export function shouldShowSubscriptionBanner() {
+    if (appState.subscriptionBannerDismissed) return false;
+    return !!getSubscriptionMessage();
 }
 
 // ============================================

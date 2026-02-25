@@ -1,0 +1,50 @@
+# ══════════════════════════════════════════════════════════════════════════════
+# BeautyHub Backend - Production Dockerfile
+# Multi-stage build for optimized image size
+# ══════════════════════════════════════════════════════════════════════════════
+
+# ── Stage 1: Dependencies ──
+FROM node:20-alpine AS deps
+
+WORKDIR /app
+
+# Install dependencies only (for caching)
+COPY package.json package-lock.json* ./
+RUN npm ci --only=production && npm cache clean --force
+
+# ── Stage 2: Production ──
+FROM node:20-alpine AS production
+
+# Security: run as non-root user
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nodejs -u 1001
+
+WORKDIR /app
+
+# Copy production dependencies
+COPY --from=deps /app/node_modules ./node_modules
+
+# Copy application code
+COPY --chown=nodejs:nodejs . .
+
+# Remove dev files
+RUN rm -rf tests/ *.test.js .env* .git* Dockerfile*
+
+# Set environment
+ENV NODE_ENV=production
+ENV PORT=5001
+
+# Security headers
+ENV NPM_CONFIG_LOGLEVEL=warn
+
+# Switch to non-root user
+USER nodejs
+
+EXPOSE 5001
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+  CMD node -e "require('http').get('http://localhost:5001/api/health', (r) => { process.exit(r.statusCode === 200 ? 0 : 1) }).on('error', () => process.exit(1))"
+
+# Start application
+CMD ["node", "server.js"]

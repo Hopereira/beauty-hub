@@ -146,3 +146,63 @@ npm run dev
 
 ### Health
 - `GET /api/health`
+
+### Billing (SaaS)
+- `GET /api/billing/plans` - Lista planos públicos
+- `GET /api/billing/plans/:slug` - Detalhes do plano
+- `GET /api/billing/subscription` - Assinatura atual do tenant
+- `POST /api/billing/subscription/activate` - Ativar com cartão
+- `POST /api/billing/subscription/pix` - Gerar pagamento PIX
+- `PUT /api/billing/subscription/plan` - Trocar plano
+- `POST /api/billing/subscription/cancel` - Cancelar assinatura
+- `GET /api/billing/invoices` - Listar faturas
+- `GET /api/billing/invoices/:id` - Detalhes da fatura
+
+### Billing MASTER (Admin)
+- `GET /api/master/plans` - Todos os planos
+- `POST /api/master/plans` - Criar plano
+- `PUT /api/master/plans/:id` - Atualizar plano
+- `PATCH /api/master/plans/:id/activate` - Ativar plano
+- `PATCH /api/master/plans/:id/deactivate` - Desativar plano
+- `GET /api/master/subscriptions` - Todas assinaturas
+- `GET /api/master/subscriptions/:id` - Detalhes assinatura
+- `POST /api/master/subscriptions/:id/suspend` - Suspender
+- `GET /api/master/mrr` - Monthly Recurring Revenue
+- `GET /api/master/revenue-summary` - Resumo de receita
+- `GET /api/master/invoices` - Todas faturas
+- `GET /api/master/billing/audit-logs` - Logs de auditoria
+
+### Webhooks
+- `POST /api/webhooks/billing/:provider` - Stripe, MercadoPago, etc.
+
+## Planos de Assinatura
+
+| Plano | Mensal | Anual (-15%) | Trial | Profissionais |
+|-------|--------|--------------|-------|---------------|
+| **Starter** | R$ 0 | R$ 0 | 30 dias | 1 |
+| **Growth** | R$ 29,90 | R$ 305 | 7 dias | 3 |
+| **Professional** | R$ 59,90 | R$ 611 | 7 dias | 10 |
+| **Enterprise** | R$ 99,90 | R$ 1.019 | 14 dias | ∞ |
+
+## Variáveis de Ambiente (Billing)
+
+```env
+# Payment Provider (mock para dev, stripe para prod)
+PAYMENT_PROVIDER=mock
+
+# Stripe (produção)
+STRIPE_SECRET_KEY=sk_live_xxx
+STRIPE_PUBLISHABLE_KEY=pk_live_xxx
+STRIPE_WEBHOOK_SECRET=whsec_xxx
+
+# Billing defaults
+BILLING_GRACE_PERIOD_DAYS=7
+BILLING_SUSPENSION_DAYS=30
+BILLING_DEFAULT_TRIAL_DAYS=30
+```
+
+## Documentação
+
+- [MULTI_TENANT_ARCHITECTURE.md](../docs/MULTI_TENANT_ARCHITECTURE.md) - Arquitetura multi-tenant
+- [ENTERPRISE_ARCHITECTURE.md](../docs/ENTERPRISE_ARCHITECTURE.md) - Arquitetura enterprise
+- [BILLING_SYSTEM.md](src/modules/billing/BILLING_SYSTEM.md) - Sistema de billing completo

@@ -3,7 +3,9 @@
  * Manages client-side navigation and dynamic page loading
  */
 
-import { isAuthenticated, getCurrentUser, setCurrentPage } from './state.js';
+import { isAuthenticated, getCurrentUser, setCurrentPage, isSubscriptionBlocked, logout } from './state.js';
+import { onHttpEvent } from '../shared/utils/http.js';
+import { showToast } from '../shared/utils/toast.js';
 
 // ============================================
 // ROUTE DEFINITIONS
@@ -136,6 +138,29 @@ export function initRouter() {
 
         e.preventDefault();
         navigateTo(href);
+    });
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Global HTTP event handlers
+    // ─────────────────────────────────────────────────────────────────────────
+
+    // Handle 401 Unauthorized - redirect to login
+    onHttpEvent('unauthorized', () => {
+        showToast('Sessão expirada. Faça login novamente.', 'warning');
+        logout();
+        navigateTo('/login', true);
+    });
+
+    // Handle subscription inactive
+    onHttpEvent('subscriptionInactive', ({ code, message }) => {
+        showToast(message || 'Assinatura inativa', 'error');
+        // Optionally redirect to billing page
+        // navigateTo('/billing', true);
+    });
+
+    // Handle network errors
+    onHttpEvent('networkError', () => {
+        showToast('Erro de conexão. Verifique sua internet.', 'error');
     });
 
     // Load initial route

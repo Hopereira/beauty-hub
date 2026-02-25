@@ -19,7 +19,7 @@ O Beauty Hub é uma aplicação **full-stack** composta por um **frontend SPA** 
 | Persistência (atual) | localStorage | Web API |
 | PWA | manifest.json | - |
 
-### Backend
+### Backend (Multi-Tenant SaaS)
 
 | Camada | Tecnologia | Versão |
 |--------|-----------|--------|
@@ -32,6 +32,10 @@ O Beauty Hub é uma aplicação **full-stack** composta por um **frontend SPA** 
 | Logging | Winston | 3.x |
 | Rate Limiting | express-rate-limit | 7.x |
 | Segurança | Helmet + CORS | - |
+| **Multi-Tenancy** | Single DB + Shared Schema | - |
+| **RBAC** | MASTER → OWNER → ADMIN → PROF → CLIENT | - |
+
+> 📖 Documentação detalhada: [`MULTI_TENANT_ARCHITECTURE.md`](MULTI_TENANT_ARCHITECTURE.md)
 
 ### Infraestrutura
 
@@ -70,54 +74,59 @@ beatyhub/
 │   ├── .sequelizerc                    # Sequelize CLI paths
 │   ├── server.js                       # Entry point (DB connect + listen)
 │   └── src/
-│       ├── app.js                      # Express app (middleware + routes)
+│       ├── app.js                      # Express app original (single-tenant)
+│       ├── app.multitenant.js          # Express app multi-tenant (SaaS)
 │       ├── config/
 │       │   ├── env.js                  # Environment variables loader
 │       │   └── database.js             # Sequelize DB config (dev/test/prod)
-│       ├── models/                     # 10 Sequelize models + index.js
-│       │   ├── index.js                # Model loader + associations
-│       │   ├── User.js
-│       │   ├── Establishment.js
-│       │   ├── Professional.js
-│       │   ├── Service.js
-│       │   ├── Client.js
-│       │   ├── Appointment.js
-│       │   ├── PaymentMethod.js
-│       │   ├── FinancialEntry.js
-│       │   ├── FinancialExit.js
-│       │   └── Notification.js
-│       ├── controllers/                # 8 controllers
-│       │   ├── authController.js
-│       │   ├── userController.js
-│       │   ├── profileController.js
-│       │   ├── establishmentController.js
-│       │   ├── professionalController.js
-│       │   ├── serviceController.js
-│       │   ├── clientController.js
-│       │   ├── appointmentController.js
-│       │   ├── financialController.js
-│       │   └── notificationController.js
-│       ├── routes/                     # 10 route files
-│       │   ├── auth.js
-│       │   ├── users.js
-│       │   ├── profile.js
-│       │   ├── establishments.js
-│       │   ├── professionals.js
-│       │   ├── services.js
-│       │   ├── clients.js
-│       │   ├── appointments.js
-│       │   ├── financial.js
-│       │   └── notifications.js
-│       ├── middleware/
-│       │   ├── auth.js                 # JWT authenticate + role authorize
-│       │   ├── validation.js           # Joi schema validation
-│       │   └── errorHandler.js         # Global error handler
-│       ├── utils/
-│       │   ├── jwt.js                  # Token generation + verification
-│       │   ├── logger.js               # Winston structured logging
-│       │   └── validators.js           # Joi schemas for all endpoints
-│       ├── migrations/                 # 10 migration files (ordered)
-│       └── seeders/                    # 1 comprehensive seeder
+│       │
+│       ├── modules/                    # ★ MÓDULOS MULTI-TENANT ★
+│       │   ├── index.js                # Inicializador de módulos
+│       │   ├── tenants/                # Gestão de tenants (estabelecimentos)
+│       │   │   ├── tenant.model.js
+│       │   │   ├── tenant.repository.js
+│       │   │   ├── tenant.service.js
+│       │   │   ├── tenant.controller.js
+│       │   │   ├── tenant.routes.js
+│       │   │   ├── tenant.validation.js
+│       │   │   └── index.js
+│       │   ├── billing/                # Planos, assinaturas, faturas
+│       │   │   ├── subscriptionPlan.model.js
+│       │   │   ├── subscription.model.js
+│       │   │   ├── invoice.model.js
+│       │   │   ├── usageLog.model.js
+│       │   │   └── index.js
+│       │   └── users/                  # Usuários multi-tenant
+│       │       ├── user.model.js       # tenant_id + RBAC
+│       │       ├── user.repository.js
+│       │       ├── user.service.js
+│       │       ├── user.controller.js
+│       │       ├── user.routes.js
+│       │       ├── user.validation.js
+│       │       └── index.js
+│       │
+│       ├── shared/                     # ★ CÓDIGO COMPARTILHADO ★
+│       │   ├── constants/index.js      # Enums (ROLES, STATUS, etc.)
+│       │   ├── database/
+│       │   │   ├── connection.js       # Sequelize instance
+│       │   │   └── BaseRepository.js   # Escopo automático por tenant
+│       │   ├── errors/AppError.js      # Custom error classes
+│       │   ├── middleware/
+│       │   │   ├── auth.js             # JWT + RBAC hierárquico
+│       │   │   ├── tenantResolver.js   # Resolve tenant (subdomain/header)
+│       │   │   ├── errorHandler.js     # Global error handler
+│       │   │   └── validation.js       # Joi + CPF/CNPJ validators
+│       │   └── utils/
+│       │       ├── logger.js           # Winston + tenant context
+│       │       └── jwt.js              # JWT com tenant_id
+│       │
+│       ├── models/                     # Models originais (legado)
+│       ├── controllers/                # Controllers originais (legado)
+│       ├── routes/                     # Routes originais (legado)
+│       ├── middleware/                 # Middleware original
+│       ├── utils/                      # Utils original
+│       ├── migrations/                 # 16 migration files
+│       └── seeders/                    # Seeds (planos, tenant demo, users)
 │
 ├── src/                                # Frontend source (modular feature-based)
 │   ├── main.js                         # Entry point: init data → modals → router

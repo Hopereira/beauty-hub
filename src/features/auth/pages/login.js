@@ -73,20 +73,39 @@ export function init() {
     const form = document.getElementById('loginForm');
     if (!form) return null;
 
-    const handleSubmit = (e) => {
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const originalBtnText = submitBtn?.textContent || 'Entrar';
+
+    const handleSubmit = async (e) => {
         e.preventDefault();
 
         const email = document.getElementById('email').value.trim();
         const password = document.getElementById('password').value;
 
-        const result = handleLogin(email, password);
+        // Disable button and show loading
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Entrando...';
+        }
 
-        if (result.success) {
-            showToast('Login realizado com sucesso!', 'success');
-            const role = result.user.role;
-            navigateTo('/dashboard');
-        } else {
-            showToast(result.message, 'error');
+        try {
+            const result = await handleLogin(email, password);
+
+            if (result.success) {
+                showToast('Login realizado com sucesso!', 'success');
+                navigateTo('/dashboard');
+            } else {
+                showToast(result.message, 'error');
+            }
+        } catch (error) {
+            console.error('[Login] Error:', error);
+            showToast(error.message || 'Erro ao fazer login', 'error');
+        } finally {
+            // Re-enable button
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalBtnText;
+            }
         }
     };
 

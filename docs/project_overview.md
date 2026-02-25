@@ -290,13 +290,16 @@ docker exec beautyhub_backend npx sequelize-cli db:migrate:undo:all  # Reset mig
 | Componente | Status | Detalhes |
 |-----------|--------|----------|
 | Frontend SPA | ✅ Completo | 8 páginas, CRUD completo, localStorage |
-| Arquitetura Modular | ✅ Completo | core/ + shared/ + features/ com barrel exports |
+| Arquitetura Modular Frontend | ✅ Completo | core/ + shared/ + features/ com barrel exports |
 | Backend API | ✅ Completo | 50+ endpoints, JWT, Joi, Winston |
+| **Multi-Tenant SaaS** | ✅ Completo | tenants, billing, RBAC (MASTER/OWNER/ADMIN/PROF/CLIENT) |
 | Docker Compose | ✅ Completo | Nginx + Backend + PostgreSQL |
-| Migrations | ✅ Completo | 10 tabelas com soft delete |
-| Seed Data | ✅ Completo | 3 users, 1 establishment, 2 profs, 5 services, 10 clients, 10 appointments, 11 financial |
+| Migrations | ✅ Completo | 16 tabelas com soft delete |
+| Seed Data | ✅ Completo | 4 planos, 1 tenant demo, 4 users (MASTER, OWNER, ADMIN, PROF) |
 | HTTP Client | ✅ Pronto | `shared/utils/http.js` — fetch wrapper para integração |
 | **Integração Frontend ↔ Backend** | ❌ Pendente | Frontend ainda usa localStorage |
+
+> 📖 Documentação multi-tenant: [`MULTI_TENANT_ARCHITECTURE.md`](MULTI_TENANT_ARCHITECTURE.md)
 
 ---
 
@@ -307,13 +310,14 @@ docker exec beautyhub_backend npx sequelize-cli db:migrate:undo:all  # Reset mig
 | ~~Alta~~ | ~~Backend API~~ | ✅ Feito | API REST Node.js/Express com 50+ endpoints |
 | ~~Alta~~ | ~~Banco de dados~~ | ✅ Feito | PostgreSQL 15 com Sequelize ORM |
 | ~~Alta~~ | ~~Docker~~ | ✅ Feito | Docker Compose com Nginx + Backend + PostgreSQL |
+| ~~Alta~~ | ~~Multi-Tenant SaaS~~ | ✅ Feito | Tenants, billing, planos, RBAC hierárquico |
 | **Alta** | **Integração Auth** | ❌ Pendente | Substituir localStorage auth por JWT do backend |
 | ~~Alta~~ | ~~API Client (fetch)~~ | ✅ Feito | `shared/utils/http.js` com fetch wrapper + token management |
 | **Alta** | **Integração CRUD** | ❌ Pendente | Substituir localStorage CRUD por chamadas REST |
+| Média | Migrar módulos restantes | ❌ Pendente | clients, services, appointments, financial com tenant_id |
 | Média | Upload de imagens | ❌ Pendente | Avatar do usuário e fotos de serviços |
 | Média | Gráficos financeiros | ❌ Pendente | Chart.js para visualização de dados |
 | Média | Relatórios PDF | ❌ Pendente | Exportação de relatórios financeiros |
 | Média | Notificações push | ❌ Pendente | Web Push API |
 | Baixa | PWA offline | ❌ Pendente | Service Worker completo |
 | Baixa | Testes automatizados | ❌ Pendente | Vitest + Playwright |
-| Baixa | Estoque e Serviços | ❌ Pendente | Páginas de gestão de estoque e catálogo de serviços |
