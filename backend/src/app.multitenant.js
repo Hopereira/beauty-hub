@@ -141,6 +141,38 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Schema Health Check
+app.get('/api/health/schema', async (req, res) => {
+  try {
+    const criticalTables = ['services', 'establishments', 'service_categories', 'tenants', 'subscriptions'];
+    const results = {};
+    
+    for (const table of criticalTables) {
+      const [rows] = await sequelize.query(
+        `SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = '${table}') as exists`
+      );
+      results[table] = rows[0].exists;
+    }
+
+    const allTablesExist = Object.values(results).every(exists => exists);
+
+    res.json({
+      success: allTablesExist,
+      message: allTablesExist ? 'Schema validation passed' : 'Schema validation failed',
+      data: {
+        tables: results,
+        timestamp: new Date().toISOString(),
+      },
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Schema validation error',
+      error: { code: 'SCHEMA_CHECK_ERROR', details: error.message },
+    });
+  }
+});
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Tenant Resolver (for tenant-scoped routes)
 // ─────────────────────────────────────────────────────────────────────────────
@@ -246,7 +278,8 @@ app.use('/api/appointments', appointmentRoutes);
 app.use('/api/financial', financialRoutes);
 app.use('/api/notifications', notificationRoutes);
 
-// OWNER Module Routes (tenant-scoped, RBAC protected)
+// OWNER Module Routes (tenant-scoped, RBAC protected, Subscription enforced)
+const requireActiveSubscription = require('./shared/middleware/requireActiveSubscription');
 const ownerProductRoutes = require('./routes/owner/products');
 const ownerSupplierRoutes = require('./routes/owner/suppliers');
 const ownerPurchaseRoutes = require('./routes/owner/purchases');
@@ -255,13 +288,14 @@ const ownerPaymentTransactionRoutes = require('./routes/owner/payment-transactio
 const serviceCategoryRoutes = require('./routes/serviceCategories');
 const reportsRoutes = require('./routes/reports');
 
-app.use('/api/products', ownerProductRoutes);
-app.use('/api/suppliers', ownerSupplierRoutes);
-app.use('/api/purchases', ownerPurchaseRoutes);
-app.use('/api/professional-details', ownerProfessionalDetailRoutes);
-app.use('/api/payment-transactions', ownerPaymentTransactionRoutes);
-app.use('/api/service-categories', serviceCategoryRoutes);
-app.use('/api/reports', reportsRoutes);
+// Apply subscription middleware to all OWNER routes
+app.use('/api/products', requireActiveSubscription(), ownerProductRoutes);
+app.use('/api/suppliers', requireActiveSubscription(), ownerSupplierRoutes);
+app.use('/api/purchases', requireActiveSubscription(), ownerPurchaseRoutes);
+app.use('/api/professional-details', requireActiveSubscription(), ownerProfessionalDetailRoutes);
+app.use('/api/payment-transactions', requireActiveSubscription(), ownerPaymentTransactionRoutes);
+app.use('/api/service-categories', requireActiveSubscription(), serviceCategoryRoutes);
+app.use('/api/reports', requireActiveSubscription({ allowReadOnly: true }), reportsRoutes);
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 404 Handler

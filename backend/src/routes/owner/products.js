@@ -5,6 +5,7 @@
 const { sequelize } = require('../../models');
 const { authenticate, authorize } = require('../../middleware/auth');
 const tenantFromJWT = require('../../middleware/tenantFromJWT');
+const requireActiveSubscription = require('../../shared/middleware/requireActiveSubscription');
 const { initInventoryModule } = require('../../modules/inventory');
 
 // Get all models from sequelize

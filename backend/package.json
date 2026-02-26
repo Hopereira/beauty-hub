@@ -11,6 +11,7 @@
     "seed": "npx sequelize-cli db:seed:all",
     "seed:undo": "npx sequelize-cli db:seed:undo:all",
     "reset": "npm run migrate:undo && npm run migrate && npm run seed",
+    "validate-schema": "node scripts/validate-schema.js",
     "test": "jest --coverage"
   },
   "dependencies": {
