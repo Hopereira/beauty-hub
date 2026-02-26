@@ -4,28 +4,89 @@
  */
 
 import { renderShell, getContentArea } from '../../../shared/components/shell/shell.js';
-import { getCurrentUser } from '../../../core/state.js';
-import { getCollection, KEYS } from '../../../shared/utils/localStorage.js';
+import { getCurrentUser, isSubscriptionBlocked } from '../../../core/state.js';
+import { api } from '../../../shared/utils/http.js';
 import { formatCurrency } from '../../../shared/utils/validation.js';
 import { navigateTo } from '../../../core/router.js';
+import { showToast } from '../../../shared/utils/toast.js';
 
 let currentMonth = null;
 let currentYear = null;
+let appointments = [];
+let clients = [];
+let stats = { today: 0, week: 0, month: 0 };
+let isLoading = false;
 
 export function render() {
     renderShell('dashboard');
 }
 
-export function init() {
+export async function init() {
     const now = new Date();
     currentMonth = now.getMonth();
     currentYear = now.getFullYear();
 
+    await loadDashboardData();
     renderDashboardContent();
 
     return () => {
         currentMonth = null;
         currentYear = null;
+        appointments = [];
+        clients = [];
+    };
+}
+
+async function loadDashboardData() {
+    isLoading = true;
+    const content = getContentArea();
+    if (content) {
+        content.innerHTML = `
+            <div style="display:flex;align-items:center;justify-content:center;min-height:400px;">
+                <div class="spinner"></div>
+            </div>
+        `;
+    }
+
+    try {
+        const [appointmentsRes, clientsRes, statsRes] = await Promise.all([
+            api.get('/appointments').catch(() => ({ data: [] })),
+            api.get('/clients').catch(() => ({ data: [] })),
+            api.get('/appointments/stats').catch(() => ({ data: null })),
+        ]);
+
+        appointments = appointmentsRes.data || [];
+        clients = clientsRes.data || [];
+        
+        if (statsRes.data) {
+            stats = statsRes.data;
+        } else {
+            calculateStats();
+        }
+    } catch (error) {
+        console.error('[Dashboard] Error loading data:', error);
+        showToast('Erro ao carregar dados do dashboard', 'error');
+    } finally {
+        isLoading = false;
+    }
+}
+
+function calculateStats() {
+    const today = new Date().toISOString().split('T')[0];
+    const weekStart = getWeekStart(new Date());
+    const weekEnd = getWeekEnd(new Date());
+    
+    const todayApps = appointments.filter(a => a.date === today && a.status === 'completed');
+    const weekApps = appointments.filter(a => a.date >= weekStart && a.date <= weekEnd && a.status === 'completed');
+    const monthApps = appointments.filter(a => {
+        const d = new Date(a.date);
+        return d.getMonth() === currentMonth && d.getFullYear() === currentYear && a.status === 'completed';
+    });
+
+    stats = {
+        today: todayApps.reduce((s, a) => s + (a.value || a.price || 0), 0),
+        week: weekApps.reduce((s, a) => s + (a.value || a.price || 0), 0),
+        month: monthApps.reduce((s, a) => s + (a.value || a.price || 0), 0),
     };
 }
 
@@ -34,23 +95,12 @@ function renderDashboardContent() {
     if (!content) return;
 
     const user = getCurrentUser();
-    const appointments = getCollection(KEYS.APPOINTMENTS)
-        .filter(a => a.professionalId === user?.id || user?.role === 'admin');
-
-    // Stats
-    const today = new Date().toISOString().split('T')[0];
-    const todayApps = appointments.filter(a => a.date === today);
-    const weekStart = getWeekStart(new Date());
-    const weekEnd = getWeekEnd(new Date());
-    const weekApps = appointments.filter(a => a.date >= weekStart && a.date <= weekEnd);
-    const monthApps = appointments.filter(a => {
-        const d = new Date(a.date);
-        return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
-    });
-
-    const todayEarnings = todayApps.filter(a => a.status === 'completed').reduce((s, a) => s + (a.value || 0), 0);
-    const weekEarnings = weekApps.filter(a => a.status === 'completed').reduce((s, a) => s + (a.value || 0), 0);
-    const monthEarnings = monthApps.filter(a => a.status === 'completed').reduce((s, a) => s + (a.value || 0), 0);
+    const blocked = isSubscriptionBlocked();
+    
+    // Use stats from API or calculated
+    const todayEarnings = stats.today || 0;
+    const weekEarnings = stats.week || 0;
+    const monthEarnings = stats.month || 0;
 
     const calendarHTML = renderCalendar(currentMonth, currentYear, appointments);
 
@@ -93,7 +143,7 @@ function renderDashboardContent() {
             position:fixed;bottom:30px;right:30px;background:var(--primary-color);color:white;border:none;
             padding:15px 30px;border-radius:50px;font-weight:700;font-size:1rem;
             box-shadow:0 4px 15px rgba(32,178,170,0.4);display:flex;align-items:center;gap:10px;cursor:pointer;transition:transform 0.3s;
-        ">
+        " ${blocked ? 'disabled style="opacity:0.6;cursor:not-allowed;"' : ''}>
             <i class="fas fa-calendar-plus"></i> AGENDAR
         </button>
     `;
@@ -140,15 +190,15 @@ function bindDashboardEvents(todayEarnings, weekEarnings, monthEarnings) {
 
     // FAB
     document.getElementById('fabAdd')?.addEventListener('click', () => {
+        if (isSubscriptionBlocked()) {
+            showToast('Assinatura inativa. Não é possível criar novos agendamentos.', 'error');
+            return;
+        }
         navigateTo('/appointments');
     });
 }
 
 function updateCalendar() {
-    const user = getCurrentUser();
-    const appointments = getCollection(KEYS.APPOINTMENTS)
-        .filter(a => a.professionalId === user?.id || user?.role === 'admin');
-
     const grid = document.getElementById('calendarGrid');
     const title = document.getElementById('calendarTitle');
     if (grid) grid.innerHTML = renderCalendar(currentMonth, currentYear, appointments);
@@ -218,9 +268,8 @@ function renderCalendar(month, year, appointments) {
 
 function getClientName(clientId) {
     if (!clientId) return '';
-    const clients = getCollection(KEYS.CLIENTS);
     const client = clients.find(c => c.id === clientId);
-    return client ? client.name.split(' ')[0] : '';
+    return client ? (client.name || '').split(' ')[0] : '';
 }
 
 function getMonthName(month) {

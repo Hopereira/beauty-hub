@@ -18,6 +18,15 @@ const logger = require('./shared/utils/logger');
 const OnboardingService = require('./modules/tenants/onboarding.service');
 const { createOnboardingRoutes } = require('./modules/tenants/onboarding.routes');
 
+// Legacy routes (until fully migrated to modules)
+const authRoutes = require('./routes/auth');
+const clientRoutes = require('./routes/clients');
+const serviceRoutes = require('./routes/services');
+const professionalRoutes = require('./routes/professionals');
+const appointmentRoutes = require('./routes/appointments');
+const financialRoutes = require('./routes/financial');
+const notificationRoutes = require('./routes/notifications');
+
 const app = express();
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -160,6 +169,9 @@ app.get('/api/plans', async (req, res) => {
   });
 });
 
+// Auth routes (public - no tenant required for login/register)
+app.use('/api/auth', authRoutes);
+
 // Onboarding / Self-Signup routes (public)
 const onboardingService = new OnboardingService({
   sequelize,
@@ -200,6 +212,13 @@ app.get('/api/billing/plans/:slug', async (req, res) => {
 // ─────────────────────────────────────────────────────────────────────────────
 app.use('/api/master/tenants', modules.tenants.routes.master);
 
+// Master Billing routes (plans, subscriptions, invoices, MRR)
+const masterBillingRoutes = modules.billing.createRoutes({
+  authenticate: modules.users.middleware.authenticate,
+  authorize: modules.users.middleware.authorize,
+}).master;
+app.use('/api/master/billing', masterBillingRoutes);
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Tenant-Scoped Routes
 // ─────────────────────────────────────────────────────────────────────────────
@@ -217,14 +236,13 @@ app.use('/api/users', modules.users.routes.users);
 // Profile
 app.use('/api/profile', modules.users.routes.profile);
 
-// TODO: Add other module routes as they are migrated
-// app.use('/api/auth', authRoutes);
-// app.use('/api/clients', clientRoutes);
-// app.use('/api/services', serviceRoutes);
-// app.use('/api/professionals', professionalRoutes);
-// app.use('/api/appointments', appointmentRoutes);
-// app.use('/api/financial', financialRoutes);
-// app.use('/api/notifications', notificationRoutes);
+// Legacy routes (tenant-scoped)
+app.use('/api/clients', clientRoutes);
+app.use('/api/services', serviceRoutes);
+app.use('/api/professionals', professionalRoutes);
+app.use('/api/appointments', appointmentRoutes);
+app.use('/api/financial', financialRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 404 Handler

@@ -22,6 +22,10 @@ module.exports = (sequelize) => {
       allowNull: false,
       defaultValue: 'CLIENT',
     },
+    tenant_id: {
+      type: DataTypes.UUID,
+      allowNull: true,
+    },
     first_name: {
       type: DataTypes.STRING(100),
       allowNull: true,
@@ -34,8 +38,8 @@ module.exports = (sequelize) => {
       type: DataTypes.STRING(20),
       allowNull: true,
     },
-    profile_picture_url: {
-      type: DataTypes.STRING(255),
+    avatar: {
+      type: DataTypes.TEXT,
       allowNull: true,
     },
     is_active: {

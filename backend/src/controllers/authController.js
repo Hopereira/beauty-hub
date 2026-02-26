@@ -42,7 +42,12 @@ async function register(req, res, next) {
 
     await t.commit();
 
-    const payload = { id: user.id, email: user.email, role: user.role };
+    const payload = { 
+      id: user.id, 
+      email: user.email, 
+      role: user.role,
+      tenantId: user.tenant_id || null
+    };
     const accessToken = generateAccessToken(payload);
     const refreshToken = generateRefreshToken(payload);
 
@@ -83,7 +88,12 @@ async function login(req, res, next) {
       });
     }
 
-    const payload = { id: user.id, email: user.email, role: user.role };
+    const payload = { 
+      id: user.id, 
+      email: user.email, 
+      role: user.role,
+      tenantId: user.tenant_id || null
+    };
     const accessToken = generateAccessToken(payload);
     const refreshToken = generateRefreshToken(payload);
 
@@ -117,7 +127,12 @@ async function refreshToken(req, res, next) {
       });
     }
 
-    const payload = { id: user.id, email: user.email, role: user.role };
+    const payload = { 
+      id: user.id, 
+      email: user.email, 
+      role: user.role,
+      tenantId: user.tenant_id || null
+    };
     const accessToken = generateAccessToken(payload);
     const newRefreshToken = generateRefreshToken(payload);
 

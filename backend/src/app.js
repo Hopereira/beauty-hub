@@ -129,6 +129,19 @@ app.use('/api/appointments', appointmentRoutes);
 app.use('/api/financial', financialRoutes);
 app.use('/api/notifications', notificationRoutes);
 
+// ── OWNER Module Routes ──
+const ownerSupplierRoutes = require('./routes/owner/suppliers');
+const ownerProductRoutes = require('./routes/owner/products');
+const ownerPurchaseRoutes = require('./routes/owner/purchases');
+const ownerProfessionalDetailRoutes = require('./routes/owner/professional-details');
+const ownerPaymentTransactionRoutes = require('./routes/owner/payment-transactions');
+
+app.use('/api/suppliers', ownerSupplierRoutes);
+app.use('/api/products', ownerProductRoutes);
+app.use('/api/purchases', ownerPurchaseRoutes);
+app.use('/api/professional-details', ownerProfessionalDetailRoutes);
+app.use('/api/payment-transactions', ownerPaymentTransactionRoutes);
+
 // ── 404 handler ──
 app.use('/api/*', (req, res) => {
   res.status(404).json({

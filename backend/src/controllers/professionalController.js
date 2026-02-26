@@ -27,7 +27,7 @@ async function list(req, res, next) {
     const { count, rows } = await Professional.findAndCountAll({
       where,
       include: [
-        { model: User, as: 'user', attributes: ['id', 'first_name', 'last_name', 'email', 'phone', 'profile_picture_url'] },
+        { model: User, as: 'user', attributes: ['id', 'first_name', 'last_name', 'email', 'phone', 'avatar'] },
         { model: Establishment, as: 'establishment', attributes: ['id', 'name'] },
       ],
       order: [[sort, order]],

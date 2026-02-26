@@ -5,6 +5,7 @@
 import { handleLogin } from '../../../core/auth.js';
 import { navigateTo } from '../../../core/router.js';
 import { showToast } from '../../../shared/utils/toast.js';
+import { getCurrentUser } from '../../../core/state.js';
 import { validateForm, validateRequired, validateEmail } from '../../../shared/utils/validation.js';
 
 export function render() {
@@ -93,7 +94,13 @@ export function init() {
 
             if (result.success) {
                 showToast('Login realizado com sucesso!', 'success');
-                navigateTo('/dashboard');
+                const user = getCurrentUser();
+                const userRole = (user?.role || '').toLowerCase();
+                if (userRole === 'master') {
+                    navigateTo('/master');
+                } else {
+                    navigateTo('/dashboard');
+                }
             } else {
                 showToast(result.message, 'error');
             }

@@ -4,43 +4,67 @@
  */
 
 import { renderShell, getContentArea } from '../../../shared/components/shell/shell.js';
-import { getCollection, addToCollection, updateInCollection, removeFromCollection, KEYS } from '../../../shared/utils/localStorage.js';
+import { api } from '../../../shared/utils/http.js';
 import { formatDate } from '../../../shared/utils/validation.js';
 import { openModal, closeModal } from '../../../shared/components/modal/modal.js';
 import { showToast } from '../../../shared/utils/toast.js';
+import { isSubscriptionBlocked } from '../../../core/state.js';
 
+let clients = [];
 let editingId = null;
 let searchTerm = '';
 let currentPage = 1;
+let isLoading = false;
 const PAGE_SIZE = 10;
 
 export function render() {
     renderShell('clients');
 }
 
-export function init() {
+export async function init() {
     editingId = null;
     searchTerm = '';
     currentPage = 1;
+    await loadClients();
     renderPage();
-    return () => { editingId = null; };
+    return () => { 
+        editingId = null; 
+        clients = [];
+    };
 }
 
-function getClients() {
-    return getCollection(KEYS.CLIENTS).sort((a, b) => a.name.localeCompare(b.name));
+async function loadClients() {
+    isLoading = true;
+    const content = getContentArea();
+    if (content) {
+        content.innerHTML = `
+            <div style="display:flex;align-items:center;justify-content:center;min-height:300px;">
+                <div class="spinner"></div>
+            </div>
+        `;
+    }
+
+    try {
+        const response = await api.get('/clients');
+        clients = response.data || [];
+        clients.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+    } catch (error) {
+        console.error('[Clients] Error loading:', error);
+        showToast('Erro ao carregar clientes', 'error');
+        clients = [];
+    } finally {
+        isLoading = false;
+    }
 }
 
 function getFilteredClients() {
-    let clients = getClients();
-    if (searchTerm) {
-        const term = searchTerm.toLowerCase();
-        clients = clients.filter(c =>
-            c.name.toLowerCase().includes(term) ||
-            c.email.toLowerCase().includes(term) ||
-            c.phone.includes(term)
-        );
-    }
-    return clients;
+    if (!searchTerm) return clients;
+    const term = searchTerm.toLowerCase();
+    return clients.filter(c =>
+        (c.name || '').toLowerCase().includes(term) ||
+        (c.email || '').toLowerCase().includes(term) ||
+        (c.phone || '').includes(term)
+    );
 }
 
 function renderPage() {
@@ -201,6 +225,11 @@ function renderPagination(total, totalPages) {
 }
 
 function openClientModal(client = null) {
+    if (isSubscriptionBlocked() && !client) {
+        showToast('Assinatura inativa. Não é possível criar novos clientes.', 'error');
+        return;
+    }
+
     editingId = client ? client.id : null;
     const title = document.getElementById('clientModalTitle');
     if (title) title.textContent = client ? 'Editar cliente' : 'Novo cliente';
@@ -233,9 +262,9 @@ function bindEvents() {
     document.getElementById('btnCancelClient')?.addEventListener('click', () => closeModal('client'));
 
     // Form submit
-    document.getElementById('clientForm')?.addEventListener('submit', (e) => {
+    document.getElementById('clientForm')?.addEventListener('submit', async (e) => {
         e.preventDefault();
-        saveClient();
+        await saveClient();
     });
 
     // Edit / Delete delegation
@@ -245,11 +274,15 @@ function bindEvents() {
 
         if (editBtn) {
             const id = editBtn.dataset.id;
-            const client = getClients().find(c => c.id === id);
+            const client = clients.find(c => c.id === id);
             if (client) openClientModal(client);
         }
 
         if (deleteBtn) {
+            if (isSubscriptionBlocked()) {
+                showToast('Assinatura inativa. Não é possível excluir clientes.', 'error');
+                return;
+            }
             editingId = deleteBtn.dataset.id;
             openModal('delete-client');
         }
@@ -260,24 +293,32 @@ function bindEvents() {
         editingId = null;
         closeModal('delete-client');
     });
-    document.getElementById('btnConfirmDeleteClient')?.addEventListener('click', () => {
+    document.getElementById('btnConfirmDeleteClient')?.addEventListener('click', async () => {
         if (editingId) {
-            removeFromCollection(KEYS.CLIENTS, editingId);
-            showToast('Cliente excluído.', 'success');
-            editingId = null;
-            closeModal('delete-client');
-            renderClientsTable();
+            try {
+                await api.delete(`/clients/${editingId}`);
+                showToast('Cliente excluído.', 'success');
+                editingId = null;
+                closeModal('delete-client');
+                await loadClients();
+                renderClientsTable();
+            } catch (error) {
+                console.error('[Clients] Delete error:', error);
+                showToast(error.message || 'Erro ao excluir cliente', 'error');
+            }
         }
     });
 }
 
-function saveClient() {
-    const today = new Date().toISOString().split('T')[0];
+async function saveClient() {
+    const submitBtn = document.querySelector('#clientForm button[type="submit"]');
+    const originalText = submitBtn?.textContent || 'Salvar';
+    
     const data = {
         name: document.getElementById('clientName').value.trim(),
         phone: document.getElementById('clientPhone').value.trim(),
-        email: document.getElementById('clientEmail').value.trim(),
-        address: document.getElementById('clientAddress').value.trim(),
+        email: document.getElementById('clientEmail').value.trim() || undefined,
+        address: document.getElementById('clientAddress').value.trim() || undefined,
     };
 
     if (!data.name || !data.phone) {
@@ -285,16 +326,31 @@ function saveClient() {
         return;
     }
 
-    if (editingId) {
-        updateInCollection(KEYS.CLIENTS, editingId, data);
-        showToast('Cliente atualizado!', 'success');
-    } else {
-        data.registrationDate = today;
-        addToCollection(KEYS.CLIENTS, data);
-        showToast('Cliente adicionado!', 'success');
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<div class="spinner spinner-sm" style="display:inline-block;width:16px;height:16px;margin-right:8px;"></div>Salvando...';
     }
 
-    editingId = null;
-    closeModal('client');
-    renderClientsTable();
+    try {
+        if (editingId) {
+            await api.put(`/clients/${editingId}`, data);
+            showToast('Cliente atualizado!', 'success');
+        } else {
+            await api.post('/clients', data);
+            showToast('Cliente adicionado!', 'success');
+        }
+
+        editingId = null;
+        closeModal('client');
+        await loadClients();
+        renderClientsTable();
+    } catch (error) {
+        console.error('[Clients] Save error:', error);
+        showToast(error.message || 'Erro ao salvar cliente', 'error');
+    } finally {
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalText;
+        }
+    }
 }

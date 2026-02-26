@@ -25,6 +25,7 @@ class MasterBillingController {
     this.getRevenueSummary = this.getRevenueSummary.bind(this);
     this.getAllInvoices = this.getAllInvoices.bind(this);
     this.getAuditLogs = this.getAuditLogs.bind(this);
+    this.getWebhookLogs = this.getWebhookLogs.bind(this);
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -303,6 +304,95 @@ class MasterBillingController {
       res.status(HTTP_STATUS.OK).json({
         success: true,
         data: logs,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // WEBHOOK LOGS
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  /**
+   * GET /api/master/billing/webhook-logs
+   * Get webhook logs
+   */
+  async getWebhookLogs(req, res, next) {
+    try {
+      const { provider, eventType, status, tenantId, startDate, endDate, limit, offset } = req.query;
+
+      const whereClause = [];
+      const binds = [];
+      let bindIndex = 1;
+
+      if (provider) {
+        whereClause.push(`provider = $${bindIndex}`);
+        binds.push(provider);
+        bindIndex++;
+      }
+
+      if (eventType) {
+        whereClause.push(`event_type = $${bindIndex}`);
+        binds.push(eventType);
+        bindIndex++;
+      }
+
+      if (status) {
+        whereClause.push(`status = $${bindIndex}`);
+        binds.push(status);
+        bindIndex++;
+      }
+
+      if (tenantId) {
+        whereClause.push(`tenant_id = $${bindIndex}`);
+        binds.push(tenantId);
+        bindIndex++;
+      }
+
+      if (startDate) {
+        whereClause.push(`created_at >= $${bindIndex}`);
+        binds.push(new Date(startDate));
+        bindIndex++;
+      }
+
+      if (endDate) {
+        whereClause.push(`created_at <= $${bindIndex}`);
+        binds.push(new Date(endDate));
+        bindIndex++;
+      }
+
+      const limitVal = parseInt(limit) || 100;
+      const offsetVal = parseInt(offset) || 0;
+      binds.push(limitVal);
+      binds.push(offsetVal);
+
+      const whereStr = whereClause.length > 0 ? `WHERE ${whereClause.join(' AND ')}` : '';
+
+      const { sequelize } = require('../../../shared/database');
+      
+      // Check if table exists first
+      let logs = [];
+      try {
+        [logs] = await sequelize.query(`
+          SELECT id, provider, event_type, event_id, tenant_id, status, error_message, retry_count, processed_at, created_at
+          FROM webhook_logs
+          ${whereStr}
+          ORDER BY created_at DESC
+          LIMIT $${bindIndex} OFFSET $${bindIndex + 1}
+        `, {
+          bind: binds,
+          type: sequelize.QueryTypes.SELECT,
+        });
+      } catch (tableError) {
+        // Table might not exist yet
+        console.warn('webhook_logs table not found:', tableError.message);
+        logs = [];
+      }
+
+      res.status(HTTP_STATUS.OK).json({
+        success: true,
+        data: { rows: logs, count: logs.length },
       });
     } catch (error) {
       next(error);

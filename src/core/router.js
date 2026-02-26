@@ -19,7 +19,22 @@ const routes = {
     '/appointments': { title: 'Agendamentos - Beauty Hub', page: 'appointments', auth: true },
     '/financial': { title: 'Financeiro - Beauty Hub', page: 'financial', auth: true },
     '/clients': { title: 'Clientes - Beauty Hub', page: 'clients', auth: true },
+    '/services': { title: 'Serviços - Beauty Hub', page: 'services', auth: true },
+    '/professionals': { title: 'Profissionais - Beauty Hub', page: 'professionals', auth: true },
+    '/billing': { title: 'Assinatura - Beauty Hub', page: 'billing', auth: true },
+    '/settings': { title: 'Configurações - Beauty Hub', page: 'settings', auth: true },
     '/account': { title: 'Minha Conta - Beauty Hub', page: 'account', auth: true },
+    // Owner routes
+    '/inventory': { title: 'Estoque - Beauty Hub', page: 'inventory', auth: true },
+    '/suppliers': { title: 'Fornecedores - Beauty Hub', page: 'suppliers', auth: true },
+    '/purchases': { title: 'Compras - Beauty Hub', page: 'purchases', auth: true },
+    '/reports': { title: 'Relatórios - Beauty Hub', page: 'reports', auth: true },
+    // Master routes (MASTER role only)
+    '/master': { title: 'Master Dashboard - Beauty Hub', page: 'master-dashboard', auth: true, role: 'master' },
+    '/master/tenants': { title: 'Tenants - Beauty Hub', page: 'master-tenants', auth: true, role: 'master' },
+    '/master/plans': { title: 'Planos - Beauty Hub', page: 'master-plans', auth: true, role: 'master' },
+    '/master/billing': { title: 'Billing - Beauty Hub', page: 'master-billing', auth: true, role: 'master' },
+    '/master/system': { title: 'Sistema - Beauty Hub', page: 'master-system', auth: true, role: 'master' },
 };
 
 // Page module loaders (lazy)
@@ -66,6 +81,17 @@ async function loadRoute(path) {
         return;
     }
 
+    // Role guard (for master routes)
+    if (route.role) {
+        const user = getCurrentUser();
+        const userRole = (user?.role || '').toLowerCase();
+        if (userRole !== route.role) {
+            showToast('Acesso não autorizado', 'error');
+            navigateTo('/dashboard', true);
+            return;
+        }
+    }
+
     document.title = route.title;
     setCurrentPage(route.page);
 
@@ -100,7 +126,22 @@ async function loadPageModule(page) {
         'appointments': () => import('../features/appointments/pages/appointments.js'),
         'financial': () => import('../features/financial/pages/financial.js'),
         'clients': () => import('../features/clients/pages/clients.js'),
+        'services': () => import('../features/services/pages/services.js'),
+        'professionals': () => import('../features/professionals/pages/professionals.js'),
+        'billing': () => import('../features/billing/pages/billing.js'),
+        'settings': () => import('../features/settings/pages/settings.js'),
         'account': () => import('../features/account/pages/account.js'),
+        // Owner pages
+        'inventory': () => import('../features/inventory/pages/inventory.js'),
+        'suppliers': () => import('../features/suppliers/pages/suppliers.js'),
+        'purchases': () => import('../features/purchases/pages/purchases.js'),
+        'reports': () => import('../features/reports/pages/reports.js'),
+        // Master pages
+        'master-dashboard': () => import('../features/master/dashboard/master-dashboard.js'),
+        'master-tenants': () => import('../features/master/tenants/master-tenants.js'),
+        'master-plans': () => import('../features/master/plans/master-plans.js'),
+        'master-billing': () => import('../features/master/billing/master-billing.js'),
+        'master-system': () => import('../features/master/system/master-system.js'),
     };
 
     const loader = moduleMap[page];
@@ -146,9 +187,15 @@ export function initRouter() {
 
     // Handle 401 Unauthorized - redirect to login
     onHttpEvent('unauthorized', () => {
-        showToast('Sessão expirada. Faça login novamente.', 'warning');
+        // Only show toast if not already on login page
+        const currentPath = window.location.pathname;
+        if (currentPath !== '/login' && currentPath !== '/register') {
+            showToast('Sessão expirada. Faça login novamente.', 'warning');
+        }
         logout();
-        navigateTo('/login', true);
+        if (currentPath !== '/login') {
+            navigateTo('/login', true);
+        }
     });
 
     // Handle subscription inactive

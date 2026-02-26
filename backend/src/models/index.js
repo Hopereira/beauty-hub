@@ -32,6 +32,18 @@ const FinancialEntry = require('./FinancialEntry')(sequelize);
 const FinancialExit = require('./FinancialExit')(sequelize);
 const Notification = require('./Notification')(sequelize);
 
+// Import OWNER module models
+const Tenant = require('../modules/tenants/tenant.model')(sequelize);
+const ProfessionalDetail = require('../modules/professionals/professionalDetail.model')(sequelize);
+const ProfessionalSpecialty = require('../modules/professionals/professionalSpecialty.model')(sequelize);
+const ProfessionalServiceCommission = require('../modules/professionals/professionalServiceCommission.model')(sequelize);
+const Supplier = require('../modules/suppliers/supplier.model')(sequelize);
+const Product = require('../modules/inventory/product.model')(sequelize);
+const Purchase = require('../modules/purchases/purchase.model')(sequelize);
+const PurchaseItem = require('../modules/purchases/purchaseItem.model')(sequelize);
+const InventoryMovement = require('../modules/inventory/inventoryMovement.model')(sequelize);
+const PaymentTransaction = require('../modules/financial/paymentTransaction.model')(sequelize);
+
 // ── Associations ──
 
 // User <-> Establishment (Admin owns establishment)
@@ -88,6 +100,27 @@ FinancialExit.belongsTo(Establishment, { foreignKey: 'establishment_id', as: 'es
 User.hasMany(Notification, { foreignKey: 'user_id', as: 'notifications' });
 Notification.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
 
+// ── OWNER Module Associations ──
+const allModels = {
+  User, Establishment, Professional, Service, Client, Appointment,
+  PaymentMethod, FinancialEntry, FinancialExit, Notification,
+  Tenant, ProfessionalDetail, ProfessionalSpecialty, ProfessionalServiceCommission,
+  Supplier, Product, Purchase, PurchaseItem,
+  InventoryMovement, PaymentTransaction
+};
+
+// Call associate methods for OWNER models
+if (Tenant.associate) Tenant.associate(allModels);
+if (ProfessionalDetail.associate) ProfessionalDetail.associate(allModels);
+if (ProfessionalSpecialty.associate) ProfessionalSpecialty.associate(allModels);
+if (ProfessionalServiceCommission.associate) ProfessionalServiceCommission.associate(allModels);
+if (Supplier.associate) Supplier.associate(allModels);
+if (Product.associate) Product.associate(allModels);
+if (Purchase.associate) Purchase.associate(allModels);
+if (PurchaseItem.associate) PurchaseItem.associate(allModels);
+if (InventoryMovement.associate) InventoryMovement.associate(allModels);
+if (PaymentTransaction.associate) PaymentTransaction.associate(allModels);
+
 module.exports = {
   sequelize,
   Sequelize,
@@ -101,4 +134,15 @@ module.exports = {
   FinancialEntry,
   FinancialExit,
   Notification,
+  // OWNER models
+  Tenant,
+  ProfessionalDetail,
+  ProfessionalSpecialty,
+  ProfessionalServiceCommission,
+  Supplier,
+  Product,
+  Purchase,
+  PurchaseItem,
+  InventoryMovement,
+  PaymentTransaction,
 };

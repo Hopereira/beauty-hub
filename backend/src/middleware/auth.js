@@ -28,7 +28,10 @@ function authenticate(req, res, next) {
 
 function authorize(...roles) {
   return (req, res, next) => {
-    if (!req.user || !roles.includes(req.user.role)) {
+    const userRole = (req.user?.role || '').toLowerCase();
+    const allowedRoles = roles.map(r => r.toLowerCase());
+    
+    if (!req.user || !allowedRoles.includes(userRole)) {
       return res.status(403).json({
         success: false,
         message: 'Acesso negado. Permissão insuficiente.',

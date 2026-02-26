@@ -98,12 +98,56 @@ beatyhub/
 - [x] **Tabela Saídas**: despesas com CRUD completo
 - [x] Modal para adicionar/editar saídas
 - [x] Exclusão com confirmação
+- [x] **Gráficos Interativos** (Chart.js):
+  - [x] Receitas vs Despesas (últimos 6 meses)
+  - [x] Distribuição por Categoria (doughnut chart)
+- [x] Exportação de relatórios
 
 ### 👥 Clientes (CRUD completo)
 - [x] Tabela com nome, telefone, email, data de cadastro
 - [x] Busca em tempo real (debounce)
 - [x] Paginação
 - [x] Criar / Editar / Excluir clientes
+
+### 💼 Serviços
+- [x] CRUD completo de serviços
+- [x] **Categorias de Serviços** (campo category)
+- [x] Tabela de categorias personalizadas
+- [x] Filtros por categoria
+- [x] Preço e duração
+
+### 📦 Estoque/Inventário (OWNER)
+- [x] CRUD completo de produtos
+- [x] Controle de estoque (quantidade, mínimo)
+- [x] Categorias de produtos
+- [x] Fornecedores
+- [x] Ajuste de estoque com histórico
+- [x] Alertas de estoque baixo
+- [x] Exportação CSV
+
+### 🏪 Fornecedores (OWNER)
+- [x] CRUD completo de fornecedores
+- [x] Dados de contato
+- [x] Histórico de compras
+
+### 🛒 Compras (OWNER)
+- [x] Registro de compras
+- [x] Itens de compra
+- [x] Movimentação automática de estoque
+- [x] Vinculação com fornecedores
+
+### ⚙️ Configurações
+- [x] **Informações do Negócio**: nome, telefone, email, endereço, CNPJ
+- [x] **Configurações Regionais**: fuso horário, idioma, moeda
+- [x] **Identidade Visual**: logo, cores primária/secundária
+- [x] **Horário de Funcionamento**: dias e horários por dia da semana
+- [x] **Configurações de Pagamento (Pagar.me)**:
+  - [x] API Key Pagar.me
+  - [x] Dados bancários completos (banco, agência, conta)
+  - [x] Dados do titular (nome, CPF/CNPJ)
+  - [x] Tipo de conta e antecipação automática
+  - [x] Recipient ID (gerado automaticamente)
+- [x] **Notificações**: email de agendamentos, lembretes, relatórios
 
 ### ⚙️ Minha Conta
 - [x] Tabs: Perfil, Segurança, Pagamentos, Notificações
@@ -112,6 +156,14 @@ beatyhub/
 - [x] Alteração de senha com validação
 - [x] Alteração de telefone
 - [x] Toggle de notificações (persistido)
+
+### 💳 Assinatura SaaS
+- [x] **Página de Onboarding**: escolha de plano para OWNER
+- [x] Exibição de planos com recursos e limites
+- [x] Destaque para plano mais popular
+- [x] Período de teste gratuito (14 dias)
+- [x] Assinatura com um clique
+- [x] Integração com sistema de billing
 
 ### 🛠️ Infraestrutura SPA
 - [x] Router com History API (sem reload de página)
@@ -202,6 +254,14 @@ curl -X POST http://localhost:8080/api/signup \
 | Agendamentos | `/appointments` | Sim |
 | Financeiro | `/financial` | Sim |
 | Clientes | `/clients` | Sim |
+| Serviços | `/services` | Sim |
+| Profissionais | `/professionals` | Sim |
+| Estoque | `/inventory` | Sim (OWNER) |
+| Fornecedores | `/suppliers` | Sim (OWNER) |
+| Compras | `/purchases` | Sim (OWNER) |
+| Relatórios | `/reports` | Sim (OWNER) |
+| Assinatura | `/billing` | Sim |
+| Configurações | `/settings` | Sim |
 | Minha Conta | `/account` | Sim |
 
 ## 🏗️ Arquitetura
@@ -263,12 +323,16 @@ curl -X POST http://localhost:8080/api/signup \
 - [x] **Brute Force Protection** (rate limiting + account lockout)
 - [x] **LGPD Compliance** (data export, anonymization, retention)
 - [x] **Webhook Resilience** (idempotency, DLQ, retry)
-- [x] **Pagar.me Integration** (PIX, cartão, boleto)
+- [x] **Pagar.me Integration** (PIX, cartão, boleto, split payments)
+- [x] **Gráficos Financeiros** (Chart.js - receitas vs despesas, categorias)
+- [x] **Categorias de Serviços** (campo + tabela de gestão)
+- [x] **Página de Onboarding SaaS** (escolha de plano para OWNER)
+- [x] **Configurações de Pagamento** (dados bancários + Pagar.me)
+- [x] **Módulos OWNER Completos** (estoque, fornecedores, compras)
 - [ ] **Integração frontend ↔ backend** (substituir localStorage por API)
-- [ ] Upload de imagens (avatar)
-- [ ] Gráficos financeiros (Chart.js)
+- [ ] Upload de imagens (avatar, logo)
 - [ ] Notificações push
-- [ ] Testes automatizados
+- [ ] Testes automatizados (Jest + Supertest)
 
 ## 📄 Licença
 

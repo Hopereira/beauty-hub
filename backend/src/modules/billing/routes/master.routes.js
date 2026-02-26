@@ -126,10 +126,17 @@ function createMasterBillingRoutes(controller, middleware = {}) {
 
   // Get audit logs
   router.get(
-    '/billing/audit-logs',
+    '/audit-logs',
     validate(auditLogsQuerySchema, 'query'),
     controller.getAuditLogs
   );
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // WEBHOOK LOGS
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  // Get webhook logs
+  router.get('/webhook-logs', controller.getWebhookLogs);
 
   return router;
 }

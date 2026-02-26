@@ -37,6 +37,21 @@ module.exports = (sequelize) => {
       type: DataTypes.JSONB,
       allowNull: true,
     },
+    payment_settings: {
+      type: DataTypes.JSONB,
+      allowNull: true,
+      comment: 'Configurações de pagamento (Pagar.me, split, etc)',
+    },
+    bank_account: {
+      type: DataTypes.JSONB,
+      allowNull: true,
+      comment: 'Dados bancários para recebimento',
+    },
+    pagarme_recipient_id: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+      comment: 'ID do recebedor no Pagar.me',
+    },
   }, {
     tableName: 'establishments',
     timestamps: true,

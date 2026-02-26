@@ -4,27 +4,64 @@
  */
 
 import { renderShell, getContentArea } from '../../../shared/components/shell/shell.js';
-import { getCollection, addToCollection, updateInCollection, removeFromCollection, KEYS } from '../../../shared/utils/localStorage.js';
+import { api } from '../../../shared/utils/http.js';
 import { formatCurrency, formatDate, parseCurrency } from '../../../shared/utils/validation.js';
 import { openModal, closeModal } from '../../../shared/components/modal/modal.js';
 import { showToast } from '../../../shared/utils/toast.js';
+import { isSubscriptionBlocked } from '../../../core/state.js';
 
+let transactions = [];
+let summary = null;
 let editingId = null;
-let editingType = null; // 'income' or 'expense'
+let editingType = null;
+let isLoading = false;
 
 export function render() {
     renderShell('financial');
 }
 
-export function init() {
+export async function init() {
     editingId = null;
     editingType = null;
+    await loadData();
     renderPage();
-    return () => { editingId = null; editingType = null; };
+    return () => { 
+        editingId = null; 
+        editingType = null;
+        transactions = [];
+        summary = null;
+    };
 }
 
-function getTransactions() {
-    return getCollection(KEYS.FINANCIAL).sort((a, b) => b.date.localeCompare(a.date));
+async function loadData() {
+    isLoading = true;
+    const content = getContentArea();
+    if (content) {
+        content.innerHTML = `
+            <div style="display:flex;align-items:center;justify-content:center;min-height:300px;">
+                <div class="spinner"></div>
+            </div>
+        `;
+    }
+
+    try {
+        const [entriesRes, exitsRes, summaryRes] = await Promise.all([
+            api.get('/financial/entries').catch(() => ({ data: [] })),
+            api.get('/financial/exits').catch(() => ({ data: [] })),
+            api.get('/financial/summary').catch(() => ({ data: null })),
+        ]);
+
+        // Combine entries and exits into transactions
+        const entries = (entriesRes.data || []).map(e => ({ ...e, type: 'income' }));
+        const exits = (exitsRes.data || []).map(e => ({ ...e, type: 'expense' }));
+        transactions = [...entries, ...exits].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+        summary = summaryRes.data;
+    } catch (error) {
+        console.error('[Financial] Error loading data:', error);
+        showToast('Erro ao carregar dados financeiros', 'error');
+    } finally {
+        isLoading = false;
+    }
 }
 
 function renderPage() {
@@ -51,6 +88,18 @@ function renderPage() {
 
         <!-- Summary Cards -->
         <div id="summaryCards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.5rem;margin-bottom:2rem;"></div>
+
+        <!-- Charts Section -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:2rem;">
+            <div style="background:white;border-radius:12px;padding:1.5rem;border:1px solid #e0e0e0;">
+                <h3 style="font-size:1.1rem;font-weight:600;margin-bottom:1rem;">Receitas vs Despesas (Últimos 6 meses)</h3>
+                <canvas id="chartRevenue" style="max-height:300px;"></canvas>
+            </div>
+            <div style="background:white;border-radius:12px;padding:1.5rem;border:1px solid #e0e0e0;">
+                <h3 style="font-size:1.1rem;font-weight:600;margin-bottom:1rem;">Distribuição por Categoria</h3>
+                <canvas id="chartCategories" style="max-height:300px;"></canvas>
+            </div>
+        </div>
 
         <!-- Incomes Table -->
         <div style="background:white;border-radius:12px;padding:1.5rem;border:1px solid #e0e0e0;margin-bottom:2rem;">
@@ -158,20 +207,21 @@ function renderPage() {
 }
 
 function refreshData() {
-    let transactions = getTransactions();
+    let filtered = [...transactions];
 
     // Apply date filters
     const startDate = document.getElementById('filterStartDate')?.value;
     const endDate = document.getElementById('filterEndDate')?.value;
-    if (startDate) transactions = transactions.filter(t => t.date >= startDate);
-    if (endDate) transactions = transactions.filter(t => t.date <= endDate);
+    if (startDate) filtered = filtered.filter(t => t.date >= startDate);
+    if (endDate) filtered = filtered.filter(t => t.date <= endDate);
 
-    const incomes = transactions.filter(t => t.type === 'income');
-    const expenses = transactions.filter(t => t.type === 'expense');
+    const incomes = filtered.filter(t => t.type === 'income');
+    const expenses = filtered.filter(t => t.type === 'expense');
 
     renderSummaryCards(incomes, expenses);
     renderIncomesTable(incomes);
     renderExpensesTable(expenses);
+    renderCharts();
 }
 
 function renderSummaryCards(incomes, expenses) {
@@ -298,6 +348,11 @@ function renderExpensesTable(expenses) {
 }
 
 function openExpenseModal(transaction = null) {
+    if (isSubscriptionBlocked() && !transaction) {
+        showToast('Assinatura inativa. Não é possível criar novas transações.', 'error');
+        return;
+    }
+
     editingId = transaction ? transaction.id : null;
     editingType = 'expense';
 
@@ -305,12 +360,14 @@ function openExpenseModal(transaction = null) {
     if (title) title.textContent = transaction ? 'Editar saída' : 'Nova saída';
 
     const today = new Date().toISOString().split('T')[0];
-    document.getElementById('expTitle').value = transaction?.description || '';
-    document.getElementById('expDescription').value = '';
+    const value = transaction?.value || transaction?.amount || 0;
+    
+    document.getElementById('expTitle').value = transaction?.description || transaction?.title || '';
+    document.getElementById('expDescription').value = transaction?.notes || '';
     document.getElementById('expCategory').value = transaction?.category || 'Selecione';
     document.getElementById('expDate').value = transaction?.date || today;
-    document.getElementById('expValue').value = transaction ? formatCurrency(transaction.value) : '';
-    document.getElementById('expPayment').value = transaction?.paymentMethod || '';
+    document.getElementById('expValue').value = value ? formatCurrency(value) : '';
+    document.getElementById('expPayment').value = transaction?.payment_method || transaction?.paymentMethod || '';
 
     const statusRadios = document.querySelectorAll('input[name="expStatus"]');
     statusRadios.forEach(r => { r.checked = r.value === (transaction?.status || 'pending'); });
@@ -332,35 +389,53 @@ function bindEvents() {
     document.getElementById('btnCancelExpense')?.addEventListener('click', () => closeModal('expense'));
 
     // Expense form submit
-    document.getElementById('expenseForm')?.addEventListener('submit', (e) => {
+    document.getElementById('expenseForm')?.addEventListener('submit', async (e) => {
         e.preventDefault();
+        const submitBtn = e.target.querySelector('button[type="submit"]');
+        const originalText = submitBtn?.textContent || 'Salvar';
+        
         const status = document.querySelector('input[name="expStatus"]:checked')?.value || 'pending';
         const data = {
-            type: 'expense',
             description: document.getElementById('expTitle').value.trim(),
-            value: parseCurrency(document.getElementById('expValue').value),
+            amount: parseCurrency(document.getElementById('expValue').value),
             date: document.getElementById('expDate').value,
             status,
             category: document.getElementById('expCategory').value,
-            paymentMethod: document.getElementById('expPayment').value,
-            clientName: '',
+            payment_method: document.getElementById('expPayment').value,
+            notes: document.getElementById('expDescription').value.trim() || undefined,
         };
 
-        if (!data.description || !data.value) {
+        if (!data.description || !data.amount) {
             showToast('Preencha título e valor.', 'error');
             return;
         }
 
-        if (editingId) {
-            updateInCollection(KEYS.FINANCIAL, editingId, data);
-            showToast('Saída atualizada!', 'success');
-        } else {
-            addToCollection(KEYS.FINANCIAL, data);
-            showToast('Saída adicionada!', 'success');
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<div class="spinner spinner-sm" style="display:inline-block;width:16px;height:16px;margin-right:8px;"></div>Salvando...';
         }
-        editingId = null;
-        closeModal('expense');
-        refreshData();
+
+        try {
+            if (editingId) {
+                await api.put(`/financial/exits/${editingId}`, data);
+                showToast('Saída atualizada!', 'success');
+            } else {
+                await api.post('/financial/exits', data);
+                showToast('Saída adicionada!', 'success');
+            }
+            editingId = null;
+            closeModal('expense');
+            await loadData();
+            refreshData();
+        } catch (error) {
+            console.error('[Financial] Save error:', error);
+            showToast(error.message || 'Erro ao salvar transação', 'error');
+        } finally {
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+            }
+        }
     });
 
     // Export
@@ -374,15 +449,24 @@ function bindEvents() {
     // Delete confirmation
     document.getElementById('btnCancelDeleteFin')?.addEventListener('click', () => {
         editingId = null;
+        editingType = null;
         closeModal('delete-financial');
     });
-    document.getElementById('btnConfirmDeleteFin')?.addEventListener('click', () => {
+    document.getElementById('btnConfirmDeleteFin')?.addEventListener('click', async () => {
         if (editingId) {
-            removeFromCollection(KEYS.FINANCIAL, editingId);
-            showToast('Transação excluída.', 'success');
-            editingId = null;
-            closeModal('delete-financial');
-            refreshData();
+            try {
+                const endpoint = editingType === 'income' ? '/financial/entries' : '/financial/exits';
+                await api.delete(`${endpoint}/${editingId}`);
+                showToast('Transação excluída.', 'success');
+                editingId = null;
+                editingType = null;
+                closeModal('delete-financial');
+                await loadData();
+                refreshData();
+            } catch (error) {
+                console.error('[Financial] Delete error:', error);
+                showToast(error.message || 'Erro ao excluir transação', 'error');
+            }
         }
     });
 }
@@ -393,7 +477,8 @@ function handleTableActions(e) {
 
     if (editBtn) {
         const id = editBtn.dataset.id;
-        const transaction = getTransactions().find(t => t.id === id);
+        const type = editBtn.dataset.type;
+        const transaction = transactions.find(t => t.id === id);
         if (transaction && transaction.type === 'expense') {
             openExpenseModal(transaction);
         } else if (transaction) {
@@ -402,7 +487,165 @@ function handleTableActions(e) {
     }
 
     if (deleteBtn) {
+        if (isSubscriptionBlocked()) {
+            showToast('Assinatura inativa. Não é possível excluir transações.', 'error');
+            return;
+        }
         editingId = deleteBtn.dataset.id;
+        const type = deleteBtn.dataset.type;
+        editingType = type || 'expense';
         openModal('delete-financial');
     }
+}
+
+// Chart rendering functions
+let revenueChart = null;
+let categoriesChart = null;
+
+function renderCharts() {
+    renderRevenueChart();
+    renderCategoriesChart();
+}
+
+function renderRevenueChart() {
+    const ctx = document.getElementById('chartRevenue');
+    if (!ctx) return;
+
+    // Destroy existing chart
+    if (revenueChart) {
+        revenueChart.destroy();
+    }
+
+    // Get last 6 months data
+    const months = [];
+    const revenues = [];
+    const expenses = [];
+    
+    for (let i = 5; i >= 0; i--) {
+        const date = new Date();
+        date.setMonth(date.getMonth() - i);
+        const monthKey = date.toISOString().slice(0, 7);
+        months.push(date.toLocaleDateString('pt-BR', { month: 'short' }));
+        
+        const monthRevenue = transactions
+            .filter(t => t.type === 'income' && t.date?.startsWith(monthKey))
+            .reduce((sum, t) => sum + parseFloat(t.amount || 0), 0);
+        
+        const monthExpense = transactions
+            .filter(t => t.type === 'expense' && t.date?.startsWith(monthKey))
+            .reduce((sum, t) => sum + parseFloat(t.amount || 0), 0);
+        
+        revenues.push(monthRevenue);
+        expenses.push(monthExpense);
+    }
+
+    revenueChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: months,
+            datasets: [
+                {
+                    label: 'Receitas',
+                    data: revenues,
+                    borderColor: '#10b981',
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    tension: 0.4,
+                    fill: true,
+                },
+                {
+                    label: 'Despesas',
+                    data: expenses,
+                    borderColor: '#ef4444',
+                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                    tension: 0.4,
+                    fill: true,
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.dataset.label + ': R$ ' + context.parsed.y.toFixed(2);
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return 'R$ ' + value.toFixed(0);
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+function renderCategoriesChart() {
+    const ctx = document.getElementById('chartCategories');
+    if (!ctx) return;
+
+    // Destroy existing chart
+    if (categoriesChart) {
+        categoriesChart.destroy();
+    }
+
+    // Group expenses by category
+    const categoryData = {};
+    transactions
+        .filter(t => t.type === 'expense' && t.category)
+        .forEach(t => {
+            const cat = t.category || 'Outros';
+            categoryData[cat] = (categoryData[cat] || 0) + parseFloat(t.amount || 0);
+        });
+
+    const labels = Object.keys(categoryData);
+    const data = Object.values(categoryData);
+    
+    const colors = [
+        '#E91E63', '#9C27B0', '#3F51B5', '#2196F3', 
+        '#00BCD4', '#009688', '#4CAF50', '#FF9800',
+        '#FF5722', '#795548'
+    ];
+
+    categoriesChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: data,
+                backgroundColor: colors.slice(0, labels.length),
+                borderWidth: 2,
+                borderColor: '#fff',
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    position: 'right',
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            const percentage = ((context.parsed / total) * 100).toFixed(1);
+                            return context.label + ': R$ ' + context.parsed.toFixed(2) + ' (' + percentage + '%)';
+                        }
+                    }
+                }
+            }
+        }
+    });
 }
