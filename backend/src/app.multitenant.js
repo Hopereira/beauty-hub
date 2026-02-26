@@ -278,8 +278,12 @@ app.use('/api/appointments', appointmentRoutes);
 app.use('/api/financial', financialRoutes);
 app.use('/api/notifications', notificationRoutes);
 
-// OWNER Module Routes (tenant-scoped, RBAC protected, Subscription enforced)
+// PROFESSIONAL Area Routes (tenant-scoped, PROFESSIONAL role only, Subscription enforced)
 const requireActiveSubscription = require('./shared/middleware/requireActiveSubscription');
+const professionalAreaRoutes = require('./routes/professionalArea');
+app.use('/api/professional', requireActiveSubscription(), professionalAreaRoutes);
+
+// OWNER Module Routes (tenant-scoped, RBAC protected, Subscription enforced)
 const ownerProductRoutes = require('./routes/owner/products');
 const ownerSupplierRoutes = require('./routes/owner/suppliers');
 const ownerPurchaseRoutes = require('./routes/owner/purchases');

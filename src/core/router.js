@@ -29,6 +29,14 @@ const routes = {
     '/suppliers': { title: 'Fornecedores - Beauty Hub', page: 'suppliers', auth: true },
     '/purchases': { title: 'Compras - Beauty Hub', page: 'purchases', auth: true },
     '/reports': { title: 'Relatórios - Beauty Hub', page: 'reports', auth: true },
+    // Professional routes (PROFESSIONAL role)
+    '/professional/dashboard': { title: 'Meu Dashboard - Beauty Hub', page: 'professional-dashboard', auth: true, role: 'professional' },
+    '/professional/appointments': { title: 'Meus Agendamentos - Beauty Hub', page: 'professional-appointments', auth: true, role: 'professional' },
+    '/professional/clients': { title: 'Meus Clientes - Beauty Hub', page: 'professional-clients', auth: true, role: 'professional' },
+    '/professional/earnings': { title: 'Meus Ganhos - Beauty Hub', page: 'professional-earnings', auth: true, role: 'professional' },
+    '/professional/performance': { title: 'Minha Performance - Beauty Hub', page: 'professional-performance', auth: true, role: 'professional' },
+    '/professional/profile': { title: 'Meu Perfil - Beauty Hub', page: 'professional-profile', auth: true, role: 'professional' },
+    '/professional/availability': { title: 'Disponibilidade - Beauty Hub', page: 'professional-availability', auth: true, role: 'professional' },
     // Master routes (MASTER role only)
     '/master': { title: 'Master Dashboard - Beauty Hub', page: 'master-dashboard', auth: true, role: 'master' },
     '/master/tenants': { title: 'Tenants - Beauty Hub', page: 'master-tenants', auth: true, role: 'master' },
@@ -136,6 +144,14 @@ async function loadPageModule(page) {
         'suppliers': () => import('../features/suppliers/pages/suppliers.js'),
         'purchases': () => import('../features/purchases/pages/purchases.js'),
         'reports': () => import('../features/reports/pages/reports.js'),
+        // Professional pages
+        'professional-dashboard': () => import('../features/professional/pages/dashboard.js'),
+        'professional-appointments': () => import('../features/professional/pages/appointments.js'),
+        'professional-clients': () => import('../features/professional/pages/clients.js'),
+        'professional-earnings': () => import('../features/professional/pages/earnings.js'),
+        'professional-performance': () => import('../features/professional/pages/performance.js'),
+        'professional-profile': () => import('../features/professional/pages/profile.js'),
+        'professional-availability': () => import('../features/professional/pages/availability.js'),
         // Master pages
         'master-dashboard': () => import('../features/master/dashboard/master-dashboard.js'),
         'master-tenants': () => import('../features/master/tenants/master-tenants.js'),
