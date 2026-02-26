@@ -1,4 +1,5 @@
 const { Establishment, Professional, Service, User } = require('../models');
+const logger = require('../utils/logger');
 
 async function list(req, res, next) {
   try {
@@ -107,4 +108,87 @@ async function getServices(req, res, next) {
   }
 }
 
-module.exports = { list, getById, create, update, remove, getProfessionals, getServices };
+// Payment Settings endpoints
+async function getPaymentSettings(req, res) {
+  try {
+    const { Establishment } = require('../models');
+    const userId = req.user.id;
+
+    const establishment = await Establishment.findOne({
+      where: { user_id: userId },
+      attributes: ['id', 'payment_settings', 'bank_account', 'pagarme_recipient_id'],
+    });
+
+    if (!establishment) {
+      return res.status(404).json({
+        success: false,
+        message: 'Establishment not found',
+      });
+    }
+
+    res.json({
+      success: true,
+      data: {
+        payment_settings: establishment.payment_settings || {},
+        bank_account: establishment.bank_account || {},
+        pagarme_recipient_id: establishment.pagarme_recipient_id || null,
+      },
+    });
+  } catch (error) {
+    logger.error('[Establishment] Get payment settings error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching payment settings',
+      error: { code: 'PAYMENT_SETTINGS_FETCH_ERROR', details: error.message },
+    });
+  }
+}
+
+async function updatePaymentSettings(req, res) {
+  try {
+    const { Establishment } = require('../models');
+    const userId = req.user.id;
+    const { payment_settings, bank_account } = req.body;
+
+    const establishment = await Establishment.findOne({
+      where: { user_id: userId },
+    });
+
+    if (!establishment) {
+      return res.status(404).json({
+        success: false,
+        message: 'Establishment not found',
+      });
+    }
+
+    // Update payment settings
+    await establishment.update({
+      payment_settings: payment_settings || establishment.payment_settings,
+      bank_account: bank_account || establishment.bank_account,
+    });
+
+    // TODO: Integrate with Pagar.me API to create/update recipient
+    // For now, just save the data
+    // const recipientId = await createPagarmeRecipient(bank_account, payment_settings);
+    // await establishment.update({ pagarme_recipient_id: recipientId });
+
+    res.json({
+      success: true,
+      message: 'Payment settings updated successfully',
+      data: {
+        payment_settings: establishment.payment_settings,
+        bank_account: establishment.bank_account,
+        pagarme_recipient_id: establishment.pagarme_recipient_id,
+      },
+    });
+  } catch (error) {
+    logger.error('[Establishment] Update payment settings error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error updating payment settings',
+      error: { code: 'PAYMENT_SETTINGS_UPDATE_ERROR', details: error.message },
+    });
+  }
+}
+
+module.exports = { list, getById, create, update, remove, getProfessionals, getServices, getPaymentSettings, updatePaymentSettings };

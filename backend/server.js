@@ -1,4 +1,5 @@
-const app = require('./src/app');
+// PRODUCTION APP: Multi-Tenant SaaS Architecture
+const app = require('./src/app.multitenant');
 const { sequelize } = require('./src/models');
 const env = require('./src/config/env');
 const logger = require('./src/utils/logger');

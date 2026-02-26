@@ -237,12 +237,31 @@ app.use('/api/users', modules.users.routes.users);
 app.use('/api/profile', modules.users.routes.profile);
 
 // Legacy routes (tenant-scoped)
+const establishmentRoutes = require('./routes/establishments');
+app.use('/api/establishments', establishmentRoutes);
 app.use('/api/clients', clientRoutes);
 app.use('/api/services', serviceRoutes);
 app.use('/api/professionals', professionalRoutes);
 app.use('/api/appointments', appointmentRoutes);
 app.use('/api/financial', financialRoutes);
 app.use('/api/notifications', notificationRoutes);
+
+// OWNER Module Routes (tenant-scoped, RBAC protected)
+const ownerProductRoutes = require('./routes/owner/products');
+const ownerSupplierRoutes = require('./routes/owner/suppliers');
+const ownerPurchaseRoutes = require('./routes/owner/purchases');
+const ownerProfessionalDetailRoutes = require('./routes/owner/professional-details');
+const ownerPaymentTransactionRoutes = require('./routes/owner/payment-transactions');
+const serviceCategoryRoutes = require('./routes/serviceCategories');
+const reportsRoutes = require('./routes/reports');
+
+app.use('/api/products', ownerProductRoutes);
+app.use('/api/suppliers', ownerSupplierRoutes);
+app.use('/api/purchases', ownerPurchaseRoutes);
+app.use('/api/professional-details', ownerProfessionalDetailRoutes);
+app.use('/api/payment-transactions', ownerPaymentTransactionRoutes);
+app.use('/api/service-categories', serviceCategoryRoutes);
+app.use('/api/reports', reportsRoutes);
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 404 Handler

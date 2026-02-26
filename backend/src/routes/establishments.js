@@ -17,4 +17,8 @@ router.delete('/:id', estController.remove);
 router.get('/:id/professionals', estController.getProfessionals);
 router.get('/:id/services', estController.getServices);
 
+// Payment Settings routes (OWNER only)
+router.get('/payment-settings', authorize('OWNER', 'ADMIN'), estController.getPaymentSettings);
+router.put('/payment-settings', authorize('OWNER', 'ADMIN'), estController.updatePaymentSettings);
+
 module.exports = router;
