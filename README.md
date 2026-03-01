@@ -69,9 +69,23 @@ beatyhub/
 
 ## ✨ Funcionalidades
 
+### 🌐 Landing Page de Vendas (Público)
+- [x] **Hero Section** com call-to-action
+- [x] **Seção de Funcionalidades** (8 cards destacando recursos)
+- [x] **Seção de Planos Dinâmica** (busca planos do banco de dados)
+- [x] **Formulário de Cadastro Completo**:
+  - Tipo de conta (Estabelecimento ou Profissional Autônomo)
+  - Dados do negócio (nome, CNPJ, telefone, email)
+  - Endereço completo (CEP, rua, número, bairro, cidade, estado)
+  - Dados do responsável (nome, CPF, email, telefone, senha)
+  - Seleção de plano com exibição de preços e features
+- [x] **Registro Público** - Cria tenant automaticamente com subdomain
+- [x] Design responsivo com gradientes modernos
+
 ### 🔐 Autenticação
 - [x] Login com validação e feedback (toast)
 - [x] Registro multi-perfil (Estabelecimento, Profissional, Cliente)
+- [x] **Registro Público via Landing Page** (cria tenant + owner)
 - [x] Logout com limpeza de sessão
 - [x] Guarda de rotas (redirect se não autenticado)
 - [x] Persistência de sessão via `localStorage`
@@ -165,7 +179,18 @@ beatyhub/
 - [x] Assinatura com um clique
 - [x] Integração com sistema de billing
 
-### 🛠️ Infraestrutura SPA
+### � Master Dashboard (MASTER role)
+- [x] **Gestão de Tenants**: visualizar e gerenciar todos os tenants
+- [x] **Gestão de Planos**:
+  - [x] CRUD completo de planos de assinatura
+  - [x] **Modal com Checkboxes de Funcionalidades** (13 funcionalidades)
+  - [x] Campos individuais para limites (usuários, profissionais, clientes, etc.)
+  - [x] Ativar/desativar planos
+  - [x] Configuração de preços e trial days
+- [x] **Billing Master**: visão geral de assinaturas e receitas
+- [x] **Sistema**: configurações globais e métricas
+
+### �️ Infraestrutura SPA
 - [x] Router com History API (sem reload de página)
 - [x] Lazy loading de módulos de página
 - [x] State management centralizado com event bus
@@ -234,14 +259,42 @@ Acesse: `http://localhost:3000`
 | MASTER | `master@beautyhub.com` | `123456` | — |
 | OWNER | `owner@belezapura.com` | `123456` | `beleza-pura` |
 
-**Self-Signup (trial de 14 dias):**
+**APIs Públicas (sem autenticação):**
+
 ```bash
-curl -X POST http://localhost:8080/api/signup \
+# Listar planos públicos
+curl http://localhost:5001/api/public/plans
+
+# Registrar novo tenant via landing page
+curl -X POST http://localhost:5001/api/public/register \
   -H "Content-Type: application/json" \
-  -d '{"tenantName":"Meu Salão","ownerName":"Maria","ownerEmail":"maria@email.com","ownerPassword":"123456","document":"12345678901"}'
+  -d '{
+    "accountType": "establishment",
+    "business": {
+      "name": "Salão Beleza Pura",
+      "cnpj": "00.000.000/0000-00",
+      "phone": "(11) 99999-9999",
+      "email": "contato@salaobel ezapura.com.br"
+    },
+    "address": {
+      "cep": "00000-000",
+      "street": "Rua das Flores",
+      "number": "123",
+      "city": "São Paulo",
+      "state": "SP"
+    },
+    "owner": {
+      "name": "João Silva",
+      "cpf": "000.000.000-00",
+      "email": "joao@email.com",
+      "phone": "(11) 99999-9999",
+      "password": "senha123"
+    },
+    "planId": "uuid-do-plano"
+  }'
 ```
 
-> Novos tenants podem ser criados via self-signup ou `POST /api/master/tenants`.
+> Novos tenants podem ser criados via landing page (`/`) ou `POST /api/public/register`.
 
 ## 📱 Rotas SPA
 
@@ -263,6 +316,11 @@ curl -X POST http://localhost:8080/api/signup \
 | Assinatura | `/billing` | Sim |
 | Configurações | `/settings` | Sim |
 | Minha Conta | `/account` | Sim |
+| Master Dashboard | `/master` | Sim (MASTER) |
+| Master Tenants | `/master/tenants` | Sim (MASTER) |
+| Master Planos | `/master/plans` | Sim (MASTER) |
+| Master Billing | `/master/billing` | Sim (MASTER) |
+| Master Sistema | `/master/system` | Sim (MASTER) |
 
 ## 🏗️ Arquitetura
 
@@ -296,7 +354,8 @@ curl -X POST http://localhost:8080/api/signup \
 | Método | Endpoint | Descrição |
 |--------|----------|-----------|
 | `GET` | `/api/health` | Health check |
-| `GET` | `/api/plans` | Listar planos disponíveis |
+| `GET` | `/api/public/plans` | Listar planos públicos ativos |
+| `POST` | `/api/public/register` | Registro público (cria tenant + owner) |
 | `POST` | `/api/signup` | Self-signup com trial |
 | `POST` | `/api/signup/autonomous` | Signup profissional autônomo |
 | `GET` | `/api/signup/check-email` | Verificar disponibilidade email |
@@ -329,7 +388,12 @@ curl -X POST http://localhost:8080/api/signup \
 - [x] **Página de Onboarding SaaS** (escolha de plano para OWNER)
 - [x] **Configurações de Pagamento** (dados bancários + Pagar.me)
 - [x] **Módulos OWNER Completos** (estoque, fornecedores, compras)
+- [x] **Landing Page de Vendas** (hero, features, planos dinâmicos, formulário)
+- [x] **APIs Públicas** (planos públicos + registro de tenant)
+- [x] **Modal de Planos com Checkboxes** (13 funcionalidades selecionáveis)
 - [ ] **Integração frontend ↔ backend** (substituir localStorage por API)
+- [ ] Email de boas-vindas após registro
+- [ ] Verificação de email
 - [ ] Upload de imagens (avatar, logo)
 - [ ] Notificações push
 - [ ] Testes automatizados (Jest + Supertest)

@@ -188,18 +188,14 @@ const bruteForceProtection = createBruteForceProtection(sequelize);
 // Public Routes (no tenant required)
 // ─────────────────────────────────────────────────────────────────────────────
 
-// Public subscription plans
-app.get('/api/plans', async (req, res) => {
-  const { SubscriptionPlan } = modules.billing.models;
-  const plans = await SubscriptionPlan.findAll({
-    where: { is_active: true, is_public: true },
-    order: [['sort_order', 'ASC']],
-  });
-  res.json({
-    success: true,
-    data: plans.map(p => p.toPublicJSON ? p.toPublicJSON() : p.toJSON()),
-  });
-});
+// Public billing routes (plans)
+const billingRoutes = modules.billing.createRoutes();
+app.use('/api/public', billingRoutes.public);
+
+// Public registration routes
+if (modules.public && modules.public.routes) {
+  app.use('/api/public', modules.public.routes);
+}
 
 // Auth routes (public - no tenant required for login/register)
 app.use('/api/auth', authRoutes);
@@ -268,29 +264,47 @@ app.use('/api/users', modules.users.routes.users);
 // Profile
 app.use('/api/profile', modules.users.routes.profile);
 
-// Legacy routes (tenant-scoped)
-const establishmentRoutes = require('./routes/establishments');
-app.use('/api/establishments', establishmentRoutes);
-app.use('/api/clients', clientRoutes);
-app.use('/api/services', serviceRoutes);
-app.use('/api/professionals', professionalRoutes);
-app.use('/api/appointments', appointmentRoutes);
-app.use('/api/financial', financialRoutes);
-app.use('/api/notifications', notificationRoutes);
+// ─────────────────────────────────────────────────────────────────────────────
+// Legacy routes (DEPRECATED - being refactored to use tenant_id)
+// ─────────────────────────────────────────────────────────────────────────────
+// ⚠️ WARNING: These routes use establishment_id instead of tenant_id
+// ⚠️ They will be migrated to modules/owner/* structure
+// ⚠️ DO NOT USE - SECURITY RISK: Multi-tenant isolation not guaranteed
+
+// const establishmentRoutes = require('./routes/establishments');
+// app.use('/api/establishments', establishmentRoutes);
+// app.use('/api/clients', clientRoutes);  // ❌ Uses establishment_id
+// app.use('/api/services', serviceRoutes);  // ❌ Uses establishment_id
+// app.use('/api/professionals', professionalRoutes);  // ❌ Uses establishment_id
+// app.use('/api/appointments', appointmentRoutes);  // ❌ Uses establishment_id
+// app.use('/api/financial', financialRoutes);  // ❌ Uses establishment_id
+app.use('/api/notifications', notificationRoutes);  // ✅ Safe (notifications only)
 
 // PROFESSIONAL Area Routes (tenant-scoped, PROFESSIONAL role only, Subscription enforced)
 const requireActiveSubscription = require('./shared/middleware/requireActiveSubscription');
 const professionalAreaRoutes = require('./routes/professionalArea');
 app.use('/api/professional', requireActiveSubscription(), professionalAreaRoutes);
 
-// OWNER Module Routes (tenant-scoped, RBAC protected, Subscription enforced)
+// ─────────────────────────────────────────────────────────────────────────────
+// OWNER Module Routes (REFACTORED - using tenant_id, subscription enforced)
+// ─────────────────────────────────────────────────────────────────────────────
+// ✅ All routes use tenant_id for multi-tenant isolation
+// ✅ All routes protected with requireActiveSubscription()
+// ✅ All routes use authorize(['OWNER', 'ADMIN'])
+// ✅ Standardized pagination with { total, page, limit, pages }
+
 const ownerProductRoutes = require('./routes/owner/products');
 const ownerSupplierRoutes = require('./routes/owner/suppliers');
 const ownerPurchaseRoutes = require('./routes/owner/purchases');
 const ownerProfessionalDetailRoutes = require('./routes/owner/professional-details');
 const ownerPaymentTransactionRoutes = require('./routes/owner/payment-transactions');
-const serviceCategoryRoutes = require('./routes/serviceCategories');
-const reportsRoutes = require('./routes/reports');
+
+// NEW: Refactored modules with tenant_id
+const ownerServicesRoutes = require('./routes/owner/services');
+const ownerClientsRoutes = require('./routes/owner/clients');
+const ownerAppointmentsRoutes = require('./routes/owner/appointments');
+const ownerFinancialRoutes = require('./routes/owner/financial');
+const ownerReportsRoutes = require('./routes/owner/reports');
 
 // Apply subscription middleware to all OWNER routes
 app.use('/api/products', requireActiveSubscription(), ownerProductRoutes);
@@ -298,8 +312,13 @@ app.use('/api/suppliers', requireActiveSubscription(), ownerSupplierRoutes);
 app.use('/api/purchases', requireActiveSubscription(), ownerPurchaseRoutes);
 app.use('/api/professional-details', requireActiveSubscription(), ownerProfessionalDetailRoutes);
 app.use('/api/payment-transactions', requireActiveSubscription(), ownerPaymentTransactionRoutes);
-app.use('/api/service-categories', requireActiveSubscription(), serviceCategoryRoutes);
-app.use('/api/reports', requireActiveSubscription({ allowReadOnly: true }), reportsRoutes);
+
+// NEW: Refactored routes (replacing legacy establishment_id routes)
+app.use('/api/services', requireActiveSubscription(), ownerServicesRoutes);
+app.use('/api/clients', requireActiveSubscription(), ownerClientsRoutes);
+app.use('/api/appointments', requireActiveSubscription(), ownerAppointmentsRoutes);
+app.use('/api/financial', requireActiveSubscription(), ownerFinancialRoutes);
+app.use('/api/reports', requireActiveSubscription({ allowReadOnly: true }), ownerReportsRoutes);
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 404 Handler

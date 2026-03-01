@@ -29,7 +29,14 @@ function authenticate(req, res, next) {
 function authorize(...roles) {
   return (req, res, next) => {
     const userRole = (req.user?.role || '').toLowerCase();
-    const allowedRoles = roles.map(r => r.toLowerCase());
+    
+    // Flatten roles array in case it's passed as an array
+    const flatRoles = roles.flat();
+    
+    // Convert all roles to lowercase strings
+    const allowedRoles = flatRoles
+      .filter(r => r && typeof r === 'string')
+      .map(r => r.toLowerCase());
     
     if (!req.user || !allowedRoles.includes(userRole)) {
       return res.status(403).json({

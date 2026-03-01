@@ -62,15 +62,20 @@ class ProductController {
         low_stock: req.query.low_stock === 'true',
         expiring_soon: req.query.expiring_soon === 'true',
         search: req.query.search,
+        page: parseInt(req.query.page) || 1,
         limit: parseInt(req.query.limit) || 100,
-        offset: parseInt(req.query.offset) || 0,
       };
 
-      const products = await this.service.getAll(req.tenant.id, filters);
+      const result = await this.service.getAll(req.tenant.id, filters);
       res.status(HTTP_STATUS.OK).json({
         success: true,
-        data: products,
-        count: products.length,
+        data: result.data,
+        pagination: {
+          total: result.total,
+          page: result.page,
+          limit: result.limit,
+          pages: result.pages,
+        },
       });
     } catch (error) {
       next(error);

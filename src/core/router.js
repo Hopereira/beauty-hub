@@ -127,7 +127,7 @@ async function loadPageModule(page) {
     if (pageModules[page]) return pageModules[page];
 
     const moduleMap = {
-        'landing': () => import('../features/landing/pages/landing.js'),
+        'landing': () => import('../features/public/landing/landing.js'),
         'login': () => import('../features/auth/pages/login.js'),
         'register': () => import('../features/auth/pages/register.js'),
         'dashboard': () => import('../features/dashboard/pages/dashboard.js'),

@@ -158,3 +158,15 @@ export function formatDateISO(dateStr) {
     const [day, month, year] = dateStr.split('/');
     return `${year}-${month}-${day}`;
 }
+
+export function formatTime(timeStr) {
+    if (!timeStr) return '';
+    // Se já está no formato HH:MM, retorna
+    if (/^\d{2}:\d{2}$/.test(timeStr)) return timeStr;
+    // Se é um Date object ou ISO string
+    const date = new Date(timeStr);
+    if (!isNaN(date.getTime())) {
+        return date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    }
+    return timeStr;
+}

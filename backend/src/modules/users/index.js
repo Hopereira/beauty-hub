@@ -8,6 +8,7 @@ const UserService = require('./user.service');
 const UserController = require('./user.controller');
 const { createUserRoutes, createProfileRoutes } = require('./user.routes');
 const userValidation = require('./user.validation');
+const { authenticate, authorize } = require('../../middleware/auth');
 
 function initUsersModule(sequelize, models = {}) {
   const User = UserModel(sequelize);
@@ -30,6 +31,10 @@ function initUsersModule(sequelize, models = {}) {
     repository: userRepository,
     service: userService,
     controller: userController,
+    middleware: {
+      authenticate,
+      authorize,
+    },
     routes: {
       users: createUserRoutes(userController),
       profile: createProfileRoutes(userController),

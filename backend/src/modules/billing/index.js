@@ -129,24 +129,31 @@ function initBillingModule(sequelize, models = {}, options = {}) {
   // Controllers
   // ─────────────────────────────────────────────────────────────────────────────
 
+  const PublicBillingController = require('./controllers/public.controller');
+  
   const billingController = new BillingController(services);
   const masterBillingController = new MasterBillingController(services);
   const webhookController = new WebhookController(services, paymentProvider);
+  const publicBillingController = new PublicBillingController(services.planService);
 
   const controllers = {
     billingController,
     masterBillingController,
     webhookController,
+    publicBillingController,
   };
 
   // ─────────────────────────────────────────────────────────────────────────────
   // Routes Factory
   // ─────────────────────────────────────────────────────────────────────────────
 
+  const createPublicBillingRoutes = require('./routes/public.routes');
+  
   const createRoutes = (middleware = {}) => ({
     billing: createBillingRoutes(billingController, middleware),
     master: createMasterBillingRoutes(masterBillingController, middleware),
     webhooks: createWebhookRoutes(webhookController),
+    public: createPublicBillingRoutes(publicBillingController),
   });
 
   // ─────────────────────────────────────────────────────────────────────────────

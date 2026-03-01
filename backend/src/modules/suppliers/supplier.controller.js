@@ -46,11 +46,20 @@ class SupplierController {
       const filters = {
         active: req.query.active,
         search: req.query.search,
+        page: parseInt(req.query.page) || 1,
         limit: parseInt(req.query.limit) || 100,
-        offset: parseInt(req.query.offset) || 0,
       };
-      const suppliers = await this.service.getAll(req.tenant.id, filters);
-      res.status(HTTP_STATUS.OK).json({ success: true, data: suppliers, count: suppliers.length });
+      const result = await this.service.getAll(req.tenant.id, filters);
+      res.status(HTTP_STATUS.OK).json({
+        success: true,
+        data: result.data,
+        pagination: {
+          total: result.total,
+          page: result.page,
+          limit: result.limit,
+          pages: result.pages,
+        },
+      });
     } catch (error) {
       next(error);
     }
