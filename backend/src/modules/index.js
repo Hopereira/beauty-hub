@@ -7,6 +7,7 @@ const { sequelize } = require('../shared/database');
 const { initTenantsModule } = require('./tenants');
 const { initBillingModule } = require('./billing');
 const { initUsersModule } = require('./users');
+const { initPublicModule } = require('./public');
 
 let initialized = false;
 let modules = {};
@@ -33,12 +34,22 @@ function initializeModules() {
     Tenant: tenantsModule.model,
   });
 
+  // Store modules temporarily for public module initialization
+  const tempModules = {
+    tenants: tenantsModule,
+    billing: billingModule,
+    users: usersModule,
+  };
+
+  // 4. Public (depends on Tenants, Users, Billing)
+  const publicModule = initPublicModule(sequelize, tempModules);
+
   modules = {
     tenants: tenantsModule,
     billing: billingModule,
     users: usersModule,
+    public: publicModule,
     sequelize, // Export sequelize for app.multitenant.js
-    // Add other modules here as they are created
   };
 
   initialized = true;

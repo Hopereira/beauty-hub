@@ -45,15 +45,20 @@ class PurchaseController {
         payment_status: req.query.payment_status,
         startDate: req.query.startDate ? new Date(req.query.startDate) : undefined,
         endDate: req.query.endDate ? new Date(req.query.endDate) : undefined,
+        page: parseInt(req.query.page) || 1,
         limit: parseInt(req.query.limit) || 100,
-        offset: parseInt(req.query.offset) || 0,
       };
 
-      const purchases = await this.service.getAll(req.tenant.id, filters);
+      const result = await this.service.getAll(req.tenant.id, filters);
       res.status(HTTP_STATUS.OK).json({
         success: true,
-        data: purchases,
-        count: purchases.length,
+        data: result.data,
+        pagination: {
+          total: result.total,
+          page: result.page,
+          limit: result.limit,
+          pages: result.pages,
+        },
       });
     } catch (error) {
       next(error);

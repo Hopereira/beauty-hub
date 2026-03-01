@@ -13,6 +13,9 @@ class PurchaseRepository extends BaseRepository {
 
   async findAllWithFilters(tenantId, filters = {}) {
     const where = this._scopedWhere(tenantId, {});
+    const page = filters.page || 1;
+    const limit = filters.limit || 100;
+    const offset = (page - 1) * limit;
 
     if (filters.supplier_id) {
       where.supplier_id = filters.supplier_id;
@@ -28,7 +31,7 @@ class PurchaseRepository extends BaseRepository {
       };
     }
 
-    return this.model.findAll({
+    const { count, rows } = await this.model.findAndCountAll({
       where,
       include: [
         {
@@ -49,9 +52,17 @@ class PurchaseRepository extends BaseRepository {
         },
       ],
       order: [['purchase_date', 'DESC']],
-      limit: filters.limit || 100,
-      offset: filters.offset || 0,
+      limit,
+      offset,
     });
+
+    return {
+      data: rows,
+      total: count,
+      page,
+      limit,
+      pages: Math.ceil(count / limit),
+    };
   }
 }
 

@@ -14,9 +14,24 @@ class PlanService {
   }
 
   /**
-   * Get all active public plans
+   * Get public plans (for landing page)
    */
   async getPublicPlans() {
+    const plans = await this.SubscriptionPlan.findAll({
+      where: {
+        is_active: true,
+        is_public: true,
+      },
+      order: [['sort_order', 'ASC']],
+    });
+
+    return plans.map(plan => this._formatPlanResponse(plan, false));
+  }
+
+  /**
+   * Get all active public plans
+   */
+  async getAllPublicPlans() {
     const plans = await this.SubscriptionPlan.findAll({
       where: {
         is_active: true,

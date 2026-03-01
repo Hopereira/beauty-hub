@@ -7,6 +7,52 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
 ## [Unreleased]
 
+### Added - 01/03/2026
+
+#### Landing Page de Vendas
+- **Nova Landing Page Pública**
+  - Hero section com call-to-action
+  - Seção de funcionalidades do sistema (8 cards)
+  - Seção de planos dinâmica (busca do banco de dados)
+  - Formulário completo de cadastro público
+  - Design responsivo com gradientes modernos
+  - Arquivo: `src/features/public/landing/landing.js`
+  - Estilos: `src/features/public/landing/landing.css`
+
+#### Modal de Planos Refatorado
+- **Checkboxes de Funcionalidades**
+  - Substituído textarea por checkboxes interativos
+  - 13 funcionalidades disponíveis (Agendamentos, Clientes, Notificações, etc.)
+  - Cada funcionalidade com label e descrição
+  - Seleção visual com hover effects
+  - Salvamento correto como array de strings
+  - Arquivo: `src/features/master/plans/master-plans.js`
+
+#### APIs Públicas (Sem Autenticação)
+- **Endpoint de Planos Públicos**
+  - `GET /api/public/plans` - Lista planos ativos e públicos
+  - Retorna preços, features, limites e trial days
+  - Controller: `backend/src/modules/billing/controllers/public.controller.js`
+  - Routes: `backend/src/modules/billing/routes/public.routes.js`
+
+- **Endpoint de Registro Público**
+  - `POST /api/public/register` - Cria novo tenant automaticamente
+  - Gera slug baseado no nome do negócio
+  - Cria tenant com subdomain (ex: `beleza-pura.beautyhub.com`)
+  - Cria usuário owner com senha criptografada
+  - Associa plano selecionado com período trial
+  - Validações completas de dados
+  - Service: `backend/src/modules/public/services/registration.service.js`
+  - Controller: `backend/src/modules/public/controllers/registration.controller.js`
+  - Routes: `backend/src/modules/public/routes/registration.routes.js`
+
+#### Módulo Público
+- **Novo Módulo Backend**
+  - Módulo `public` para endpoints sem autenticação
+  - Integração com módulos Tenants, Users e Billing
+  - Arquivo: `backend/src/modules/public/index.js`
+  - Registrado em `backend/src/modules/index.js`
+
 ### Added - 26/02/2026
 
 #### Backend
@@ -67,7 +113,15 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 - Chart.js 4.4.0 adicionado ao `index.html` via CDN
 - Migrations executadas com sucesso no banco de dados
 
-### Changed
+### Changed - 01/03/2026
+- `index.html`: Adicionado CSS da landing page
+- `src/core/router.js`: Rota `/` atualizada para carregar landing page pública
+- `backend/src/app.multitenant.js`: Rotas públicas registradas
+- `backend/src/modules/index.js`: Módulo público inicializado
+- `backend/src/modules/billing/index.js`: Controller público adicionado
+- `src/features/master/plans/master-plans.js`: Modal refatorado com checkboxes
+
+### Changed - 26/02/2026
 - `index.html`: Adicionado script Chart.js
 - `src/core/router.js`: Rotas OWNER adicionadas
 - `src/features/settings/pages/settings.js`: Seção Pagar.me completa
@@ -83,14 +137,33 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
 ### Technical Details
 
-#### Novos Arquivos
+#### Novos Arquivos - 01/03/2026
+1. `src/features/public/landing/landing.js`
+2. `src/features/public/landing/landing.css`
+3. `backend/src/modules/public/index.js`
+4. `backend/src/modules/public/services/registration.service.js`
+5. `backend/src/modules/public/controllers/registration.controller.js`
+6. `backend/src/modules/public/routes/registration.routes.js`
+7. `backend/src/modules/billing/controllers/public.controller.js`
+8. `backend/src/modules/billing/routes/public.routes.js`
+
+#### Novos Arquivos - 26/02/2026
 1. `backend/src/migrations/028_add_category_to_services.js`
 2. `backend/src/migrations/029_add_payment_fields_to_establishments.js`
 3. `backend/src/migrations/030_create_service_categories.js`
 4. `src/features/billing/pages/onboarding.js`
 5. `src/features/billing/styles/onboarding.css`
 
-#### Arquivos Modificados
+#### Arquivos Modificados - 01/03/2026
+1. `src/features/master/plans/master-plans.js`
+2. `src/core/router.js`
+3. `index.html`
+4. `backend/src/app.multitenant.js`
+5. `backend/src/modules/index.js`
+6. `backend/src/modules/billing/index.js`
+7. `backend/src/modules/billing/services/plan.service.js`
+
+#### Arquivos Modificados - 26/02/2026
 1. `backend/src/models/Service.js`
 2. `backend/src/models/Establishment.js`
 3. `src/core/router.js`
@@ -100,6 +173,52 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 7. `README.md`
 
 ### Integration Points
+
+#### Landing Page e Registro Público
+Estrutura do formulário de cadastro:
+```json
+{
+  "accountType": "establishment",
+  "business": {
+    "name": "Salão Beleza Pura",
+    "cnpj": "00.000.000/0000-00",
+    "phone": "(11) 99999-9999",
+    "email": "contato@salaobel ezapura.com.br"
+  },
+  "address": {
+    "cep": "00000-000",
+    "street": "Rua das Flores",
+    "number": "123",
+    "complement": "Sala 1",
+    "neighborhood": "Centro",
+    "city": "São Paulo",
+    "state": "SP"
+  },
+  "owner": {
+    "name": "João Silva",
+    "cpf": "000.000.000-00",
+    "email": "joao@email.com",
+    "phone": "(11) 99999-9999",
+    "password": "senha123"
+  },
+  "planId": "uuid-do-plano"
+}
+```
+
+Funcionalidades disponíveis para checkboxes:
+- Agendamentos
+- Cadastro de Clientes
+- Notificações
+- Gestão Financeira
+- Relatórios
+- Gestão de Profissionais
+- Controle de Estoque
+- Gestão de Fornecedores
+- Controle de Compras
+- Marca Personalizada
+- Múltiplas Unidades
+- Analytics Avançado
+- Acesso à API
 
 #### Pagar.me Split Payments
 A estrutura de dados bancários segue o padrão da API Pagar.me:
@@ -129,6 +248,12 @@ A estrutura de dados bancários segue o padrão da API Pagar.me:
 - Responsivo com `maintainAspectRatio: true`
 
 ### Next Steps
+- [x] Landing page de vendas completa
+- [x] API pública de planos
+- [x] API de registro com criação automática de tenant
+- [x] Modal de planos com checkboxes de funcionalidades
+- [ ] Implementar envio de email de boas-vindas após registro
+- [ ] Adicionar verificação de email
 - [ ] Implementar endpoint backend para criar recipient no Pagar.me
 - [ ] Implementar split de pagamentos em transações
 - [ ] Adicionar validação de dados bancários
