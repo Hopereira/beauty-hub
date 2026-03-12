@@ -95,8 +95,8 @@ app.use(morgan(':method :url :status :res[content-length] - :response-time ms', 
 // Rate Limiting
 // ─────────────────────────────────────────────────────────────────────────────
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 500,
+  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000'),
+  max: parseInt(process.env.RATE_LIMIT_MAX || '100'),
   standardHeaders: true,
   legacyHeaders: false,
   keyGenerator: (req) => {

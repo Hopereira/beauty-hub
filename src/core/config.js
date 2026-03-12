@@ -22,13 +22,19 @@ export const REFRESH_TOKEN_KEY = 'bh_refresh_token';
 export const USER_KEY = 'bh_user';
 export const TENANT_KEY = 'bh_tenant_slug';
 
+// Slugs that must never be resolved as tenant (mirrors backend RESERVED_SLUGS)
+const RESERVED_SLUGS = ['www', 'api', 'app', 'adm', 'admin', 'mail', 'ftp', 'smtp', 'cdn', 'static', 'assets'];
+
 // Get tenant slug from subdomain or localStorage
 export function getTenantSlug() {
-    // Try subdomain first (e.g., beleza-pura.beautyhub.com)
+    // Try subdomain first (e.g., salonmaria.biaxavier.com.br)
     const hostname = window.location.hostname;
     const parts = hostname.split('.');
-    if (parts.length >= 3 && parts[0] !== 'www' && parts[0] !== 'app') {
-        return parts[0];
+    if (parts.length >= 3) {
+        const sub = parts[0].toLowerCase();
+        if (!RESERVED_SLUGS.includes(sub)) {
+            return sub;
+        }
     }
     // Fallback to localStorage
     return localStorage.getItem(TENANT_KEY) || null;

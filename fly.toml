@@ -1,0 +1,66 @@
+# ══════════════════════════════════════════════════════════════════════════════
+# BeautyHub API — Fly.io Configuration
+# Deploy: flyctl deploy --remote-only
+# ══════════════════════════════════════════════════════════════════════════════
+
+app = "beautyhub-api"
+primary_region = "gru"    # São Paulo
+
+[build]
+  dockerfile = "backend/Dockerfile.prod"
+  build_target = "production"
+
+[env]
+  NODE_ENV       = "production"
+  PORT           = "5001"
+  TRUST_PROXY    = "true"
+  LOG_FORMAT     = "json"
+
+[[services]]
+  internal_port = 5001
+  protocol      = "tcp"
+  auto_stop_machines  = true
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [[services.ports]]
+    port     = 80
+    handlers = ["http"]
+    [services.ports.http_options]
+      response.pristine = true
+
+  [[services.ports]]
+    port     = 443
+    handlers = ["tls", "http"]
+
+  [services.tls_options]
+    alpn = ["h2", "http/1.1"]
+
+  [[services.http_checks]]
+    interval    = "30s"
+    timeout     = "10s"
+    grace_period = "40s"
+    method      = "get"
+    path        = "/api/health"
+    protocol    = "http"
+    tls_skip_verify = false
+    [services.http_checks.headers]
+      X-Fly-Health-Check = "true"
+
+  [services.concurrency]
+    type       = "requests"
+    hard_limit = 250
+    soft_limit = 200
+
+[[vm]]
+  memory    = "256mb"
+  cpu_kind  = "shared"
+  cpus      = 1
+
+[deploy]
+  strategy   = "rolling"
+  wait_timeout = "5m"
+
+[metrics]
+  port = 9091
+  path = "/metrics"
