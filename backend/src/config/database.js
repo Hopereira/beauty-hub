@@ -1,5 +1,52 @@
 require('dotenv').config();
 
+const sharedDefine = {
+  timestamps: true,
+  underscored: true,
+  paranoid: true,
+};
+
+// Production config: prefer DATABASE_URL, fall back to individual vars
+const productionBase = process.env.DATABASE_URL
+  ? {
+      use_env_variable: 'DATABASE_URL',
+      dialect: 'postgres',
+      logging: process.env.DB_LOGGING === 'true' ? console.log : false,
+      define: sharedDefine,
+      pool: {
+        max: parseInt(process.env.DB_POOL_MAX, 10) || 10,
+        min: 1,
+        acquire: 60000,
+        idle: 10000,
+      },
+      dialectOptions: {
+        ssl: { require: true, rejectUnauthorized: false },
+        statement_timeout: 60000,
+        idle_in_transaction_session_timeout: 60000,
+      },
+    }
+  : {
+      username: process.env.DB_USER,
+      password: process.env.DB_PASSWORD,
+      database: process.env.DB_NAME,
+      host: process.env.DB_HOST,
+      port: parseInt(process.env.DB_PORT, 10) || 5432,
+      dialect: 'postgres',
+      logging: process.env.DB_LOGGING === 'true' ? console.log : false,
+      define: sharedDefine,
+      pool: {
+        max: parseInt(process.env.DB_POOL_MAX, 10) || 10,
+        min: 1,
+        acquire: 60000,
+        idle: 10000,
+      },
+      dialectOptions: {
+        ssl: { require: true, rejectUnauthorized: false },
+        statement_timeout: 60000,
+        idle_in_transaction_session_timeout: 60000,
+      },
+    };
+
 const config = {
   development: {
     username: process.env.DB_USER || 'beautyhub_user',
@@ -9,11 +56,7 @@ const config = {
     port: parseInt(process.env.DB_PORT, 10) || 5432,
     dialect: 'postgres',
     logging: false,
-    define: {
-      timestamps: true,
-      underscored: true,
-      paranoid: true,
-    },
+    define: sharedDefine,
   },
   test: {
     username: process.env.DB_USER || 'beautyhub_user',
@@ -23,36 +66,9 @@ const config = {
     port: parseInt(process.env.DB_PORT, 10) || 5432,
     dialect: 'postgres',
     logging: false,
-    define: {
-      timestamps: true,
-      underscored: true,
-      paranoid: true,
-    },
+    define: sharedDefine,
   },
-  production: {
-    username: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
-    host: process.env.DB_HOST,
-    port: parseInt(process.env.DB_PORT, 10) || 5432,
-    dialect: 'postgres',
-    logging: process.env.DB_LOGGING === 'true' ? console.log : false,
-    define: {
-      timestamps: true,
-      underscored: true,
-      paranoid: true,
-    },
-    pool: {
-      max: parseInt(process.env.DB_POOL_MAX, 10) || 20,
-      min: parseInt(process.env.DB_POOL_MIN, 10) || 5,
-      acquire: parseInt(process.env.DB_POOL_ACQUIRE, 10) || 60000,
-      idle: parseInt(process.env.DB_POOL_IDLE, 10) || 10000,
-    },
-    dialectOptions: {
-      statement_timeout: 60000,
-      idle_in_transaction_session_timeout: 60000,
-    },
-  },
+  production: productionBase,
 };
 
 module.exports = config;
