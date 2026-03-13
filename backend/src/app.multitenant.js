@@ -63,7 +63,15 @@ app.use(cors({
       return callback(null, true);
     }
     
-    // Allow subdomains (for multi-tenant)
+    // Allow any *.biaxavier.com.br subdomain (multi-tenant)
+    try {
+      const url = new URL(origin);
+      if (url.hostname.endsWith('.biaxavier.com.br') || url.hostname === 'biaxavier.com.br') {
+        return callback(null, true);
+      }
+    } catch (_) { /* ignore invalid origins */ }
+
+    // Allow subdomains from configured origins (pattern-based)
     const isSubdomain = allowedOrigins.some(allowed => {
       const pattern = allowed.replace('*.', '.*\\.');
       return new RegExp(`^${pattern}$`).test(origin);

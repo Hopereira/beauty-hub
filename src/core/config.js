@@ -30,7 +30,10 @@ export function getTenantSlug() {
     // Try subdomain first (e.g., salonmaria.biaxavier.com.br)
     const hostname = window.location.hostname;
     const parts = hostname.split('.');
-    if (parts.length >= 3) {
+    // For .com.br (2-part TLD) need >= 4 parts; for .com (1-part TLD) need >= 3
+    const isMultiPartTLD = parts.length >= 2 && ['com.br', 'org.br', 'net.br'].includes(parts.slice(-2).join('.'));
+    const minParts = isMultiPartTLD ? 4 : 3;
+    if (parts.length >= minParts) {
         const sub = parts[0].toLowerCase();
         if (!RESERVED_SLUGS.includes(sub)) {
             return sub;

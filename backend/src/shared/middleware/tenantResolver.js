@@ -129,8 +129,11 @@ function extractSubdomain(host) {
   // Split by dots
   const parts = hostname.split('.');
   
-  // Need at least 3 parts for subdomain (sub.domain.tld)
-  if (parts.length >= 3) {
+  // For .com.br (2-part TLD) need >= 4 parts; for .com (1-part TLD) need >= 3
+  const isMultiPartTLD = parts.length >= 2 && ['com.br', 'org.br', 'net.br'].includes(parts.slice(-2).join('.'));
+  const minParts = isMultiPartTLD ? 4 : 3;
+
+  if (parts.length >= minParts) {
     return parts[0];
   }
   
