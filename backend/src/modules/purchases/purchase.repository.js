@@ -2,7 +2,7 @@
  * Purchase Repository
  */
 
-const BaseRepository = require('../../shared/database/baseRepository');
+const BaseRepository = require('../../shared/database/BaseRepository');
 const { Op } = require('sequelize');
 
 class PurchaseRepository extends BaseRepository {

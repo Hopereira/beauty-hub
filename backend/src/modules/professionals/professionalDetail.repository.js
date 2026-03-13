@@ -3,7 +3,7 @@
  * Data access layer for professional details
  */
 
-const BaseRepository = require('../../shared/database/baseRepository');
+const BaseRepository = require('../../shared/database/BaseRepository');
 
 class ProfessionalDetailRepository extends BaseRepository {
   constructor(models) {

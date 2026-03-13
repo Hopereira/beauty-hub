@@ -3,7 +3,7 @@
  * Data access layer for products
  */
 
-const BaseRepository = require('../../shared/database/baseRepository');
+const BaseRepository = require('../../shared/database/BaseRepository');
 const { Op } = require('sequelize');
 
 class ProductRepository extends BaseRepository {
