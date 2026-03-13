@@ -63,10 +63,13 @@ app.use(cors({
       return callback(null, true);
     }
     
-    // Allow any *.biaxavier.com.br subdomain (multi-tenant)
+    // Allow any *.biaxavier.com.br subdomain (multi-tenant) + Cloudflare Pages
     try {
       const url = new URL(origin);
       if (url.hostname.endsWith('.biaxavier.com.br') || url.hostname === 'biaxavier.com.br') {
+        return callback(null, true);
+      }
+      if (url.hostname.endsWith('.beauty-hub.pages.dev') || url.hostname === 'beauty-hub.pages.dev') {
         return callback(null, true);
       }
     } catch (_) { /* ignore invalid origins */ }
