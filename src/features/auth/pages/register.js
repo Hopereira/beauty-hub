@@ -84,14 +84,26 @@ export function render() {
 
                         <div class="input-group" style="margin-bottom:1.5rem;">
                             <label for="reg-password" style="display:block;margin-bottom:0.5rem;font-size:0.85rem;font-weight:600;color:var(--text-dark);">Senha</label>
-                            <input type="password" id="reg-password" name="password" required
-                                style="width:100%;padding:12px 16px;border:1px solid var(--input-border);border-radius:8px;background:var(--input-bg);font-size:0.95rem;">
+                            <div style="position:relative;">
+                                <input type="password" id="reg-password" name="password" required
+                                    style="width:100%;padding:12px 16px;padding-right:44px;border:1px solid var(--input-border);border-radius:8px;background:var(--input-bg);font-size:0.95rem;">
+                                <button type="button" class="toggle-pw-btn" data-target="reg-password" aria-label="Mostrar senha"
+                                    style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:1.1rem;padding:4px;">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
                         </div>
 
                         <div class="input-group" style="margin-bottom:1.5rem;">
                             <label for="reg-confirm" style="display:block;margin-bottom:0.5rem;font-size:0.85rem;font-weight:600;color:var(--text-dark);">Confirmar Senha</label>
-                            <input type="password" id="reg-confirm" name="confirmPassword" required
-                                style="width:100%;padding:12px 16px;border:1px solid var(--input-border);border-radius:8px;background:var(--input-bg);font-size:0.95rem;">
+                            <div style="position:relative;">
+                                <input type="password" id="reg-confirm" name="confirmPassword" required
+                                    style="width:100%;padding:12px 16px;padding-right:44px;border:1px solid var(--input-border);border-radius:8px;background:var(--input-bg);font-size:0.95rem;">
+                                <button type="button" class="toggle-pw-btn" data-target="reg-confirm" aria-label="Mostrar senha"
+                                    style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:1.1rem;padding:4px;">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
                         </div>
 
                         <button type="submit" style="
@@ -146,6 +158,18 @@ export function init() {
             goBack();
         });
     }
+
+    // Password visibility toggles
+    document.querySelectorAll('.toggle-pw-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const input = document.getElementById(btn.dataset.target);
+            if (input) {
+                const isPassword = input.type === 'password';
+                input.type = isPassword ? 'text' : 'password';
+                btn.querySelector('i').className = isPassword ? 'fas fa-eye-slash' : 'fas fa-eye';
+            }
+        });
+    });
 
     // Form submit
     const form = document.getElementById('registerForm');

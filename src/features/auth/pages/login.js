@@ -29,8 +29,14 @@ export function render() {
 
                         <div class="input-group" style="margin-bottom:1.5rem;">
                             <label for="password" style="display:block;margin-bottom:0.5rem;font-size:0.85rem;font-weight:600;color:var(--text-dark);">Senha</label>
-                            <input type="password" id="password" name="password" required
-                                style="width:100%;padding:12px 16px;border:1px solid var(--input-border);border-radius:8px;background:var(--input-bg);font-size:0.95rem;transition:border-color 0.3s,box-shadow 0.3s;">
+                            <div style="position:relative;">
+                                <input type="password" id="password" name="password" required
+                                    style="width:100%;padding:12px 16px;padding-right:44px;border:1px solid var(--input-border);border-radius:8px;background:var(--input-bg);font-size:0.95rem;transition:border-color 0.3s,box-shadow 0.3s;">
+                                <button type="button" id="togglePassword" aria-label="Mostrar senha"
+                                    style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:1.1rem;padding:4px;">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
                         </div>
 
                         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2rem;font-size:0.85rem;">
@@ -76,6 +82,17 @@ export function init() {
 
     const submitBtn = form.querySelector('button[type="submit"]');
     const originalBtnText = submitBtn?.textContent || 'Entrar';
+
+    // Password visibility toggle
+    const toggleBtn = document.getElementById('togglePassword');
+    const passwordInput = document.getElementById('password');
+    if (toggleBtn && passwordInput) {
+        toggleBtn.addEventListener('click', () => {
+            const isPassword = passwordInput.type === 'password';
+            passwordInput.type = isPassword ? 'text' : 'password';
+            toggleBtn.querySelector('i').className = isPassword ? 'fas fa-eye-slash' : 'fas fa-eye';
+        });
+    }
 
     const handleSubmit = async (e) => {
         e.preventDefault();

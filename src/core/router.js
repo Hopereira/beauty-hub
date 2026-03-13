@@ -4,6 +4,7 @@
  */
 
 import { isAuthenticated, getCurrentUser, setCurrentPage, isSubscriptionBlocked, logout } from './state.js';
+import { getTenantSlug } from './config.js';
 import { onHttpEvent } from '../shared/utils/http.js';
 import { showToast } from '../shared/utils/toast.js';
 
@@ -82,6 +83,15 @@ async function loadRoute(path) {
     if (!route) {
         navigateTo('/dashboard', true);
         return;
+    }
+
+    // Tenant subdomain detected → skip landing, go to login
+    if (route.page === 'landing' && !isAuthenticated()) {
+        const tenantSlug = getTenantSlug();
+        if (tenantSlug) {
+            navigateTo('/login', true);
+            return;
+        }
     }
 
     // Auth guard
