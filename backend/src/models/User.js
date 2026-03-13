@@ -38,10 +38,6 @@ module.exports = (sequelize) => {
       type: DataTypes.STRING(20),
       allowNull: true,
     },
-    avatar: {
-      type: DataTypes.TEXT,
-      allowNull: true,
-    },
     is_active: {
       type: DataTypes.BOOLEAN,
       defaultValue: true,

@@ -29,6 +29,9 @@ const notificationRoutes = require('./routes/notifications');
 
 const app = express();
 
+// Trust proxy (Fly.io runs behind a reverse proxy)
+app.set('trust proxy', 1);
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Initialize Modules
 // ─────────────────────────────────────────────────────────────────────────────
