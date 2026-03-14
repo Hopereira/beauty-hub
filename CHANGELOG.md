@@ -7,6 +7,75 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
 ## [Unreleased]
 
+### Fixed - 13/03/2026
+
+#### Frontend — UX & Navegação
+- **Redirect Tenant → Login**
+  - Quando um tenant é detectado via subdomínio, `/` redireciona para `/login` ao invés da landing page
+  - Arquivo: `src/core/router.js`
+
+- **Toggle Mostrar/Esconder Senha**
+  - Adicionado botão com ícone de olho nos inputs de senha em login e registro
+  - Arquivos: `src/features/auth/pages/login.js`, `src/features/auth/pages/register.js`
+
+- **Menu Hamburger Mobile**
+  - Corrigidos touch handlers que impediam o menu lateral de abrir/fechar no mobile
+  - Arquivo: `src/shared/components/shell/shell.js`
+
+- **Modal CSS (Overflow/Scroll)**
+  - Modal de criar profissional agora tem scroll quando o conteúdo excede a tela
+  - Arquivo: `src/shared/styles/components.css`
+
+- **Redirect Profissional para Área Própria**
+  - Profissionais que acessam `/dashboard`, `/appointments` ou `/clients` são redirecionados automaticamente para `/professional/dashboard`, `/professional/appointments`, `/professional/clients`
+  - Garante que profissional veja apenas seus próprios dados
+  - Arquivo: `src/core/router.js`
+
+#### Frontend — Dados & Mappers
+- **Fix snake_case/camelCase nos Campos de Nome**
+  - `handleLogin` e `recoverSession` agora leem tanto `first_name`/`last_name` (backend) quanto `firstName`/`lastName` (frontend)
+  - Arquivo: `src/core/auth.js`
+
+- **Fix Dropdown de Profissionais no Modal de Agendamento**
+  - `mapProfessionalFromAPI` agora aceita tanto formato aninhado (`apiProf.user.first_name`) quanto achatado (`apiProf.first_name`, `apiProf.name`)
+  - Antes mostrava specialty ao invés do nome do profissional
+  - Arquivo: `src/shared/utils/api-mappers.js`
+
+- **Fix Registro de Profissional Autônomo**
+  - Frontend agora envia `first_name`, `last_name`, `salon_name` em snake_case e role em UPPERCASE (`PROFESSIONAL`, `ADMIN`) para o backend
+  - Arquivo: `src/core/auth.js`
+
+#### Backend — API & Controllers
+- **CRUD Completo para Profissionais (`/api/professionals`)**
+  - Adicionados endpoints `POST`, `PUT`, `DELETE` além do `GET` existente
+  - `POST` cria User (role=professional) + Professional com senha padrão
+  - `PUT` atualiza dados do User e Professional
+  - `DELETE` soft-delete do profissional + desativa user
+  - Arquivo: `backend/src/routes/owner/professionals.js`
+
+- **Fix Dashboard do Profissional — Colunas Erradas**
+  - Corrigido `Client.name` → `Client.first_name`/`Client.last_name` com `CONCAT`
+  - Corrigido `Service.duration` → `Service.duration_minutes`
+  - Corrigidos filtros de busca de clientes para usar `first_name`/`last_name`
+  - Arquivo: `backend/src/controllers/professionalAreaController.js`
+
+- **Fix Role Normalização no Registro**
+  - Backend normaliza role para lowercase antes de salvar no PostgreSQL ENUM (`master`, `owner`, `admin`, `professional`, `client`)
+  - Arquivo: `backend/src/controllers/authController.js`
+
+#### Arquivos Modificados - 13/03/2026
+1. `src/core/router.js` — Redirect tenant→login, redirect profissional→área própria
+2. `src/core/auth.js` — snake_case/camelCase fix, registro com campos corretos
+3. `src/features/auth/pages/login.js` — Toggle senha
+4. `src/features/auth/pages/register.js` — Toggle senha
+5. `src/shared/styles/components.css` — Modal overflow/scroll
+6. `src/shared/utils/api-mappers.js` — mapProfessionalFromAPI aceita formato flat
+7. `backend/src/routes/owner/professionals.js` — POST/PUT/DELETE endpoints
+8. `backend/src/controllers/professionalAreaController.js` — Fix colunas
+9. `backend/src/controllers/authController.js` — Normalização role lowercase
+
+---
+
 ### Added - 01/03/2026
 
 #### Landing Page de Vendas
