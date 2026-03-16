@@ -1,0 +1,296 @@
+{
+  "name": "BeautyHub - OWNER Module API Tests",
+  "description": "Collection for testing OWNER module endpoints",
+  "baseUrl": "http://localhost:5001/api",
+  "auth": {
+    "type": "bearer",
+    "token": "YOUR_JWT_TOKEN_HERE"
+  },
+  "tests": [
+    {
+      "name": "1. Health Check",
+      "method": "GET",
+      "url": "{{baseUrl}}/health",
+      "description": "Verify API is running"
+    },
+    {
+      "name": "2. Login (Get JWT Token)",
+      "method": "POST",
+      "url": "{{baseUrl}}/auth/login",
+      "body": {
+        "email": "admin@admin.com",
+        "password": "123456"
+      },
+      "description": "Login to get JWT token. Use token in Authorization header for subsequent requests."
+    },
+    {
+      "name": "3. Create Professional",
+      "method": "POST",
+      "url": "{{baseUrl}}/professionals",
+      "headers": {
+        "Authorization": "Bearer {{token}}"
+      },
+      "body": {
+        "user_id": "USER_UUID_HERE",
+        "cpf": "123.456.789-00",
+        "hire_date": "2026-01-01",
+        "contract_type": "AUTONOMO",
+        "base_commission_percentage": 35.00,
+        "active": true
+      },
+      "description": "Create a new professional with base commission"
+    },
+    {
+      "name": "4. List Professionals",
+      "method": "GET",
+      "url": "{{baseUrl}}/professionals",
+      "headers": {
+        "Authorization": "Bearer {{token}}"
+      },
+      "description": "List all professionals with filters"
+    },
+    {
+      "name": "5. Add Professional Specialty",
+      "method": "POST",
+      "url": "{{baseUrl}}/professionals/PROFESSIONAL_ID/specialties",
+      "headers": {
+        "Authorization": "Bearer {{token}}"
+      },
+      "body": {
+        "service_id": "SERVICE_UUID_HERE"
+      },
+      "description": "Add a specialty (service) to a professional"
+    },
+    {
+      "name": "6. Set Custom Commission",
+      "method": "POST",
+      "url": "{{baseUrl}}/professionals/PROFESSIONAL_ID/commissions",
+      "headers": {
+        "Authorization": "Bearer {{token}}"
+      },
+      "body": {
+        "service_id": "SERVICE_UUID_HERE",
+        "commission_percentage": 50.00
+      },
+      "description": "Set custom commission for professional + service"
+    },
+    {
+      "name": "7. Create Supplier",
+      "method": "POST",
+      "url": "{{baseUrl}}/suppliers",
+      "headers": {
+        "Authorization": "Bearer {{token}}"
+      },
+      "body": {
+        "name": "Fornecedor Teste",
+        "document": "12.345.678/0001-90",
+        "phone": "(11) 98765-4321",
+        "email": "fornecedor@teste.com",
+        "address": "Rua Teste, 123",
+        "active": true
+      },
+      "description": "Create a new supplier"
+    },
+    {
+      "name": "8. List Suppliers",
+      "method": "GET",
+      "url": "{{baseUrl}}/suppliers",
+      "headers": {
+        "Authorization": "Bearer {{token}}"
+      },
+      "description": "List all suppliers"
+    },
+    {
+      "name": "9. Create Product",
+      "method": "POST",
+      "url": "{{baseUrl}}/products",
+      "headers": {
+        "Authorization": "Bearer {{token}}"
+      },
+      "body": {
+        "name": "Shampoo Kerastase",
+        "category": "Shampoo",
+        "supplier_id": "SUPPLIER_UUID_HERE",
+        "cost_price": 50.00,
+        "sale_price": 80.00,
+        "stock_quantity": 10,
+        "minimum_stock": 5,
+        "active": true
+      },
+      "description": "Create a new product"
+    },
+    {
+      "name": "10. List Products",
+      "method": "GET",
+      "url": "{{baseUrl}}/products",
+      "headers": {
+        "Authorization": "Bearer {{token}}"
+      },
+      "description": "List all products"
+    },
+    {
+      "name": "11. List Products - Low Stock",
+      "method": "GET",
+      "url": "{{baseUrl}}/products?low_stock=true",
+      "headers": {
+        "Authorization": "Bearer {{token}}"
+      },
+      "description": "List products with low stock"
+    },
+    {
+      "name": "12. Adjust Product Stock",
+      "method": "POST",
+      "url": "{{baseUrl}}/products/PRODUCT_ID/adjust-stock",
+      "headers": {
+        "Authorization": "Bearer {{token}}"
+      },
+      "body": {
+        "quantity": -5,
+        "notes": "Produto vencido"
+      },
+      "description": "Manually adjust product stock (negative to reduce)"
+    },
+    {
+      "name": "13. Create Purchase",
+      "method": "POST",
+      "url": "{{baseUrl}}/purchases",
+      "headers": {
+        "Authorization": "Bearer {{token}}"
+      },
+      "body": {
+        "supplier_id": "SUPPLIER_UUID_HERE",
+        "payment_method": "PIX",
+        "notes": "Compra teste",
+        "items": [
+          {
+            "product_id": "PRODUCT_UUID_HERE",
+            "quantity": 20,
+            "unit_cost": 45.00
+          }
+        ]
+      },
+      "description": "Create purchase - automatically updates stock"
+    },
+    {
+      "name": "14. List Purchases",
+      "method": "GET",
+      "url": "{{baseUrl}}/purchases",
+      "headers": {
+        "Authorization": "Bearer {{token}}"
+      },
+      "description": "List all purchases"
+    },
+    {
+      "name": "15. Create Service Payment (Split)",
+      "method": "POST",
+      "url": "{{baseUrl}}/payment-transactions",
+      "headers": {
+        "Authorization": "Bearer {{token}}"
+      },
+      "body": {
+        "client_id": "CLIENT_UUID_HERE",
+        "professional_id": "PROFESSIONAL_UUID_HERE",
+        "service_id": "SERVICE_UUID_HERE",
+        "total_amount": 100.00,
+        "payment_method": "CREDITO"
+      },
+      "description": "Register payment with automatic split calculation"
+    },
+    {
+      "name": "16. List Service Payments",
+      "method": "GET",
+      "url": "{{baseUrl}}/payment-transactions",
+      "headers": {
+        "Authorization": "Bearer {{token}}"
+      },
+      "description": "List all service payments"
+    },
+    {
+      "name": "17. Revenue Stats Report",
+      "method": "GET",
+      "url": "{{baseUrl}}/payment-transactions/reports/revenue-stats?startDate=2026-01-01&endDate=2026-12-31",
+      "headers": {
+        "Authorization": "Bearer {{token}}"
+      },
+      "description": "Get revenue statistics"
+    },
+    {
+      "name": "18. Revenue by Professional Report",
+      "method": "GET",
+      "url": "{{baseUrl}}/payment-transactions/reports/revenue-by-professional?startDate=2026-01-01&endDate=2026-12-31",
+      "headers": {
+        "Authorization": "Bearer {{token}}"
+      },
+      "description": "Get revenue grouped by professional"
+    },
+    {
+      "name": "19. Top Services Report",
+      "method": "GET",
+      "url": "{{baseUrl}}/payment-transactions/reports/top-services?startDate=2026-01-01&endDate=2026-12-31",
+      "headers": {
+        "Authorization": "Bearer {{token}}"
+      },
+      "description": "Get top selling services"
+    },
+    {
+      "name": "20. Professional Statistics",
+      "method": "GET",
+      "url": "{{baseUrl}}/professionals/PROFESSIONAL_ID/statistics",
+      "headers": {
+        "Authorization": "Bearer {{token}}"
+      },
+      "description": "Get statistics for a specific professional"
+    }
+  ],
+  "instructions": [
+    "1. Start by calling 'Health Check' to verify API is running",
+    "2. Call 'Login' to get JWT token and copy it",
+    "3. Replace {{token}} with your JWT token in all subsequent requests",
+    "4. Replace UUIDs (USER_UUID_HERE, PROFESSIONAL_ID, etc.) with actual IDs from your database",
+    "5. Run tests in order as some depend on previous ones",
+    "6. Check response status codes (200 = success, 201 = created, 400 = validation error, 401 = unauthorized)"
+  ],
+  "expectedResults": {
+    "createProfessional": {
+      "status": 201,
+      "response": {
+        "id": "uuid",
+        "tenant_id": "uuid",
+        "user_id": "uuid",
+        "base_commission_percentage": 35.00,
+        "active": true
+      }
+    },
+    "createPurchase": {
+      "status": 201,
+      "response": {
+        "id": "uuid",
+        "total_amount": 900.00,
+        "items": [
+          {
+            "quantity": 20,
+            "unit_cost": 45.00,
+            "total_cost": 900.00
+          }
+        ]
+      },
+      "sideEffects": [
+        "Product stock increased by 20",
+        "Inventory movement created (type: ENTRY)"
+      ]
+    },
+    "createServicePayment": {
+      "status": 201,
+      "response": {
+        "id": "uuid",
+        "total_amount": 100.00,
+        "salon_percentage": 65.00,
+        "professional_percentage": 35.00,
+        "salon_amount": 65.00,
+        "professional_amount": 35.00,
+        "payment_status": "PAID"
+      },
+      "note": "Split calculated automatically based on professional commission"
+    }
+  }
+}
