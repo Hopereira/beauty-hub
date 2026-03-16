@@ -89,7 +89,7 @@ export function render() {
                     <li><a href="#contato"><i class="fas fa-envelope"></i> Contato</a></li>
                     <li class="bx-drawer__divider"></li>
                     <li><a href="${APP_URL}" target="_blank" rel="noopener noreferrer" class="bx-drawer__highlight">
-                        <i class="fas fa-calendar-check"></i> Agendar Online
+                        <i class="fas fa-calendar-check"></i> Sistema
                     </a></li>
                     <li><a href="/curso" class="bx-drawer__highlight bx-drawer__highlight--curso">
                         <i class="fas fa-graduation-cap"></i> Curso <span class="bx-badge">Em breve</span>
