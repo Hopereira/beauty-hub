@@ -11,6 +11,18 @@ module.exports = {
     const transaction = await queryInterface.sequelize.transaction();
 
     try {
+      // Check if establishments.tenant_id exists before attempting backfill
+      const [colCheck] = await queryInterface.sequelize.query(`
+        SELECT column_name FROM information_schema.columns
+        WHERE table_name = 'establishments' AND column_name = 'tenant_id'
+      `, { transaction });
+
+      if (colCheck.length === 0) {
+        console.log('ℹ️  Migration 033: establishments.tenant_id not found, skipping backfill (fresh DB)');
+        await transaction.commit();
+        return;
+      }
+
       const tables = [
         'appointments',
         'clients',

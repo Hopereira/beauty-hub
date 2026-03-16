@@ -88,14 +88,14 @@ jobs:
         uses: superfly/flyctl-actions/setup-flyctl@master
 
       - name: Deploy to Fly.io
-        run: flyctl deploy --remote-only --config fly.toml --app beautyhub-api
+        run: flyctl deploy --remote-only --config backend/fly.toml --app beautyhub-backend
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
 
       - name: Run database migrations
         run: |
           flyctl ssh console \
-            --app beautyhub-api \
+            --app beautyhub-backend \
             -C "npx sequelize-cli db:migrate --env production"
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}

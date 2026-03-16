@@ -3,7 +3,7 @@
 # Deploy: flyctl deploy --remote-only
 # ══════════════════════════════════════════════════════════════════════════════
 
-app = "beautyhub-api"
+app = "beautyhub-backend"
 primary_region = "gru"    # São Paulo
 
 [build]
