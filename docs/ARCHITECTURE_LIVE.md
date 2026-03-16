@@ -41,15 +41,15 @@
 | `biaxavier.com.br` | Site/Landing da Beatriz | Cloudflare Pages | 🔲 Pendente |
 | `app.biaxavier.com.br` | SPA do SaaS (login, dashboard) | Cloudflare Pages | 🔲 Pendente |
 | `adm.biaxavier.com.br` | Painel Master (mesma SPA, rota /master) | Cloudflare Pages | 🔲 Pendente |
-| `api.biaxavier.com.br` | API Backend Node.js | Fly.io | ✅ Cert criado, DNS pendente |
+| `api.biaxavier.com.br` | API Backend Node.js | Fly.io (beautyhub-backend) | ✅ Cert criado, DNS pendente atualização |
 | `*.biaxavier.com.br` | Tenants (multi-tenant) | Cloudflare Pages wildcard | 🔲 Pendente |
 
 ### DNS Necessários
 
 ```
-# API (Fly.io)
-A     api   → 66.241.125.104
-AAAA  api   → 2a09:8280:1::e2:5ed6:0
+# API (Fly.io) — beautyhub-backend
+A     api   → 66.241.125.210
+AAAA  api   → 2a09:8280:1::e4:20f0:0
 
 # Frontend (Cloudflare Pages)
 CNAME app   → <projeto>.pages.dev
@@ -84,8 +84,8 @@ cliente1.biaxavier.com.br
 
 | Item | Valor |
 |------|-------|
-| App | `backend-dawn-voice-9214` |
-| URL | `https://backend-dawn-voice-9214.fly.dev` |
+| App | `beautyhub-backend` |
+| URL | `https://beautyhub-backend.fly.dev` |
 | Custom | `https://api.biaxavier.com.br` (após DNS) |
 | Região | `gru` (São Paulo) |
 | Runtime | Node.js 20, Express, Sequelize 6 |
