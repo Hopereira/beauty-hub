@@ -51,13 +51,24 @@ class RegistrationService {
       // Hash password
       const hashedPassword = await bcrypt.hash(data.owner.password, 10);
 
+      // Determine document type and tenant type from accountType
+      const isProfessional = data.accountType === 'professional';
+      const documentValue = isProfessional
+        ? (data.owner.cpf || data.business.cnpj)
+        : (data.business.cnpj || data.owner.cpf);
+      const documentType = (!isProfessional && data.business.cnpj)
+        ? 'cnpj'
+        : 'cpf';
+
       // Create tenant
       const tenant = await this.Tenant.create({
         name: data.business.name,
         slug,
         email: data.business.email,
         phone: data.business.phone,
-        document: data.business.cnpj || data.owner.cpf,
+        document: documentValue,
+        document_type: documentType,
+        type: isProfessional ? 'autonomous' : 'establishment',
         address: {
           street: data.address.street,
           number: data.address.number,
@@ -73,20 +84,23 @@ class RegistrationService {
           currency: 'BRL',
           language: 'pt-BR',
         },
-        is_active: true,
       }, { transaction });
+
+      // Split full name into first/last
+      const nameParts  = (data.owner.name || '').trim().split(/\s+/);
+      const firstName  = nameParts[0] || 'Nome';
+      const lastName   = nameParts.slice(1).join(' ') || 'Sobrenome';
 
       // Create owner user
       const owner = await this.User.create({
-        tenant_id: tenant.id,
-        name: data.owner.name,
-        email: data.owner.email,
-        password: hashedPassword,
-        phone: data.owner.phone,
-        document: data.owner.cpf,
-        role: 'OWNER',
-        is_active: true,
-        email_verified: false,
+        tenant_id:  tenant.id,
+        first_name: firstName,
+        last_name:  lastName,
+        email:      data.owner.email,
+        password:   hashedPassword,
+        phone:      data.owner.phone,
+        role:       'OWNER',
+        is_active:  true,
       }, { transaction });
 
       // Create subscription if plan selected
