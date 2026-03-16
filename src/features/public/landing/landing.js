@@ -307,7 +307,16 @@ function renderRegistrationForm() {
                 <div class="form-grid">
                     <div class="form-group" style="grid-column: 1 / -1;">
                         <label>CEP *</label>
-                        <input type="text" id="cep" required placeholder="00000-000">
+                        <div style="position:relative;">
+                            <input type="text" id="cep" required placeholder="00000-000"
+                                maxlength="9"
+                                style="padding-right:40px;">
+                            <span id="cepStatus" style="
+                                position:absolute;right:12px;top:50%;transform:translateY(-50%);
+                                font-size:0.85rem;display:none;
+                            "></span>
+                        </div>
+                        <small id="cepMsg" style="font-size:0.78rem;margin-top:4px;display:none;"></small>
                     </div>
                     <div class="form-group" style="grid-column: 1 / -1;">
                         <label>Rua *</label>
@@ -333,10 +342,33 @@ function renderRegistrationForm() {
                         <label>Estado *</label>
                         <select id="state" required>
                             <option value="">Selecione</option>
-                            <option value="SP">São Paulo</option>
-                            <option value="RJ">Rio de Janeiro</option>
-                            <option value="MG">Minas Gerais</option>
-                            <!-- Adicionar outros estados -->
+                            <option value="AC">AC – Acre</option>
+                            <option value="AL">AL – Alagoas</option>
+                            <option value="AP">AP – Amapá</option>
+                            <option value="AM">AM – Amazonas</option>
+                            <option value="BA">BA – Bahia</option>
+                            <option value="CE">CE – Ceará</option>
+                            <option value="DF">DF – Distrito Federal</option>
+                            <option value="ES">ES – Espírito Santo</option>
+                            <option value="GO">GO – Goiás</option>
+                            <option value="MA">MA – Maranhão</option>
+                            <option value="MT">MT – Mato Grosso</option>
+                            <option value="MS">MS – Mato Grosso do Sul</option>
+                            <option value="MG">MG – Minas Gerais</option>
+                            <option value="PA">PA – Pará</option>
+                            <option value="PB">PB – Paraíba</option>
+                            <option value="PR">PR – Paraná</option>
+                            <option value="PE">PE – Pernambuco</option>
+                            <option value="PI">PI – Piauí</option>
+                            <option value="RJ">RJ – Rio de Janeiro</option>
+                            <option value="RN">RN – Rio Grande do Norte</option>
+                            <option value="RS">RS – Rio Grande do Sul</option>
+                            <option value="RO">RO – Rondônia</option>
+                            <option value="RR">RR – Roraima</option>
+                            <option value="SC">SC – Santa Catarina</option>
+                            <option value="SP">SP – São Paulo</option>
+                            <option value="SE">SE – Sergipe</option>
+                            <option value="TO">TO – Tocantins</option>
                         </select>
                     </div>
                 </div>
@@ -436,6 +468,67 @@ function openRegistrationModal() {
         if (modalBody) {
             modalBody.innerHTML = renderRegistrationForm();
         }
+
+        // Re-bind submit (form was re-rendered)
+        document.getElementById('registrationForm')?.addEventListener('submit', handleRegistration);
+
+        // Activate smart CEP lookup
+        initCepLookup();
+    }
+}
+
+function initCepLookup() {
+    const cepInput = document.getElementById('cep');
+    if (!cepInput) return;
+
+    // Mask: 00000-000
+    cepInput.addEventListener('input', (e) => {
+        let v = e.target.value.replace(/\D/g, '');
+        if (v.length > 5) v = v.slice(0, 5) + '-' + v.slice(5, 8);
+        e.target.value = v;
+
+        const digits = v.replace(/\D/g, '');
+        if (digits.length === 8) fetchCep(digits);
+    });
+}
+
+async function fetchCep(cep) {
+    const status  = document.getElementById('cepStatus');
+    const msg     = document.getElementById('cepMsg');
+    const street  = document.getElementById('street');
+    const neighborhood = document.getElementById('neighborhood');
+    const city    = document.getElementById('city');
+    const state   = document.getElementById('state');
+    const number  = document.getElementById('number');
+
+    // Loading
+    if (status) { status.style.display = 'inline'; status.textContent = '⏳'; }
+    if (msg)    { msg.style.display = 'none'; msg.textContent = ''; }
+
+    try {
+        const res  = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+        const data = await res.json();
+
+        if (data.erro) {
+            if (status) { status.textContent = '❌'; }
+            if (msg)    { msg.style.display = 'block'; msg.style.color = '#e53e3e'; msg.textContent = 'CEP não encontrado. Verifique e tente novamente.'; }
+            return;
+        }
+
+        // Fill fields
+        if (street)       { street.value       = data.logradouro || ''; }
+        if (neighborhood) { neighborhood.value = data.bairro      || ''; }
+        if (city)         { city.value         = data.localidade  || ''; }
+        if (state)        { state.value        = data.uf          || ''; }
+
+        // Focus number after auto-fill
+        if (number) number.focus();
+
+        if (status) { status.textContent = '✅'; }
+        if (msg)    { msg.style.display = 'block'; msg.style.color = '#38a169'; msg.textContent = `${data.localidade} – ${data.uf}`; }
+    } catch (_) {
+        if (status) { status.textContent = '❌'; }
+        if (msg)    { msg.style.display = 'block'; msg.style.color = '#e53e3e'; msg.textContent = 'Erro ao buscar CEP. Verifique sua conexão.'; }
     }
 }
 
