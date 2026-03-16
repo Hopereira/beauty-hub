@@ -95,7 +95,7 @@ jobs:
       - name: Smoke test — health check
         run: |
           sleep 10
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://api.biaxavier.com.br/api/health)
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://beautyhub-backend.fly.dev/api/health)
           if [ "$STATUS" != "200" ]; then
             echo "Health check failed: HTTP $STATUS"
             exit 1
