@@ -43,52 +43,61 @@ export function render() {
     const app = document.getElementById('app');
     if (!app) return;
 
+    document.title = 'Ana Beatriz Xavier — Extensão de Cílios & Beleza';
+
     app.innerHTML = `
         <div class="bx-landing">
 
             <!-- ── NAVEGAÇÃO ── -->
             <nav class="bx-nav">
-                <div class="bx-nav__brand">Ana Beatriz Xavier</div>
-                <div class="bx-nav__links">
-                    <a href="#servicos">Serviços</a>
-                    <a href="#sobre">Sobre</a>
-                    <a href="#contato">Contato</a>
-                    <a href="${WHATSAPP_URL}" target="_blank" rel="noopener noreferrer"
-                       class="bx-btn bx-btn--primary bx-btn--whatsapp-nav">
-                        <i class="fab fa-whatsapp"></i> Agendar
-                    </a>
-                </div>
-                <!-- Ícone WhatsApp visível apenas em mobile (nav links ocultos) -->
+                <span class="bx-nav__brand">Beatriz Xavier</span>
+                <ul class="bx-nav__links">
+                    <li><a href="#inicio">Home</a></li>
+                    <li><a href="#servicos">Serviços</a></li>
+                    <li><a href="#galeria">Galeria</a></li>
+                    <li><a href="#sobre">Sobre</a></li>
+                    <li><a href="#contato">Contato</a></li>
+                </ul>
+                <a href="${WHATSAPP_URL}" target="_blank" rel="noopener noreferrer"
+                   class="bx-nav__cta">
+                    <i class="fab fa-whatsapp"></i> Agendar
+                </a>
                 <a href="${WHATSAPP_URL}" target="_blank" rel="noopener noreferrer"
                    class="bx-nav__mobile-cta" aria-label="Agendar pelo WhatsApp">
                     <i class="fab fa-whatsapp"></i>
                 </a>
             </nav>
 
-            <!-- ── HERO ── -->
-            <section class="bx-hero">
-                <div class="bx-hero__text">
-                    <span class="bx-hero__tag">Especialista em Beleza</span>
-                    <h1>Ana Beatriz<br>Xavier</h1>
-                    <p class="bx-hero__sub">Beleza, cuidado e autoestima em cada detalhe.</p>
+            <!-- ── HERO: SPLIT 3 COLUNAS ── -->
+            <section id="inicio" class="bx-hero">
+                <div class="bx-hero__photo-wrap bx-hero__photo-wrap--left">
+                    <img src="/src/assets/images/beatriz.jpg"
+                         alt="Ana Beatriz Xavier"
+                         onerror="this.parentElement.style.background='#e8d5d0'">
+                </div>
+
+                <div class="bx-hero__center">
+                    <span class="bx-hero__pretitle">Especialista em Beleza</span>
+                    <h1 class="bx-hero__title">Beatriz Xavier:<br>O Olhar que<br>Você Sempre Sonhou.</h1>
                     <p class="bx-hero__desc">
-                        Entre pinças, espelhos e muita dedicação, nasceu um espaço pensado
-                        para valorizar a beleza de cada mulher com leveza, cuidado e propósito.
+                        Realce sua beleza natural com extensões de cílios personalizadas
+                        e outros serviços de embelezamento.
                     </p>
-                    <div class="bx-hero__cta">
+                    <div class="bx-hero__actions">
                         <a href="${WHATSAPP_URL}" target="_blank" rel="noopener noreferrer"
                            class="bx-btn bx-btn--primary">
                             <i class="fab fa-whatsapp"></i> Agendar pelo WhatsApp
                         </a>
-                        <a href="#sobre" class="bx-btn bx-btn--ghost">Conheça meu trabalho</a>
+                        <a href="#servicos" class="bx-hero__scroll">
+                            Ver serviços <i class="fas fa-chevron-down"></i>
+                        </a>
                     </div>
                 </div>
 
-                <div class="bx-hero__photo">
-                    <img src="/src/assets/images/beatriz.jpg"
-                         alt="Ana Beatriz Xavier — Especialista em Beleza"
-                         class="bx-hero__photo-img"
-                         onerror="this.style.display='none';this.parentElement.innerHTML+='<div class=\'bx-hero__photo-placeholder\' aria-hidden=\'true\'><i class=\'fas fa-user-circle\'></i><span>Foto da Beatriz</span></div>'">
+                <div class="bx-hero__photo-wrap bx-hero__photo-wrap--right">
+                    <img src="/src/assets/images/beatriz 3.jpg"
+                         alt="Trabalho de Ana Beatriz Xavier"
+                         onerror="this.parentElement.style.background='#dfc9c3'">
                 </div>
             </section>
 
@@ -116,47 +125,47 @@ export function render() {
                 </a>
             </section>
 
-            <!-- ── SOBRE ── -->
-            <section id="sobre" class="bx-about">
-                <div class="bx-about__photo-wrapper">
-                    <img src="/src/assets/images/trabalho2.png"
-                         alt="Espaço de atendimento de Ana Beatriz Xavier"
-                         class="bx-about__photo-img"
-                         onerror="this.style.display='none';this.parentElement.innerHTML+='<div class=\'bx-about__photo-placeholder\' aria-hidden=\'true\'><i class=\'fas fa-images\'></i><span>Foto do espaço</span></div>'">
-                </div>
-
-                <div class="bx-about__text">
-                    <span class="bx-section-tag">Sobre mim</span>
-                    <h2>Transformo cuidado<br>em experiência.</h2>
-                    <p>
-                        Entre pinças, espelhos e muita dedicação, meu espaço de atendimento revela
-                        muito mais do que técnica: revela carinho, presença e propósito em cada detalhe.
-                    </p>
-                    <p>
-                        Teve maquiagem, luz, câmera e um making of especial que mostrou um pouco dos
-                        bastidores do meu trabalho — daquilo que existe por trás de cada atendimento,
-                        de cada olhar valorizado e de cada mulher que sai daqui se sentindo ainda mais
-                        bonita e confiante.
-                    </p>
-                    <p>
-                        Mais do que cílios e depilação, esse espaço foi criado para realçar a beleza
-                        e fortalecer a autoestima de cada mulher que passa por aqui.
-                    </p>
-                    <div class="bx-about__actions">
-                        <a href="${INSTAGRAM_URL}" target="_blank" rel="noopener noreferrer"
-                           class="bx-btn bx-btn--secondary">
-                            <i class="fab fa-instagram"></i> Instagram
-                        </a>
-                        <a href="${FACEBOOK_URL}" target="_blank" rel="noopener noreferrer"
-                           class="bx-btn bx-btn--ghost">
-                            <i class="fab fa-facebook"></i> Facebook
-                        </a>
+            <!-- ── SOBRE: DARK SECTION ── -->
+            <div id="sobre" class="bx-about-section">
+                <div class="bx-about">
+                    <div class="bx-about__photo">
+                        <img src="/src/assets/images/trabalho2.png"
+                             alt="Espaço de atendimento de Ana Beatriz Xavier"
+                             onerror="this.parentElement.style.display='none'">
+                    </div>
+                    <div class="bx-about__text">
+                        <span class="bx-section-tag">Sobre mim</span>
+                        <h2>Transformo cuidado<br>em experiência.</h2>
+                        <p>
+                            Entre pinças, espelhos e muita dedicação, meu espaço de atendimento revela
+                            muito mais do que técnica: revela carinho, presença e propósito em cada detalhe.
+                        </p>
+                        <p>
+                            Teve maquiagem, luz, câmera e um making of especial que mostrou um pouco dos
+                            bastidores do meu trabalho — daquilo que existe por trás de cada atendimento,
+                            de cada olhar valorizado e de cada mulher que sai daqui se sentindo ainda mais
+                            bonita e confiante.
+                        </p>
+                        <p>
+                            Mais do que cílios e depilação, esse espaço foi criado para realçar a beleza
+                            e fortalecer a autoestima de cada mulher que passa por aqui.
+                        </p>
+                        <div class="bx-about__actions">
+                            <a href="${INSTAGRAM_URL}" target="_blank" rel="noopener noreferrer"
+                               class="bx-btn bx-btn--secondary">
+                                <i class="fab fa-instagram"></i> Instagram
+                            </a>
+                            <a href="${FACEBOOK_URL}" target="_blank" rel="noopener noreferrer"
+                               class="bx-btn bx-btn--ghost">
+                                <i class="fab fa-facebook"></i> Facebook
+                            </a>
+                        </div>
                     </div>
                 </div>
-            </section>
+            </div>
 
             <!-- ── GALERIA ── -->
-            <section class="bx-gallery">
+            <section id="galeria" class="bx-gallery">
                 <span class="bx-section-tag">Portfólio</span>
                 <h2>Meus Trabalhos</h2>
                 <p class="bx-gallery__subtitle">Cada atendimento é único — veja um pouco do que já realizei</p>
@@ -193,36 +202,31 @@ export function render() {
                 </a>
             </section>
 
-            <!-- ── CONTATO / REDES SOCIAIS ── -->
+            <!-- ── CONTATO ── -->
             <section id="contato" class="bx-contact">
+                <span class="bx-section-tag">Fale comigo</span>
                 <h2>Me encontre aqui</h2>
                 <p class="bx-contact__sub">
                     Agende, me siga ou entre em contato pelos canais abaixo
                 </p>
-                <div class="bx-social-links">
+                <div class="bx-social-grid">
                     <a href="${WHATSAPP_URL}" target="_blank" rel="noopener noreferrer"
-                       class="bx-social-link">
-                        <i class="fab fa-whatsapp"></i>
-                        <div>
-                            <strong>WhatsApp</strong>
-                            <span>Agende sua visita</span>
-                        </div>
+                       class="bx-social-card bx-social-card--whatsapp">
+                        <i class="fab fa-whatsapp bx-social-card__icon"></i>
+                        <span class="bx-social-card__name">WhatsApp</span>
+                        <span class="bx-social-card__handle">Agende sua visita</span>
                     </a>
                     <a href="${INSTAGRAM_URL}" target="_blank" rel="noopener noreferrer"
-                       class="bx-social-link">
-                        <i class="fab fa-instagram"></i>
-                        <div>
-                            <strong>Instagram</strong>
-                            <span>@ana_trizz32iu</span>
-                        </div>
+                       class="bx-social-card bx-social-card--instagram">
+                        <i class="fab fa-instagram bx-social-card__icon"></i>
+                        <span class="bx-social-card__name">Instagram</span>
+                        <span class="bx-social-card__handle">@ana_trizz32iu</span>
                     </a>
                     <a href="${FACEBOOK_URL}" target="_blank" rel="noopener noreferrer"
-                       class="bx-social-link">
-                        <i class="fab fa-facebook"></i>
-                        <div>
-                            <strong>Facebook</strong>
-                            <span>beatriz.depiladora</span>
-                        </div>
+                       class="bx-social-card bx-social-card--facebook">
+                        <i class="fab fa-facebook bx-social-card__icon"></i>
+                        <span class="bx-social-card__name">Facebook</span>
+                        <span class="bx-social-card__handle">beatriz.depiladora</span>
                     </a>
                 </div>
             </section>
