@@ -1,0 +1,318 @@
+/* =====================================================
+   CURSO — Ana Beatriz Xavier
+   biaxavier.com.br/curso  |  Prefixo: cx-
+   ===================================================== */
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+.cx-page {
+    min-height: 100vh;
+    font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+    background: #FAFFFE;
+    color: #0d1f1f;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ── NAV ── */
+.cx-nav {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 2.5rem;
+    height: 68px;
+    background: rgba(250, 255, 254, 0.96);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(32, 178, 170, 0.12);
+}
+
+.cx-nav__brand {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+}
+
+.cx-nav__logo {
+    height: 42px;
+    width: auto;
+    object-fit: contain;
+}
+
+.cx-nav__back {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: #20B2AA;
+    text-decoration: none;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    transition: background 0.2s;
+}
+
+.cx-nav__back:hover {
+    background: rgba(32, 178, 170, 0.08);
+}
+
+/* ── HERO ── */
+.cx-hero {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 400px;
+    gap: 4rem;
+    align-items: center;
+    max-width: 1140px;
+    margin: 0 auto;
+    padding: 6rem 2rem;
+    width: 100%;
+}
+
+/* ── BADGE ── */
+.cx-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(32, 178, 170, 0.1);
+    color: #178f8f;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 0.45rem 1rem;
+    border-radius: 50px;
+    margin-bottom: 1.75rem;
+    border: 1px solid rgba(32, 178, 170, 0.2);
+}
+
+/* ── TITLE ── */
+.cx-hero__title {
+    font-size: 3rem;
+    font-weight: 800;
+    line-height: 1.2;
+    letter-spacing: -0.03em;
+    color: #0d1f1f;
+    margin-bottom: 1.5rem;
+}
+
+.cx-hero__title--accent {
+    color: #20B2AA;
+}
+
+.cx-hero__desc {
+    font-size: 1.05rem;
+    line-height: 1.8;
+    color: #4a7575;
+    margin-bottom: 2.5rem;
+    max-width: 520px;
+}
+
+/* ── FEATURES ── */
+.cx-features {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.85rem;
+    margin-bottom: 2.5rem;
+}
+
+.cx-feature {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: white;
+    border: 1px solid rgba(32, 178, 170, 0.15);
+    border-radius: 12px;
+    padding: 0.85rem 1rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #0d1f1f;
+}
+
+.cx-feature i {
+    color: #20B2AA;
+    font-size: 1.1rem;
+    width: 20px;
+    text-align: center;
+}
+
+/* ── BUTTONS ── */
+.cx-cta-group {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.cx-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.95rem 1.75rem;
+    border-radius: 50px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    text-decoration: none;
+    transition: all 0.25s;
+    cursor: pointer;
+    border: 2px solid transparent;
+    white-space: nowrap;
+}
+
+.cx-btn--primary {
+    background: #25D366;
+    color: white;
+    border-color: #25D366;
+}
+
+.cx-btn--primary:hover {
+    background: #1aa857;
+    border-color: #1aa857;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(37, 211, 102, 0.35);
+}
+
+.cx-btn--ghost {
+    background: transparent;
+    color: #20B2AA;
+    border-color: #20B2AA;
+}
+
+.cx-btn--ghost:hover {
+    background: #20B2AA;
+    color: white;
+}
+
+/* ── VISUAL / ANIMATION ── */
+.cx-hero__visual {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1.5rem;
+}
+
+.cx-construction {
+    position: relative;
+    width: 220px;
+    height: 220px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.cx-construction__icon {
+    width: 100px;
+    height: 100px;
+    background: linear-gradient(135deg, #20B2AA 0%, #7dd8d5 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    color: white;
+    position: relative;
+    z-index: 2;
+    box-shadow: 0 12px 40px rgba(32, 178, 170, 0.35);
+}
+
+.cx-ring {
+    position: absolute;
+    border-radius: 50%;
+    border: 2px solid rgba(32, 178, 170, 0.25);
+    animation: cx-pulse 3s ease-in-out infinite;
+}
+
+.cx-ring--1 { width: 140px; height: 140px; animation-delay: 0s; }
+.cx-ring--2 { width: 180px; height: 180px; animation-delay: 0.5s; }
+.cx-ring--3 { width: 220px; height: 220px; animation-delay: 1s; }
+
+@keyframes cx-pulse {
+    0%, 100% { transform: scale(1); opacity: 0.5; }
+    50%       { transform: scale(1.04); opacity: 1; }
+}
+
+.cx-soon-label {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: #20B2AA;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+}
+
+/* ── FOOTER ── */
+.cx-footer {
+    background: #0d1f1f;
+    color: rgba(255, 255, 255, 0.45);
+    text-align: center;
+    padding: 1.5rem 2rem;
+    font-size: 0.83rem;
+}
+
+/* ── MOBILE ── */
+@media (max-width: 768px) {
+    .cx-nav {
+        padding: 0 1.25rem;
+        height: 60px;
+    }
+
+    .cx-nav__logo { height: 34px; }
+
+    .cx-nav__back {
+        font-size: 0.82rem;
+        padding: 0.4rem 0.75rem;
+    }
+
+    .cx-hero {
+        grid-template-columns: 1fr;
+        padding: 3rem 1.25rem 4rem;
+        gap: 3rem;
+        text-align: center;
+    }
+
+    .cx-hero__title {
+        font-size: 2.2rem;
+    }
+
+    .cx-hero__desc {
+        font-size: 1rem;
+        max-width: 100%;
+    }
+
+    .cx-features {
+        grid-template-columns: 1fr;
+        text-align: left;
+    }
+
+    .cx-cta-group {
+        flex-direction: column;
+    }
+
+    .cx-btn {
+        width: 100%;
+        justify-content: center;
+        min-height: 56px;
+        font-size: 1rem;
+        border-radius: 14px;
+    }
+
+    .cx-hero__visual {
+        order: -1;
+    }
+
+    .cx-construction {
+        width: 160px;
+        height: 160px;
+    }
+
+    .cx-construction__icon {
+        width: 72px;
+        height: 72px;
+        font-size: 1.8rem;
+    }
+
+    .cx-ring--1 { width: 100px; height: 100px; }
+    .cx-ring--2 { width: 130px; height: 130px; }
+    .cx-ring--3 { width: 160px; height: 160px; }
+}

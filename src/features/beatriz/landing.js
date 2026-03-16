@@ -16,6 +16,7 @@ const WHATSAPP_NUMBER = '5524988243174';
 const WHATSAPP_URL    = `https://wa.me/${WHATSAPP_NUMBER}`;
 const INSTAGRAM_URL   = 'https://www.instagram.com/ana_trizz32iu/';
 const FACEBOOK_URL    = 'https://www.facebook.com/beatriz.depiladora/';
+const APP_URL         = 'https://app.biaxavier.com.br/';
 
 // ─── Serviços ──────────────────────────────────────────────────────────────
 // TODO: confirmar lista completa de serviços com Ana Beatriz
@@ -59,16 +60,46 @@ export function render() {
                     <li><a href="#galeria">Galeria</a></li>
                     <li><a href="#sobre">Sobre</a></li>
                     <li><a href="#contato">Contato</a></li>
+                    <li><a href="${APP_URL}" target="_blank" rel="noopener noreferrer">Sistema</a></li>
+                    <li><a href="/curso">Curso <span class="bx-badge bx-badge--nav">Em breve</span></a></li>
                 </ul>
                 <a href="${WHATSAPP_URL}" target="_blank" rel="noopener noreferrer"
                    class="bx-nav__cta">
                     <i class="fab fa-whatsapp"></i> Agendar
                 </a>
-                <a href="${WHATSAPP_URL}" target="_blank" rel="noopener noreferrer"
-                   class="bx-nav__mobile-cta" aria-label="Agendar pelo WhatsApp">
-                    <i class="fab fa-whatsapp"></i>
-                </a>
+                <button class="bx-nav__hamburger" id="bxHamburger" aria-label="Abrir menu" aria-expanded="false">
+                    <span></span><span></span><span></span>
+                </button>
             </nav>
+
+            <!-- ── DRAWER MOBILE ── -->
+            <div class="bx-drawer__overlay" id="bxOverlay"></div>
+            <aside class="bx-drawer" id="bxDrawer" aria-label="Menu">
+                <div class="bx-drawer__header">
+                    <img src="/assets/logos/logo.png" alt="Beatriz Xavier" class="bx-drawer__logo">
+                    <button class="bx-drawer__close" id="bxDrawerClose" aria-label="Fechar menu">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <ul class="bx-drawer__links">
+                    <li><a href="#inicio"><i class="fas fa-home"></i> Home</a></li>
+                    <li><a href="#servicos"><i class="fas fa-spa"></i> Serviços</a></li>
+                    <li><a href="#galeria"><i class="fas fa-images"></i> Galeria</a></li>
+                    <li><a href="#sobre"><i class="fas fa-user"></i> Sobre</a></li>
+                    <li><a href="#contato"><i class="fas fa-envelope"></i> Contato</a></li>
+                    <li class="bx-drawer__divider"></li>
+                    <li><a href="${APP_URL}" target="_blank" rel="noopener noreferrer" class="bx-drawer__highlight">
+                        <i class="fas fa-calendar-check"></i> Agendar Online
+                    </a></li>
+                    <li><a href="/curso" class="bx-drawer__highlight bx-drawer__highlight--curso">
+                        <i class="fas fa-graduation-cap"></i> Curso <span class="bx-badge">Em breve</span>
+                    </a></li>
+                </ul>
+                <a href="${WHATSAPP_URL}" target="_blank" rel="noopener noreferrer"
+                   class="bx-btn bx-btn--primary bx-drawer__cta">
+                    <i class="fab fa-whatsapp"></i> Agendar pelo WhatsApp
+                </a>
+            </aside>
 
             <!-- ── HERO: SPLIT 3 COLUNAS ── -->
             <section id="inicio" class="bx-hero">
@@ -172,30 +203,25 @@ export function render() {
                 <h2>Meus Trabalhos</h2>
                 <p class="bx-gallery__subtitle">Cada atendimento é único — veja um pouco do que já realizei</p>
                 <div class="bx-gallery__grid">
-                    <div class="bx-gallery__item">
-                        <img src="/assets/images/beatriz.jpg"
-                             alt="Ana Beatriz Xavier" loading="lazy"
-                             onerror="this.parentElement.style.display='none'">
+                    <div class="bx-gallery__item" role="button" tabindex="0" data-src="/assets/images/beatriz.jpg" data-alt="Ana Beatriz Xavier">
+                        <img src="/assets/images/beatriz.jpg" alt="Ana Beatriz Xavier" loading="lazy">
+                        <div class="bx-gallery__overlay"><i class="fas fa-search-plus"></i></div>
                     </div>
-                    <div class="bx-gallery__item">
-                        <img src="/assets/images/beatriz3.jpg"
-                             alt="Trabalho de Ana Beatriz" loading="lazy"
-                             onerror="this.parentElement.style.display='none'">
+                    <div class="bx-gallery__item" role="button" tabindex="0" data-src="/assets/images/trabalho1.png" data-alt="Trabalho de Ana Beatriz">
+                        <img src="/assets/images/trabalho1.png" alt="Trabalho de Ana Beatriz" loading="lazy">
+                        <div class="bx-gallery__overlay"><i class="fas fa-search-plus"></i></div>
                     </div>
-                    <div class="bx-gallery__item">
-                        <img src="/assets/images/trabalho1.png"
-                             alt="Trabalho de Ana Beatriz" loading="lazy"
-                             onerror="this.parentElement.style.display='none'">
+                    <div class="bx-gallery__item" role="button" tabindex="0" data-src="/assets/images/trabalho2.png" data-alt="Trabalho de Ana Beatriz">
+                        <img src="/assets/images/trabalho2.png" alt="Trabalho de Ana Beatriz" loading="lazy">
+                        <div class="bx-gallery__overlay"><i class="fas fa-search-plus"></i></div>
                     </div>
-                    <div class="bx-gallery__item">
-                        <img src="/assets/images/trabalho2.png"
-                             alt="Trabalho de Ana Beatriz" loading="lazy"
-                             onerror="this.parentElement.style.display='none'">
+                    <div class="bx-gallery__item" role="button" tabindex="0" data-src="/assets/images/beatriz3.jpg" data-alt="Trabalho de Ana Beatriz">
+                        <img src="/assets/images/beatriz3.jpg" alt="Trabalho de Ana Beatriz" loading="lazy">
+                        <div class="bx-gallery__overlay"><i class="fas fa-search-plus"></i></div>
                     </div>
-                    <div class="bx-gallery__item">
-                        <img src="/assets/images/trabalho3.png"
-                             alt="Trabalho de Ana Beatriz" loading="lazy"
-                             onerror="this.parentElement.style.display='none'">
+                    <div class="bx-gallery__item" role="button" tabindex="0" data-src="/assets/images/trabalho3.png" data-alt="Trabalho de Ana Beatriz">
+                        <img src="/assets/images/trabalho3.png" alt="Trabalho de Ana Beatriz" loading="lazy">
+                        <div class="bx-gallery__overlay"><i class="fas fa-search-plus"></i></div>
                     </div>
                 </div>
                 <a href="${INSTAGRAM_URL}" target="_blank" rel="noopener noreferrer"
@@ -239,13 +265,24 @@ export function render() {
             </footer>
 
         </div>
+
+        <!-- ── MODAL FOTO ── -->
+        <div class="bx-photo-modal" id="bxPhotoModal" role="dialog" aria-modal="true" aria-label="Foto ampliada">
+            <div class="bx-photo-modal__backdrop" id="bxModalBackdrop"></div>
+            <div class="bx-photo-modal__box">
+                <button class="bx-photo-modal__close" id="bxModalClose" aria-label="Fechar foto">
+                    <i class="fas fa-times"></i>
+                </button>
+                <img class="bx-photo-modal__img" id="bxModalImg" src="" alt="">
+            </div>
+        </div>
     `;
 }
 
 // ─── Init ──────────────────────────────────────────────────────────────────
 
 export function init() {
-    // Smooth scroll para links de âncora internos
+    // ── Smooth scroll ──
     document.querySelectorAll('.bx-landing a[href^="#"]').forEach(anchor => {
         anchor.addEventListener('click', e => {
             const targetId = anchor.getAttribute('href');
@@ -257,5 +294,75 @@ export function init() {
         });
     });
 
-    return null;
+    // ── Hamburger / Drawer ──
+    const hamburger = document.getElementById('bxHamburger');
+    const drawer    = document.getElementById('bxDrawer');
+    const overlay   = document.getElementById('bxOverlay');
+    const drawerClose = document.getElementById('bxDrawerClose');
+
+    function openDrawer() {
+        drawer.classList.add('bx-drawer--open');
+        overlay.classList.add('bx-drawer__overlay--visible');
+        hamburger.setAttribute('aria-expanded', 'true');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeDrawer() {
+        drawer.classList.remove('bx-drawer--open');
+        overlay.classList.remove('bx-drawer__overlay--visible');
+        hamburger.setAttribute('aria-expanded', 'false');
+        document.body.style.overflow = '';
+    }
+
+    if (hamburger)   hamburger.addEventListener('click', openDrawer);
+    if (drawerClose) drawerClose.addEventListener('click', closeDrawer);
+    if (overlay)     overlay.addEventListener('click', closeDrawer);
+
+    document.querySelectorAll('.bx-drawer__links a[href^="#"]').forEach(link => {
+        link.addEventListener('click', () => { closeDrawer(); });
+    });
+
+    // ── Photo Modal ──
+    const modal         = document.getElementById('bxPhotoModal');
+    const modalImg      = document.getElementById('bxModalImg');
+    const modalClose    = document.getElementById('bxModalClose');
+    const modalBackdrop = document.getElementById('bxModalBackdrop');
+
+    function openPhotoModal(src, alt) {
+        modalImg.src = src;
+        modalImg.alt = alt || '';
+        modal.classList.add('bx-photo-modal--open');
+        document.body.style.overflow = 'hidden';
+        modalClose.focus();
+    }
+
+    function closePhotoModal() {
+        modal.classList.remove('bx-photo-modal--open');
+        document.body.style.overflow = '';
+        setTimeout(() => { if (modalImg) modalImg.src = ''; }, 300);
+    }
+
+    document.querySelectorAll('.bx-gallery__item').forEach(item => {
+        item.addEventListener('click', () => {
+            const src = item.dataset.src;
+            const alt = item.dataset.alt;
+            if (src) openPhotoModal(src, alt);
+        });
+        item.addEventListener('keydown', e => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                const src = item.dataset.src;
+                const alt = item.dataset.alt;
+                if (src) openPhotoModal(src, alt);
+            }
+        });
+    });
+
+    if (modalClose)    modalClose.addEventListener('click', closePhotoModal);
+    if (modalBackdrop) modalBackdrop.addEventListener('click', closePhotoModal);
+
+    const onKeyEsc = e => { if (e.key === 'Escape') closePhotoModal(); };
+    document.addEventListener('keydown', onKeyEsc);
+
+    return () => { document.removeEventListener('keydown', onKeyEsc); };
 }

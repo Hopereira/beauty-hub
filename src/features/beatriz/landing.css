@@ -550,6 +550,288 @@
     }
 }
 
+/* ── BADGE (nav + drawer) ── */
+.bx-badge {
+    display: inline-block;
+    background: var(--bx-primary);
+    color: white;
+    font-size: 0.6rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 0.15rem 0.5rem;
+    border-radius: 50px;
+    vertical-align: middle;
+    line-height: 1.6;
+}
+
+.bx-badge--nav {
+    background: var(--bx-primary);
+    color: white;
+    margin-left: 0.3rem;
+}
+
+/* ── HAMBURGER ── */
+.bx-nav__hamburger {
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+    width: 48px;
+    height: 48px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 10px;
+    flex-shrink: 0;
+    transition: background 0.2s;
+}
+
+.bx-nav__hamburger:hover {
+    background: rgba(32, 178, 170, 0.1);
+}
+
+.bx-nav__hamburger span {
+    display: block;
+    width: 24px;
+    height: 2.5px;
+    background: var(--bx-text);
+    border-radius: 2px;
+    transition: transform 0.3s, opacity 0.3s;
+}
+
+/* ── DRAWER OVERLAY ── */
+.bx-drawer__overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 200;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+}
+
+.bx-drawer__overlay--visible {
+    opacity: 1;
+    pointer-events: all;
+}
+
+/* ── DRAWER SIDEBAR ── */
+.bx-drawer {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: min(320px, 88vw);
+    background: var(--bx-white);
+    z-index: 300;
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    transform: translateX(100%);
+    transition: transform 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: -8px 0 32px rgba(0, 0, 0, 0.15);
+    overflow-y: auto;
+}
+
+.bx-drawer--open {
+    transform: translateX(0);
+}
+
+.bx-drawer__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.07);
+}
+
+.bx-drawer__logo {
+    height: 36px;
+    width: auto;
+    object-fit: contain;
+}
+
+.bx-drawer__close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    background: rgba(0, 0, 0, 0.06);
+    border: none;
+    border-radius: 50%;
+    font-size: 1.1rem;
+    color: var(--bx-text);
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.bx-drawer__close:hover {
+    background: rgba(0, 0, 0, 0.12);
+}
+
+.bx-drawer__links {
+    list-style: none;
+    padding: 1rem 0;
+    flex: 1;
+}
+
+.bx-drawer__links li a {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    padding: 0.95rem 1.75rem;
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--bx-text);
+    text-decoration: none;
+    transition: background 0.15s, color 0.15s;
+    min-height: 52px;
+}
+
+.bx-drawer__links li a i {
+    width: 20px;
+    text-align: center;
+    color: var(--bx-primary);
+    font-size: 1.05rem;
+}
+
+.bx-drawer__links li a:hover {
+    background: var(--bx-accent);
+    color: var(--bx-primary-dark);
+}
+
+.bx-drawer__divider {
+    height: 1px;
+    background: rgba(0, 0, 0, 0.08);
+    margin: 0.5rem 1.75rem;
+}
+
+.bx-drawer__highlight {
+    color: var(--bx-primary) !important;
+    font-weight: 700 !important;
+}
+
+.bx-drawer__highlight--curso {
+    color: var(--bx-primary-dark) !important;
+}
+
+.bx-drawer__cta {
+    margin: 1rem 1.5rem 1.5rem;
+    justify-content: center;
+    width: calc(100% - 3rem);
+    min-height: 56px;
+    font-size: 1rem;
+    border-radius: 14px;
+}
+
+/* ── GALLERY OVERLAY & CURSOR ── */
+.bx-gallery__item {
+    cursor: pointer;
+    position: relative;
+}
+
+.bx-gallery__overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(20, 178, 170, 0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.25s;
+    border-radius: inherit;
+}
+
+.bx-gallery__overlay i {
+    color: white;
+    font-size: 1.8rem;
+    filter: drop-shadow(0 2px 8px rgba(0,0,0,0.3));
+}
+
+.bx-gallery__item:hover .bx-gallery__overlay,
+.bx-gallery__item:focus .bx-gallery__overlay {
+    opacity: 1;
+}
+
+.bx-gallery__item:focus {
+    outline: 3px solid var(--bx-primary);
+    outline-offset: 2px;
+}
+
+/* ── PHOTO MODAL ── */
+.bx-photo-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+}
+
+.bx-photo-modal--open {
+    opacity: 1;
+    pointer-events: all;
+}
+
+.bx-photo-modal__backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.88);
+}
+
+.bx-photo-modal__box {
+    position: relative;
+    z-index: 1;
+    max-width: min(92vw, 900px);
+    max-height: 92vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.bx-photo-modal__img {
+    display: block;
+    max-width: 100%;
+    max-height: 88vh;
+    width: auto;
+    height: auto;
+    border-radius: 12px;
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6);
+    object-fit: contain;
+}
+
+.bx-photo-modal__close {
+    position: absolute;
+    top: -18px;
+    right: -18px;
+    width: 48px;
+    height: 48px;
+    background: var(--bx-primary);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    font-size: 1.1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+    transition: background 0.2s, transform 0.15s;
+    z-index: 2;
+}
+
+.bx-photo-modal__close:hover {
+    background: var(--bx-primary-dark);
+    transform: scale(1.1);
+}
+
 /* ── FOOTER ── */
 .bx-footer {
     background: var(--bx-text);
@@ -617,12 +899,13 @@
         height: 38px;
     }
 
-    .bx-nav__mobile-cta {
+    .bx-nav__hamburger {
         display: flex;
-        width: 52px;
-        height: 52px;
-        font-size: 1.4rem;
-        flex-shrink: 0;
+    }
+
+    .bx-gallery__overlay {
+        opacity: 1;
+        background: rgba(20, 178, 170, 0.35);
     }
 
     /* ─ Hero ─ */
@@ -750,7 +1033,7 @@
         gap: 0.75rem;
     }
 
-    /* ─ Galeria ─ */
+    /* ─ Galeria (todos visíveis, overlay sempre ativo no touch) ─ */
     .bx-gallery {
         padding: 4rem 1.25rem;
     }
