@@ -64,7 +64,7 @@ export function render() {
                 <div style="text-align:center;">
                     <div style="display:flex;flex-direction:column;align-items:center;gap:2rem;">
                         <div style="width:280px;height:280px;background:white;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 40px rgba(0,0,0,0.15);">
-                            <img src="/src/assets/logos/logo.png" alt="Beauty Hub Logo" style="width:200px;height:auto;" onerror="this.style.display='none'">
+                            <img src="/src/assets/logos/sem fundo.png" alt="Beauty Hub Logo" style="width:200px;height:auto;" onerror="this.src='/src/assets/logos/beautyhub.png';this.onerror=function(){this.style.display='none'}">
                         </div>
                         <div style="background:white;color:var(--primary-color);padding:12px 40px;border-radius:50px;font-weight:800;font-size:1.8rem;letter-spacing:2px;box-shadow:0 4px 20px rgba(0,0,0,0.08);">
                             BEAUTY HUB

@@ -169,7 +169,13 @@ async function loadPageModule(page) {
     if (pageModules[page]) return pageModules[page];
 
     const moduleMap = {
-        'landing': () => import('../features/public/landing/landing.js'),
+        'landing': () => {
+            const h = window.location.hostname;
+            if (h === 'biaxavier.com.br' || h === 'www.biaxavier.com.br') {
+                return import('../features/beatriz/landing.js');
+            }
+            return import('../features/public/landing/landing.js');
+        },
         'privacy-policy': () => import('../features/public/privacy-policy.js'),
         'data-deletion': () => import('../features/public/data-deletion.js'),
         'terms-of-service': () => import('../features/public/terms-of-service.js'),
