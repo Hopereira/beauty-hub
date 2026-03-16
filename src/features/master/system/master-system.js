@@ -39,8 +39,9 @@ async function loadData() {
             api.get('/master/billing/webhook-logs').catch((e) => { console.warn('Webhook logs:', e.message); return { data: [] }; }),
         ]);
 
-        auditLogs = auditRes.data?.rows || auditRes.data || [];
-        webhookLogs = webhookRes.data?.rows || webhookRes.data || [];
+        const toArray = (v) => (Array.isArray(v) ? v : []);
+        auditLogs   = toArray(auditRes.data?.rows  ?? auditRes.data);
+        webhookLogs = toArray(webhookRes.data?.rows ?? webhookRes.data);
     } catch (error) {
         console.error('[MasterSystem] Error:', error);
     } finally {
