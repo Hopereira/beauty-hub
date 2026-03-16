@@ -284,19 +284,19 @@ function renderRegistrationForm() {
                 <div class="form-grid">
                     <div class="form-group">
                         <label>Nome do Estabelecimento *</label>
-                        <input type="text" id="businessName" required placeholder="Salão Beleza Pura">
+                        <input type="text" id="businessName" placeholder="Salão Beleza Pura">
                     </div>
                     <div class="form-group">
-                        <label>CNPJ *</label>
-                        <input type="text" id="cnpj" required placeholder="00.000.000/0000-00">
+                        <label>CNPJ</label>
+                        <input type="text" id="cnpj" placeholder="00.000.000/0000-00">
                     </div>
                     <div class="form-group">
                         <label>Telefone *</label>
-                        <input type="tel" id="businessPhone" required placeholder="(11) 99999-9999">
+                        <input type="tel" id="businessPhone" placeholder="(11) 99999-9999">
                     </div>
                     <div class="form-group">
                         <label>Email do Negócio *</label>
-                        <input type="email" id="businessEmail" required placeholder="contato@salaobel ezapura.com.br">
+                        <input type="email" id="businessEmail" placeholder="contato@salaobelezapura.com.br">
                     </div>
                 </div>
             </div>
@@ -446,15 +446,26 @@ function bindEvents() {
     // Account type change
     document.addEventListener('change', (e) => {
         if (e.target.name === 'accountType') {
-            const establishmentFields = document.getElementById('establishmentFields');
-            if (establishmentFields) {
-                establishmentFields.style.display = e.target.value === 'establishment' ? 'block' : 'none';
-            }
+            toggleEstablishmentFields(e.target.value === 'establishment');
         }
     });
 
     // Registration form submit
     document.getElementById('registrationForm')?.addEventListener('submit', handleRegistration);
+}
+
+function toggleEstablishmentFields(show) {
+    const section = document.getElementById('establishmentFields');
+    if (!section) return;
+    section.style.display = show ? 'block' : 'none';
+    const inputs = section.querySelectorAll('input[id="businessName"], input[id="businessPhone"], input[id="businessEmail"]');
+    inputs.forEach(input => {
+        if (show) {
+            input.setAttribute('required', '');
+        } else {
+            input.removeAttribute('required');
+        }
+    });
 }
 
 function openRegistrationModal() {
@@ -471,6 +482,9 @@ function openRegistrationModal() {
 
         // Re-bind submit (form was re-rendered)
         document.getElementById('registrationForm')?.addEventListener('submit', handleRegistration);
+
+        // Set initial required state (default: establishment checked)
+        toggleEstablishmentFields(true);
 
         // Activate smart CEP lookup
         initCepLookup();
