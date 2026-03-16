@@ -1,1 +1,2 @@
-# Cloudflare Pages handles SPA fallback automatically
+# SPA fallback — todas as rotas servem index.html
+/*    /index.html    200

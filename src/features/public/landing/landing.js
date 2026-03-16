@@ -6,6 +6,8 @@
 import { api } from '../../../shared/utils/http.js';
 import { formatCurrency } from '../../../shared/utils/validation.js';
 import { showToast } from '../../../shared/utils/toast.js';
+import { API_BASE_URL, setTenantSlug } from '../../../core/config.js';
+import { navigateTo } from '../../../core/router.js';
 
 let plans = [];
 let selectedPlan = null;
@@ -115,7 +117,7 @@ export async function init() {
 async function loadPlans() {
     try {
         // Buscar planos públicos (sem autenticação)
-        const res = await fetch('http://localhost:5001/api/public/plans');
+        const res = await fetch(`${API_BASE_URL}/public/plans`);
         const data = await res.json();
         plans = data.data || [];
     } catch (error) {
@@ -479,7 +481,7 @@ async function handleRegistration(e) {
     };
 
     try {
-        const response = await fetch('http://localhost:5001/api/public/register', {
+        const response = await fetch(`${API_BASE_URL}/public/register`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data),
@@ -490,9 +492,11 @@ async function handleRegistration(e) {
         if (result.success) {
             showToast('Conta criada com sucesso! Redirecionando...', 'success');
             
-            // Redirecionar para login com o slug do tenant
+            if (result.data?.tenantSlug) {
+                setTenantSlug(result.data.tenantSlug);
+            }
             setTimeout(() => {
-                window.location.href = `/${result.data.tenantSlug}/login`;
+                navigateTo('/login');
             }, 2000);
         } else {
             throw new Error(result.message || 'Erro ao criar conta');
