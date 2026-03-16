@@ -1,8 +1,9 @@
-# AUDITORIA DE CÓDIGO — BeautyHub SaaS
-**Data:** 16 de março de 2026  
-**Tipo:** Análise Estática — Leitura e Diagnóstico (sem alterações)  
-**Branch auditada:** `tests/personas` (master + feature/landing-page-and-public-apis)  
+# 📋 AUDITORIA COMPLETA DE CÓDIGO — BeautyHub SaaS 2026
+**Data inicial:** 16 de março de 2026 — **Atualizada:** 16 de março de 2026 (pós PRs #6, #7, #8, #10)  
+**Tipo:** Análise Estática — Leitura e Diagnóstico (sem alterações destrutivas)  
+**Branch auditada:** `master` (pós-merge de fix/security-p1, fix/hardening-p2, fix/cleanup-p3, feature/audit-fase4-completion)  
 **Auditor:** Cascade AI  
+**Status geral:** 🟢 Fases P1/P2/P3 completas — Fase 4 em review (PR #10)
 
 ---
 
@@ -10,14 +11,23 @@
 
 O sistema BeautyHub SaaS apresenta **arquitetura sólida e bem estruturada**, com implementação correta dos pilares de um SaaS multi-tenant: RBAC hierárquico, isolamento por `tenant_id`, rate limiting, brute force protection e logging estruturado via Winston. O frontend SPA em Vite + Vanilla JS é modular e bem organizado por feature.
 
-**Pontos fortes:** BaseRepository com escopo automático de tenant, middleware de assinatura com modo leitura/escrita, tratamento global de erros cobrindo Sequelize + Joi + JWT, lazy loading de módulos no frontend.
+**Pontos fortes:** BaseRepository com escopo automático de tenant, middleware de assinatura com modo leitura/escrita, tratamento global de erros cobrindo Sequelize + Joi + JWT, lazy loading de módulos no frontend, módulo LGPD implementado, Notifications CRUD completo, suite de testes Jest com 24 testes passando.
 
-**Riscos críticos identificados:**
-1. **Secrets JWT com fallback inseguros** em `env.js` — se as variáveis de ambiente não forem configuradas em produção, segredos fracos serão usados.
-2. **Interpolação de string em SQL** em dois locais — padrão perigoso mesmo quando os valores atuais são seguros.
-3. **`requireActiveSubscription` usa `require('../../models')` direto** — quebra o padrão de injeção de dependência e acopla ao modelo legado.
-4. **Cache de tenant em memória (Map)** — incompatível com deploy multi-instância no Fly.io.
-5. **`bruteForceProtection` instanciado mas não montado** nas rotas de auth em `app.multitenant.js`.
+### Estado das Correções (Pós-Auditoria)
+
+| Fase | PRs | Itens | Status |
+|------|-----|-------|--------|
+| P1 Crítico | #6 | JWT_SECRET obrigatório em produção; bruteForce montado em login | ✅ Merged |
+| P2 Hardening | #7 | SQL parametrizado; requireSubscription desacoplado; migrations 032/033 | ✅ Merged |
+| P3 Limpeza | #8 | asyncHandler billing; DB_PASSWORD obrigatório; app.legacy removido | ✅ Merged |
+| Fase 4 Roadmap | #10 | LGPD module; Notifications module; migrations 034/035; 24 testes Jest; fix cancelled/canceled | 🔄 PR aberto |
+
+**Riscos ainda em aberto:**
+1. **Cache de tenant em memória (Map)** — incompatível com deploy multi-instância no Fly.io (aguarda infra Redis)
+2. **Módulos `owner-*` sem BaseRepository** — acesso direto a modelos legados (refatoração progressiva)
+3. **Tokens em `localStorage`** — suscetível a XSS (CSP deveria ser habilitado)
+4. **Pagar.me** — apenas documentado, não implementado
+5. **Webhook resilience/DLQ** — não implementado
 
 ---
 
@@ -79,7 +89,7 @@ O router aplica guards por role (`route.role`), redirecionando PROFESSIONAL para
 
 ### 2.2 Backend (Node.js 20 + Express + Sequelize + PostgreSQL)
 
-#### Endpoints Mapeados (~70+)
+#### Endpoints Mapeados (~80+)
 
 **Públicos (sem auth):**
 ```
@@ -121,27 +131,40 @@ GET/POST/PUT/DELETE /api/master/billing  (planos, assinaturas, faturas, MRR)
 /api/professional/* (via professionalArea routes)
 ```
 
+**LGPD (Fase 4):**
+```
+GET  /api/lgpd/export                    POST /api/lgpd/delete-request
+GET  /api/master/lgpd/requests           POST /api/master/lgpd/requests/:id/process
+```
+
+**Notifications (Fase 4):**
+```
+GET    /api/notifications                PATCH /api/notifications/read-all
+PATCH  /api/notifications/:id/read       DELETE /api/notifications/:id
+POST   /api/notifications                POST  /api/notifications/broadcast
+```
+
 #### Arquitetura Modular
 
 O padrão `Controller → Service → Repository → Model` está implementado nos módulos `tenants/`, `billing/`, `users/`. Os módulos `owner-*` implementam `Controller → Service` mas **não usam BaseRepository** — acessam os modelos legados diretamente.
 
 ```
 backend/src/modules/
-├── tenants/      ✅ Controller→Service→Repository→Model (completo)
-├── billing/      ✅ Controller→Service→Repository→Model (completo)
-├── users/        ✅ Controller→Service→Repository→Model (completo)
-├── public/       ✅ Controller→Service (adequado para rotas públicas)
-├── owner-clients/     ⚠️ Controller→Service (sem Repository/BaseRepository)
-├── owner-services/    ⚠️ Controller→Service (sem Repository/BaseRepository)
-├── owner-appointments/⚠️ Controller→Service (sem Repository/BaseRepository)
-├── owner-financial/   ⚠️ Controller→Service (sem Repository/BaseRepository)
-├── owner-reports/     ⚠️ Controller→Service (sem Repository/BaseRepository)
-├── appointments/      ❌ Diretório VAZIO
-├── clients/           ❌ Diretório VAZIO
-├── notifications/     ❌ Diretório VAZIO
-├── services/          ❌ Diretório VAZIO
-└── inventory/, suppliers/, purchases/, professionals/, financial/  ✅ Com arquivos
+├── tenants/       ✅ Controller→Service→Repository→Model (completo)
+├── billing/       ✅ Controller→Service→Repository→Model (completo)
+├── users/         ✅ Controller→Service→Repository→Model (completo)
+├── public/        ✅ Controller→Service (adequado para rotas públicas)
+├── lgpd/          ✅ Service→Controller→Routes (Fase 4) [PR #10]
+├── notifications/ ✅ Service→Controller→Routes (Fase 4) [PR #10]
+├── owner-clients/      ⚠️ Controller→Service (sem BaseRepository)
+├── owner-services/     ⚠️ Controller→Service (sem BaseRepository)
+├── owner-appointments/ ⚠️ Controller→Service (sem BaseRepository)
+├── owner-financial/    ⚠️ Controller→Service (sem BaseRepository)
+├── owner-reports/      ⚠️ Controller→Service (sem BaseRepository)
+└── inventory/, suppliers/, purchases/, professionals/, financial/ ✅ Com arquivos
 ```
+
+> Diretórios stub vazios (`appointments/`, `clients/`, `services/`) foram removidos (PR #8/P3).
 
 #### Multi-Tenancy
 
@@ -150,11 +173,11 @@ backend/src/modules/
 | BaseRepository `_scopedWhere(tenantId)` | Automático em todos os métodos | ✅ |
 | tenantResolver middleware | Header `X-Tenant-Slug` → Subdomain → Query (dev) | ✅ |
 | validateTenantConsistency | JWT tenantId vs request tenantId | ✅ |
-| tenant_id em tabelas legadas | Migration 031 (allowNull: true) | ⚠️ |
+| tenant_id em tabelas legadas | Migrations 031→033 backfill→034 NOT NULL [PR #10] | ✅ em PR |
 | Cache de tenant (Map, 1min TTL) | Em memória — sem Redis | ⚠️ |
 | MASTER bypass de tenant | `req.user.role === ROLES.MASTER` | ✅ |
 
-**Risco:** A migration 031 adiciona `tenant_id` com `allowNull: true` nas tabelas legadas. Registros anteriores à migração e registros criados via rotas legadas terão `tenant_id = NULL`, quebrando o isolamento multi-tenant nesses registros.
+> Migrations 032 (login_attempts), 033 (backfill tenant_id via establishment_id), 034 (NOT NULL constraint) e 035 (lgpd_deletion_requests) incluídas em PR #10.
 
 #### RBAC
 
@@ -172,15 +195,16 @@ A hierarquia está corretamente implementada em `auth.js`: roles com índice mai
 | CORS | ✅ | Wildcard `*.biaxavier.com.br` + Cloudflare Pages |
 | Rate Limit global | ✅ | 100 req/15min por tenant+IP |
 | Rate Limit auth | ✅ | 20 req/15min em `/api/auth/login` e `/register` |
-| Brute Force Protection | ✅ Criado | ⚠️ Não montado em app.multitenant.js |
+| Brute Force Protection | ✅ Montado | `checkLoginAllowed()` em `/api/auth/login` (PR #6) |
 | Account Lockout | ✅ | 10 falhas/hora → bloqueia conta |
+| JWT obrigatório em produção | ✅ | `env.js` valida JWT_SECRET/DB_PASSWORD em NODE_ENV=production (PR #6) |
 | JWT + Refresh Token | ✅ | Access: 1h, Refresh: 7d |
 | bcryptjs | ✅ | Hash de senhas |
 | Joi validation | ✅ | Nos módulos tenants, billing, users |
-| SQL Parameterizado | ⚠️ | Dois locais com template literals inseguros |
-| LGPD (export/anonimização) | ❌ | Não encontrado no código ativo |
-| Webhook resilience/DLQ | ❌ | Não implementado |
-| Pagar.me integração | ❌ | Apenas documentada, não implementada |
+| SQL Parameterizado | ✅ | Template literals corrigidos para bind parameters (PR #7) |
+| LGPD (export/anonimização) | ✅ em PR | Módulo implementado em PR #10 |
+| Webhook resilience/DLQ | ❌ | Não implementado — roadmap |
+| Pagar.me integração | ❌ | Apenas documentada, não implementada — roadmap |
 
 #### Logging (Winston)
 
@@ -206,7 +230,7 @@ O `errorHandler.js` cobre:
 
 ### 2.3 Banco de Dados (PostgreSQL 15 via Supabase em Produção)
 
-#### Migrations (31 arquivos)
+#### Migrations (35 arquivos)
 
 ```
 001-010: Tabelas legadas (users, establishments, professionals, services,
@@ -219,9 +243,11 @@ O `errorHandler.js` cobre:
 023-027: Suppliers, purchases, products, purchase_items, inventory_movements
 028-030: Service categories, payment fields, service_categories table
 031:     Adiciona tenant_id às tabelas legadas (allowNull: true)
+032:     ✅ [PR #7] Cria tabela login_attempts com índices
+033:     ✅ [PR #7] Backfill tenant_id via establishment_id → tenants
+034:     ✅ [PR #10] NOT NULL constraint em tenant_id tabelas legadas
+035:     ✅ [PR #10] Cria tabela lgpd_deletion_requests
 ```
-
-**Tabela `login_attempts`** referenciada em `bruteForceProtection.js` mas **sem migration correspondente** (deveria estar em migration 018 ou uma nova).
 
 #### Índices Críticos
 
@@ -238,11 +264,12 @@ Migration 031 adiciona `{table}_tenant_id_idx` para todas as 7 tabelas legadas. 
 - Rede isolada `beautyhub_network`
 - Volume persistente `db_data`
 
-**Atenção:** Credenciais padrão expostas no arquivo versionado:
+**Corrigido (PR #8):** Credenciais agora obrigatórias com sintaxe `:?`:
 ```yaml
-DB_PASSWORD: ${DB_PASSWORD:-beautyhub_secret_2026}
-JWT_SECRET: ${JWT_SECRET:-bh_jwt_secret_change_me_in_production_2026}
+DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required. Copy .env.example to .env}
+JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required. Copy .env.example to .env}
 ```
+O docker-compose falha com mensagem clara se a variável não estiver definida.
 
 #### Fly.io (Produção Backend)
 
@@ -261,97 +288,72 @@ JWT_SECRET: ${JWT_SECRET:-bh_jwt_secret_change_me_in_production_2026}
 
 ## 3. DISCREPÂNCIAS IDENTIFICADAS
 
-| # | Discrepância | Localização | Impacto |
-|---|-------------|-------------|---------|
-| D1 | Docs mencionam 18 módulos frontend; existem 19 diretórios em `src/features/` (inclui `landing/` vazio separado de `public/landing/`) | `src/features/landing/` | Baixo |
-| D2 | Docs listam `src/features/settings/` mas a rota `/settings` existe sem feature page confirmada | `src/features/settings/` | Baixo |
-| D3 | Módulos `appointments/`, `clients/`, `notifications/`, `services/` em `backend/src/modules/` são vazios (stubs) | `backend/src/modules/` | Médio |
-| D4 | Backend tem dois arquivos app: `app.legacy.js` e `app.multitenant.js` — `app.legacy.js` não deveria mais existir | `backend/src/app.legacy.js` | Baixo |
-| D5 | 13 controllers legados em `backend/src/controllers/` não estão sendo usados nas rotas ativas — código morto | `backend/src/controllers/` | Baixo |
-| D6 | `bruteForceProtection` criado em `app.multitenant.js:203` mas nunca montado como middleware | `app.multitenant.js:203` | **Alto** |
-| D7 | Pagar.me documentado em `PAGARME_INTEGRATION.md` mas sem implementação no código ativo | `docs/` | Médio |
-| D8 | LGPD (exportação/anonimização) documentada mas sem módulo/service implementado | `backend/src/modules/` | Médio |
-| D9 | `login_attempts` table usada em bruteForceProtection.js sem migration dedicada | `backend/src/migrations/` | Alto |
-| D10 | Frontend frontend CANCELLED vs backend CANCELED (inconsistência de spelling) | `src/core/config.js:60` vs `constants/index.js:43` | Baixo |
+| # | Discrepância | Localização | Impacto | Status |
+|---|-------------|-------------|---------|--------|
+| D1 | Docs mencionam 18 módulos frontend; existem 19 diretórios (`landing/` separado de `public/landing/`) | `src/features/landing/` | Baixo | ⏳ Pendente |
+| D2 | `src/features/settings/` existe sem feature page confirmada | `src/features/settings/` | Baixo | ⏳ Pendente |
+| D3 | Módulos stub vazios (`appointments/`, `clients/`, `notifications/`, `services/`) | `backend/src/modules/` | Médio | ✅ Removidos (PR #8) |
+| D4 | `app.legacy.js` coexistindo com `app.multitenant.js` | `backend/src/app.legacy.js` | Baixo | ✅ Removido (PR #8) |
+| D5 | 13 controllers legados inativos em `backend/src/controllers/` | `backend/src/controllers/` | Baixo | ⏳ Refatoração progressiva |
+| D6 | `bruteForceProtection` criado mas não montado nas rotas de auth | `app.multitenant.js:203` | **Alto** | ✅ Corrigido (PR #6) |
+| D7 | Pagar.me documentado mas não implementado | `docs/` | Médio | ⏳ Roadmap |
+| D8 | LGPD documentada mas sem módulo implementado | `backend/src/modules/` | Médio | ✅ Implementado (PR #10) |
+| D9 | `login_attempts` sem migration dedicada | `backend/src/migrations/` | Alto | ✅ Migration 032 (PR #7) |
+| D10 | `'canceled'` (1L) em código de runtime vs `'cancelled'` (2L) na constante | `requireActiveSubscription.js:81` | Alto | ✅ Corrigido (PR #10) |
 
 ---
 
 ## 4. VULNERABILIDADES E RISCOS
 
-### 4.1 CRÍTICO — Secrets JWT com Fallback Inseguros
+### 4.1 ✅ RESOLVIDO — Secrets JWT com Fallback Inseguros (era Crítico)
 
-**Arquivo:** `backend/src/config/env.js:38-39`
+**Arquivo:** `backend/src/config/env.js` — **Corrigido em PR #6**
 
 ```javascript
-secret: process.env.JWT_SECRET || 'bh_jwt_secret_dev',
-refreshSecret: process.env.JWT_REFRESH_SECRET || 'bh_jwt_refresh_secret_dev',
+// Enforce required secrets in production
+if (nodeEnv === 'production') {
+  const requiredVars = ['JWT_SECRET', 'JWT_REFRESH_SECRET', 'DB_PASSWORD'];
+  const missing = requiredVars.filter((v) => !process.env[v]);
+  if (missing.length > 0) {
+    throw new Error(`[env] Missing required production environment variables: ${missing.join(', ')}`);
+  }
+}
 ```
-
-**Problema:** Se `JWT_SECRET` não estiver configurado em produção (ex: erro de deploy, variável não propagada para a instância), tokens serão assinados com o segredo fraco `bh_jwt_secret_dev`. Qualquer pessoa com acesso ao repositório poderia forjar tokens JWT válidos.
-
-**Impacto:** Crítico — comprometimento total de autenticação  
-**Probabilidade:** Baixa (Fly.io tem secrets configurados), mas consequência catastrófica
-
-**Mitigação:** Adicionar `throw new Error('JWT_SECRET is required in production')` se `NODE_ENV === 'production'` e a variável não estiver definida.
+O backend agora falha no startup com mensagem explícita se variáveis críticas estiverem ausentes em produção.
 
 ---
 
-### 4.2 ALTO — Interpolação de String em SQL (Dois Locais)
+### 4.2 ✅ RESOLVIDO — Interpolação de String em SQL
 
-**Local 1 — `backend/src/app.multitenant.js:170`:**
-```javascript
-`SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = '${table}') as exists`
-```
-`table` vem de array hardcoded `criticalTables` — atualmente seguro, mas o padrão é perigoso.
-
-**Local 2 — `backend/src/shared/middleware/bruteForceProtection.js:336`:**
-```javascript
-`WHERE created_at < NOW() - INTERVAL '${daysToKeep} days'`
-```
-`daysToKeep` default é 30, mas se futuro código passar valor de usuário, há injeção SQL.
-
-**Mitigação:** Usar `sequelize.literal()` com valores tipados ou queries parametrizadas.
+**Corrigido em PR #7:**
+- `app.multitenant.js`: schema health check usa `bind: [table]`
+- `bruteForceProtection.js`: cleanup usa `bind: [days]` com `parseInt` sanitizado
 
 ---
 
-### 4.3 ALTO — `bruteForceProtection` Não Montado nas Rotas de Auth
+### 4.3 ✅ RESOLVIDO — `bruteForceProtection` Não Montado
 
-**Arquivo:** `backend/src/app.multitenant.js:203`
-
+**Corrigido em PR #6:**
 ```javascript
-const bruteForceProtection = createBruteForceProtection(sequelize);
-// ... variável criada mas nunca usada como middleware
-app.use('/api/auth', authRoutes);  // bruteForce não aplicado aqui
+app.use('/api/auth/login', bruteForceProtection.checkLoginAllowed());
+app.use('/api/auth', authRoutes);
 ```
+Proteção anti-brute-force agora ativa em `/api/auth/login`.
 
-A proteção anti-brute-force foi implementada mas não está ativa. O `authLimiter` (rate limit simples) está ativo, mas o `BruteForceProtection.checkLoginAllowed()` — que verifica tentativas por email e bloqueia contas — **não está sendo executado**.
+---
 
-**Impacto:** Alto — brute force de credenciais não mitigado efetivamente  
-**Mitigação:** Aplicar `bruteForceProtection.checkLoginAllowed()` nas rotas de login:
+### 4.4 ✅ RESOLVIDO — `requireActiveSubscription` Acoplado ao Legacy
+
+**Corrigido em PR #7:** Middleware agora aceita `models` como segundo parâmetro:
 ```javascript
-app.use('/api/auth/login', bruteForceProtection.checkLoginAllowed(), authRoutes);
+function requireActiveSubscription(options = {}, models = null) {
+  const { Subscription } = models || require('../../models'); // fallback retrocompatível
+}
 ```
 
 ---
 
-### 4.4 ALTO — `requireActiveSubscription` Quebra Injeção de Dependência
-
-**Arquivo:** `backend/src/shared/middleware/requireActiveSubscription.js:55`
-
-```javascript
-const { Subscription } = require('../../models');
-```
-
-Este `require` dentro da função do middleware acessa o arquivo `backend/src/models/index.js` (modelos legados), contornando o padrão de injeção de dependência dos módulos. Isso cria acoplamento ao sistema legado e pode causar comportamento inesperado se o modelo `Subscription` do legacy não estiver sincronizado com o módulo `billing`.
-
-**Mitigação:** Injetar o modelo `Subscription` via factory function:
-```javascript
-function requireActiveSubscription(options = {}, { SubscriptionModel } = {}) { ... }
-```
-
----
-
-### 4.5 MÉDIO — Cache de Tenant em Memória (Incompatível Multi-Instância)
+### 4.5 ⚠️ ABERTO — Cache de Tenant em Memória
 
 **Arquivo:** `backend/src/shared/middleware/tenantResolver.js:12-13`
 
@@ -360,172 +362,123 @@ const tenantCache = new Map();
 const CACHE_TTL = 60000; // 1 minute
 ```
 
-Em deploy com múltiplas instâncias (Fly.io pode escalar horizontalmente), cada instância mantém seu próprio cache. Uma atualização de tenant (ex: suspensão de conta) pode não ser propagada imediatamente para todas as instâncias.
-
-**Impacto:** Médio — tenant suspenso pode continuar com acesso por até 1 minuto em outras instâncias  
-**Mitigação:** Redis para cache compartilhado ou TTL reduzido para 10 segundos.
-
----
-
-### 4.6 MÉDIO — tenant_id Nullable em Tabelas Legadas
-
-**Arquivo:** `backend/src/migrations/031_add_tenant_id_to_legacy_tables.js:41`
-
-```javascript
-allowNull: true, // Nullable for backward compatibility with existing data
-```
-
-Tabelas: `appointments`, `clients`, `services`, `professionals`, `financial_entries`, `financial_exits`, `payment_methods`
-
-Registros com `tenant_id = NULL` não serão retornados pelas queries dos módulos `owner-*` (que filtram por `tenant_id`), mas também não estão isolados — podem ser acessados por queries legacy sem filtro.
-
-**Mitigação:** Script de backfill para preencher `tenant_id` baseado em `establishment_id → tenant`.
+**Impacto:** Médio — tenant suspenso pode continuar com acesso em instâncias com cache válido  
+**Probabilidade:** Média (escala horizontal no Fly.io)  
+**Mitigação pendente:** Redis compartilhado ou TTL reduzido para 10s
 
 ---
 
-### 4.7 MÉDIO — Tabela `login_attempts` Sem Migration
+### 4.6 ✅ RESOLVIDO — tenant_id Nullable + Sem Backfill
 
-**Arquivo:** `backend/src/shared/middleware/bruteForceProtection.js:11`
-
-```javascript
-this.tableName = 'login_attempts';
-```
-
-Não há migration criando esta tabela no histórico de 31 arquivos. A tabela provavelmente foi criada manualmente ou via migration 018 (que tem mais de 14KB), mas não está explicitamente documentada.
-
-**Impacto:** Se a tabela não existir, o `bruteForceProtection` lançará erro em runtime (mas o código captura e ignora: linha 78 `// Don't block login on error`)  
-**Mitigação:** Criar migration dedicada `032_create_login_attempts.js`.
+**Corrigido em PRs #7 e #10:**
+- Migration 033: backfill via `establishment_id → establishments.tenant_id`
+- Migration 034: aplica `NOT NULL` nas 7 tabelas legadas
 
 ---
 
-### 4.8 BAIXO — Default DB Password no Repositório
+### 4.7 ✅ RESOLVIDO — Tabela `login_attempts` Sem Migration
 
-**Arquivo:** `docker-compose.yml:32,63`
+**Corrigido em PR #7:** Migration 032 cria a tabela com índices em `(identifier, type, created_at)` e `(created_at)`.
 
+---
+
+### 4.8 ✅ RESOLVIDO — DB Password Default no Repositório
+
+**Corrigido em PR #8:** `docker-compose.yml` agora usa `:?` em vez de `:-`:
 ```yaml
-DB_PASSWORD: ${DB_PASSWORD:-beautyhub_secret_2026}
-```
-
-Senha padrão versionada no Git. Em desenvolvimento local sem `.env`, esta senha é usada e pode ser identificada por qualquer pessoa com acesso ao repositório.
-
-**Mitigação:** Remover fallback do docker-compose.yml; exigir variável explícita. Para dev, usar `.env.local` no `.gitignore`.
-
----
-
-### 4.9 BAIXO — Endpoint de Billing Sem Error Handling
-
-**Arquivo:** `backend/src/app.multitenant.js:233-254`
-
-```javascript
-app.get('/api/billing/plans', async (req, res) => {
-  const { SubscriptionPlan } = modules.billing.models;
-  const plans = await SubscriptionPlan.findAll({ ... }); // sem try-catch
-  ...
-});
-```
-
-Se `SubscriptionPlan.findAll()` lançar erro, o servidor ficará sem resposta (unhandled promise rejection).
-
-**Mitigação:** Envolver em `try-catch` ou usar `asyncHandler()` disponível no `errorHandler.js`.
-
----
-
-## 5. MATRIZ DE RISCO
-
-| # | Risco | Impacto | Probabilidade | Prioridade |
-|---|-------|---------|---------------|------------|
-| R1 | JWT secrets sem validação de produção | **Alto** | Baixa | 🔴 P1 |
-| R2 | bruteForceProtection não montado | **Alto** | Atual | 🔴 P1 |
-| R3 | Interpolação SQL (template literals) | **Alto** | Baixa | 🟡 P2 |
-| R4 | requireActiveSubscription acoplado ao legacy | **Médio** | Atual | 🟡 P2 |
-| R5 | Cache tenant in-memory (multi-instância) | **Médio** | Média | 🟡 P2 |
-| R6 | tenant_id nullable (isolamento parcial) | **Médio** | Alta | 🟡 P2 |
-| R7 | Tabela login_attempts sem migration | **Médio** | Média | 🟡 P2 |
-| R8 | Endpoints billing sem error handling | **Baixo** | Baixa | 🟢 P3 |
-| R9 | DB password default no repositório | **Baixo** | Alta | 🟢 P3 |
-| R10 | Módulos stubs vazios | **Baixo** | Atual | 🟢 P3 |
-| R11 | Código legado (controllers/, app.legacy.js) | **Baixo** | Baixa | 🟢 P3 |
-| R12 | localStorage sem criptografia (tokens) | **Médio** | Baixa | 🟢 P3 |
-
----
-
-## 6. RECOMENDAÇÕES PRIORIZADAS
-
-### 🔴 URGENTE (P1) — Implementar Antes do Próximo Deploy
-
-#### R1 — Validar JWT_SECRET em Produção
-**Arquivo:** `backend/src/config/env.js`
-```javascript
-jwt: {
-  secret: process.env.NODE_ENV === 'production'
-    ? (() => { if (!process.env.JWT_SECRET) throw new Error('JWT_SECRET required'); return process.env.JWT_SECRET; })()
-    : (process.env.JWT_SECRET || 'bh_jwt_secret_dev'),
-  // ... mesmo padrão para refreshSecret
-}
-```
-
-#### R2 — Montar bruteForceProtection nas Rotas de Auth
-**Arquivo:** `backend/src/app.multitenant.js`
-
-Substituir:
-```javascript
-app.use('/api/auth', authRoutes);
-```
-Por:
-```javascript
-app.use('/api/auth/login', bruteForceProtection.checkLoginAllowed());
-app.use('/api/auth', authRoutes);
+DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
 ```
 
 ---
 
-### 🟡 IMPORTANTE (P2) — Implementar na Próxima Sprint
+### 4.9 ✅ RESOLVIDO — Endpoints de Billing Sem Error Handling
 
-#### R3 — Corrigir Interpolação SQL
-**Arquivo:** `backend/src/app.multitenant.js:170`
-```javascript
-// Substituir template literal por query parametrizada
-const [rows] = await sequelize.query(
-  `SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = $1) as exists`,
-  { bind: [table], type: sequelize.QueryTypes.SELECT }
-);
-```
-
-#### R4 — Injetar Subscription em requireActiveSubscription
-Refatorar para receber o modelo como parâmetro, ou buscar via `modules.billing.models.Subscription`.
-
-#### R5 — Migration para login_attempts
-Criar `backend/src/migrations/032_create_login_attempts.js` com a tabela necessária para o bruteForceProtection.
-
-#### R6 — Backfill de tenant_id em Tabelas Legadas
-Criar script ou migration `033_backfill_tenant_id.js` que preenche `tenant_id` nos registros existentes via:
-```sql
-UPDATE appointments a
-SET tenant_id = e.tenant_id
-FROM establishments e
-WHERE a.establishment_id = e.id AND a.tenant_id IS NULL;
-```
+**Corrigido em PR #8:** Ambos os endpoints `GET /api/billing/plans*` envolvidos em `asyncHandler()`.
 
 ---
 
-### 🟢 MELHORIA (P3) — Backlog Técnico
+### 4.10 ✅ RESOLVIDO — Bug `cancelled` vs `canceled`
 
-#### R7 — Error Handling em Endpoints Inline de Billing
-Envolver os `app.get('/api/billing/plans', ...)` com `asyncHandler()`.
+**Corrigido em PR #10:** `requireActiveSubscription.js` usava `'canceled'` (1L) enquanto a constante e o banco usam `'cancelled'` (2L). Corrigido para `includes(['suspended', 'canceled', 'cancelled', 'expired'])`.
 
-#### R8 — Redis para Cache de Tenant
-Para escalar horizontalmente no Fly.io, substituir o `Map` por Redis (ex: `ioredis`).
+---
 
-#### R9 — Remover Fallback de DB_PASSWORD do docker-compose
-Exigir variável explícita; documentar no README.
+### 4.11 ⚠️ ABERTO — Tokens JWT em `localStorage`
 
-#### R10 — Limpar Diretórios Vazios e Código Legado
-- Remover `backend/src/modules/appointments/`, `clients/`, `notifications/`, `services/` (stubs vazios)
-- Remover ou arquivar `backend/src/app.legacy.js`
-- Remover os 13 controllers legados inativos
+Suscetível a XSS. Content Security Policy (`contentSecurityPolicy: false` no Helmet) está desativada para o SPA.  
+**Impacto:** Médio — CSP desativada expõe localStorage a scripts injetados  
+**Mitigação:** Habilitar CSP com nonce-based para scripts, ou migrar tokens para `httpOnly cookies`
 
-#### R11 — Adicionar NOT NULL em tenant_id Após Backfill
-Após executar o backfill (R6), criar migration para tornar `tenant_id NOT NULL` nas tabelas legadas.
+---
+
+### 4.12 ⚠️ ABERTO — Módulos `owner-*` Sem BaseRepository
+
+Os 5 módulos `owner-*` acessam diretamente `Sequelize.findAll()` sem passar pelo `BaseRepository._scopedWhere()`. O escopo por `tenant_id` está implementado manualmente no service, o que é correto mas não garante uniformidade.
+
+**Impacto:** Baixo (funcional) / Médio (manutenibilidade)  
+**Mitigação:** Refatoração progressiva para estender `BaseRepository`
+
+---
+
+## 5. MATRIZ DE RISCO — ESTADO ATUAL
+
+| # | Risco | Impacto | Probabilidade | Status | PR |
+|---|-------|---------|---------------|--------|----|
+| R1 | JWT secrets sem validação de produção | **Alto** | Baixa | ✅ Resolvido | #6 |
+| R2 | bruteForceProtection não montado | **Alto** | Atual | ✅ Resolvido | #6 |
+| R3 | Interpolação SQL (template literals) | **Alto** | Baixa | ✅ Resolvido | #7 |
+| R4 | requireActiveSubscription acoplado ao legacy | **Médio** | Atual | ✅ Resolvido | #7 |
+| R5 | Cache tenant in-memory (multi-instância) | **Médio** | Média | ⚠️ Aberto | Infra Redis |
+| R6 | tenant_id nullable (isolamento parcial) | **Médio** | Alta | ✅ Resolvido | #7+#10 |
+| R7 | Tabela login_attempts sem migration | **Médio** | Média | ✅ Resolvido | #7 |
+| R8 | Endpoints billing sem error handling | **Baixo** | Baixa | ✅ Resolvido | #8 |
+| R9 | DB password default no repositório | **Baixo** | Alta | ✅ Resolvido | #8 |
+| R10 | Módulos stubs vazios + app.legacy.js | **Baixo** | Atual | ✅ Resolvido | #8 |
+| R11 | Bug cancelled vs canceled | **Médio** | Atual | ✅ Resolvido | #10 |
+| R12 | localStorage sem CSP (tokens expostos a XSS) | **Médio** | Baixa | ⚠️ Aberto | Roadmap |
+| R13 | Módulos owner-* sem BaseRepository | **Baixo** | Baixa | ⚠️ Aberto | Refatoração |
+| R14 | Pagar.me não implementado | **Médio** | Atual | ⚠️ Aberto | Roadmap |
+| R15 | Webhook resilience/DLQ ausente | **Médio** | Média | ⚠️ Aberto | Roadmap |
+
+---
+
+## 6. RECOMENDAÇÕES ATUAIS (ESTADO PÓS-CORREÇÕES)
+
+### ✅ COMPLETAS — Implementadas nas Fases P1/P2/P3
+
+| Item | Implementação | PR |
+|------|--------------|----|
+| JWT obrigatório em produção | `env.js` throw em startup | #6 |
+| bruteForce montado em login | `checkLoginAllowed()` antes de `authRoutes` | #6 |
+| SQL parametrizado | `bind: [table]` e `bind: [days]` | #7 |
+| requireSubscription desacoplado | `models` injetável via segundo parâmetro | #7 |
+| Migration login_attempts | 032 com índices | #7 |
+| Backfill tenant_id | 033 via establishment_id | #7 |
+| NOT NULL tenant_id | 034 após backfill | #10 |
+| asyncHandler billing endpoints | `asyncHandler()` em ambos `GET /billing/plans*` | #8 |
+| DB_PASSWORD obrigatório | `:?` no docker-compose | #8 |
+| app.legacy.js removido | `git rm` | #8 |
+| Módulo LGPD completo | service/controller/routes + migration 035 | #10 |
+| Módulo Notifications completo | service/controller/routes (substituiu stub vazio) | #10 |
+| Bug cancelled/canceled | `includes()` com ambas as formas | #10 |
+| Testes Jest (24 testes) | BaseRepo, RBAC, JWT, tenantResolver, subscription | #10 |
+
+### ⚠️ PRÓXIMAS ETAPAS RECOMENDADAS
+
+#### Alta Prioridade
+- **Fazer merge do PR #10** e rodar `npm run migrate` em produção para aplicar migrations 032-035
+- **Verificar tabela `login_attempts` no Supabase** — pode precisar de `GRANT` de permissões
+
+#### Média Prioridade
+- **Redis para tenant cache** — avaliar após confirmação de escala horizontal no Fly.io
+- **CSP habilitada** — configurar Helmet CSP com `nonce` para scripts inline do SPA
+- **Refatorar módulos `owner-*`** para estender `BaseRepository`
+
+#### Baixo — Roadmap
+- Integração real Pagar.me (webhook + events)
+- Webhook resilience com DLQ e retry exponencial
+- Testes de integração com banco de dados real
+- Testes E2E com Playwright
 
 ---
 
@@ -588,38 +541,45 @@ keyGenerator: (req) => {
 
 ---
 
-## 8. PLANO DE AÇÃO PÓS-AUDITORIA
+## 8. PLANO DE AÇÃO ATUALIZADO PÓS-CORREÇÕES
 
-### Fase 1 — Correções Críticas (1-2 dias)
-- [ ] R1: Validação obrigatória de JWT_SECRET em produção
-- [ ] R2: Montar bruteForceProtection.checkLoginAllowed() em `/api/auth/login`
-- [ ] Verificar se `login_attempts` table existe em Supabase production
+### Fase 1 ✅ — Correções Críticas (COMPLETO)
+- [x] R1: Validação obrigatória de JWT_SECRET em produção
+- [x] R2: Montar bruteForceProtection.checkLoginAllowed() em `/api/auth/login`
+- [x] R3: SQL parametrizado com bind parameters
 
-### Fase 2 — Correções Importantes (Sprint atual)
-- [ ] R3: Parametrizar queries com template literals
-- [ ] R4: Desacoplar requireActiveSubscription do legacy models
-- [ ] R5: Criar migration 032 para `login_attempts`
-- [ ] R6: Script de backfill tenant_id em tabelas legadas
+### Fase 2 ✅ — Hardening (COMPLETO)
+- [x] R4: Desacoplar requireActiveSubscription do legacy models
+- [x] R5: Migration 032 para `login_attempts`
+- [x] R6: Migration 033 backfill tenant_id; Migration 034 NOT NULL
 
-### Fase 3 — Limpeza e Hardening (Sprint seguinte)
-- [ ] R7: asyncHandler nos endpoints inline de billing
-- [ ] R8: Avaliar Redis para tenant cache (se Fly.io escalar)
-- [ ] R9: Remover fallback de senhas do docker-compose.yml
-- [ ] R10: Limpar diretórios vazios e código legado
-- [ ] R11: NOT NULL após backfill de tenant_id
+### Fase 3 ✅ — Limpeza (COMPLETO)
+- [x] R7: asyncHandler nos endpoints inline de billing
+- [x] R9: Remover fallback de senhas do docker-compose.yml
+- [x] R10: Limpar app.legacy.js e diretórios stub vazios
 
-### Fase 4 — Funcionalidades Faltantes (Roadmap)
-- [ ] Implementar módulo LGPD (exportação + anonimização de dados)
-- [ ] Integração real com Pagar.me (apenas documentada)
-- [ ] Webhook resilience com idempotência e retry
-- [ ] Implementar módulo completo de notificações
-- [ ] Testes automatizados (coverage mínima 70%)
+### Fase 4 🔄 — Funcionalidades (PR #10 — Revisão)
+- [x] Módulo LGPD implementado (export + deletion request + anonimização)
+- [x] Módulo Notifications implementado (CRUD + broadcast)
+- [x] Migration 035 para lgpd_deletion_requests
+- [x] Suite de testes Jest com 24 testes passando
+- [x] Bug cancelled/canceled corrigido
+- [ ] **Fazer merge do PR #10 e rodar migrations em produção**
+
+### Fase 5 🗓️ — Roadmap (Futuro)
+- [ ] Redis para tenant cache compartilhado
+- [ ] CSP habilitada no Helmet
+- [ ] Integração real com Pagar.me
+- [ ] Webhook resilience com DLQ e retry exponencial
+- [ ] Testes de integração com BD real (coverage ≥ 70%)
+- [ ] Refatorar módulos `owner-*` para estender `BaseRepository`
 
 ### Estratégia de Deploy Seguro
-1. **Feature flags** para novas funcionalidades
-2. **Canary deploy** no Fly.io (`vm.count = 2`, 10% → 50% → 100%)
-3. **Monitoramento pós-deploy** via logs Winston + UptimeRobot por 2h
-4. **Rollback rápido:** `fly releases list && fly deploy --image <previous>`
+1. **Merge PR #10** → `git pull` no servidor de staging
+2. **Rodar migrations:** `NODE_ENV=production npm run migrate`
+3. **Verificar tabela `login_attempts`** no Supabase: `\dt login_attempts`
+4. **Monitorar pós-deploy** via Winston logs + UptimeRobot por 2h
+5. **Rollback:** `fly releases list && fly deploy --image <previous>`
 
 ---
 
@@ -632,28 +592,36 @@ keyGenerator: (req) => {
 - [x] JWT com expiração curta (1h access, 7d refresh)
 - [x] bcrypt para senhas
 - [x] Error messages não vazam detalhes em produção
-- [ ] **bruteForceProtection não montado** ← CORRIGIR
-- [ ] **JWT_SECRET sem validação obrigatória em prod** ← CORRIGIR
-- [ ] Tabela `login_attempts` sem migration ← CORRIGIR
+- [x] **bruteForceProtection montado** em `/api/auth/login` (PR #6)
+- [x] **JWT_SECRET obrigatório em produção** (PR #6)
+- [x] **Tabela `login_attempts` com migration 032** (PR #7)
+- [ ] CSP desativada (tokens expostos a XSS) ← ROADMAP
 
 ### Multi-Tenancy
 - [x] BaseRepository com escopo automático
 - [x] tenantResolver por subdomain/header
 - [x] validateTenantConsistency JWT vs request
 - [x] MASTER bypass controlado
-- [ ] **tenant_id nullable em tabelas legadas** ← BACKFILL NECESSÁRIO
-- [ ] **Cache em memória** ← REDIS para multi-instância
+- [x] **tenant_id backfill + NOT NULL** migrations 033/034 (PR #7+#10)
+- [ ] Cache em memória ← Redis quando necessário
 
 ### Qualidade de Código
-- [x] Módulos bem separados (tenants, billing, users)
+- [x] Módulos bem separados (tenants, billing, users, lgpd, notifications)
 - [x] Constants centralizadas
 - [x] Error classes tipadas
 - [x] Logging estruturado com contexto
-- [ ] **Módulos stubs vazios** ← LIMPAR
-- [ ] **Código legado ativo** ← DEPRECAR E REMOVER
-- [ ] **Testes automatizados** ← IMPLEMENTAR
+- [x] **app.legacy.js removido** (PR #8)
+- [x] **Diretórios stub vazios removidos** (PR #8)
+- [x] **24 testes Jest passando** (PR #10)
+- [ ] Módulos `owner-*` sem BaseRepository ← Refatoração progressiva
+
+### Compliance LGPD
+- [x] `GET /api/lgpd/export` — exportação de dados pessoais (Art. 18 II)
+- [x] `POST /api/lgpd/delete-request` — solicitação de exclusão (Art. 18 VI)
+- [x] `processDeletionRequest` — anonimização dos dados do usuário
+- [x] Migration 035 para `lgpd_deletion_requests`
 
 ---
 
-*Relatório gerado em 16/03/2026 — BeautyHub SaaS Auditoria v1.0*  
-*Próxima auditoria recomendada: após implementação das correções P1 e P2*
+*Auditoria inicial: 16/03/2026 — Atualizada: 16/03/2026 pós PRs #6, #7, #8, #10*  
+*BeautyHub SaaS Auditoria v2.0 — Próxima revisão: após merge PR #10 e deploy em produção*

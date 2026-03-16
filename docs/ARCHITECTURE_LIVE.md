@@ -1,6 +1,6 @@
 # BeautyHub SaaS — Arquitetura de Produção
 
-> Atualizado: 2026-03-13 | Backend: **LIVE ✅** | Frontend: **Pendente deploy**
+> Atualizado: 2026-03-16 (pós PRs #6, #7, #8, #10) | Backend: **LIVE ✅** | Frontend: **Pendente deploy**
 
 ---
 
@@ -96,8 +96,8 @@ cliente1.biaxavier.com.br
 | Grupo | Rotas | Auth | Tenant |
 |-------|-------|------|--------|
 | **Público** | `/api/health`, `/api/auth/login`, `/api/billing/plans` | ❌ | ❌ |
-| **Master** | `/api/master/tenants/*`, `/api/master/billing/*` | ✅ master | ❌ |
-| **Tenant** | `/api/users/*`, `/api/tenant/*`, `/api/auth/me` | ✅ | ✅ |
+| **Master** | `/api/master/tenants/*`, `/api/master/billing/*`, `/api/master/lgpd/*` | ✅ master | ❌ |
+| **Tenant** | `/api/users/*`, `/api/tenant/*`, `/api/auth/me`, `/api/lgpd/*`, `/api/notifications/*` | ✅ | ✅ |
 | **Owner** | `/api/services,clients,appointments,financial,professionals,products,suppliers,purchases,reports/*` | ✅ | ✅ + subscription |
 
 ### Secrets (Fly.io)
@@ -146,7 +146,7 @@ VITE_API_URL=https://api.biaxavier.com.br npm run build
 |------|-------|
 | Host | `db.sbidpqhncyqmlbriyroo.supabase.co:5432` |
 | SSL | require |
-| Migrations | 31 ✅ |
+| Migrations | 35 ✅ (032-035 adicionadas em PRs #7/#10) |
 | Seeds | subscription_plans + master_and_tenant ✅ |
 
 ### Tabelas Principais
@@ -158,6 +158,8 @@ financial_entries, financial_exits, payment_methods
 products, suppliers, purchases, purchase_items
 professional_details, payment_transactions, inventory_movements
 invoices, usage_logs, establishments (legacy)
+login_attempts          ← novo (migration 032)
+lgpd_deletion_requests  ← novo (migration 035)
 ```
 
 ---
@@ -173,9 +175,20 @@ invoices, usage_logs, establishments (legacy)
 
 ---
 
-## 8. ⚠️ Problemas Identificados
+## 8. Status das Correções Pós-Auditoria
 
-### 8.1 CRÍTICO: Detecção de subdomain para domínios .com.br
+| PR | Título | Status |
+|----|--------|--------|
+| #6 | JWT_SECRET obrigatório + bruteForce em /auth/login | ✅ Merged |
+| #7 | SQL parametrizado + requireSubscription + migrations 032/033 | ✅ Merged |
+| #8 | asyncHandler billing + DB_PASSWORD obrigatório + app.legacy removido | ✅ Merged |
+| #10 | LGPD + Notifications + migrations 034/035 + 24 testes Jest | 🔄 PR aberto |
+
+---
+
+## 9. ⚠️ Problemas Residuais
+
+### 9.1 Detecção de subdomain para domínios .com.br
 
 O `getTenantSlug()` no frontend usa `hostname.split('.').length >= 3` para detectar subdomínio. Para domínios `.com.br` (TLD de 2 partes), isso gera falso positivo:
 
@@ -185,22 +198,9 @@ app.biaxavier.com.br → ["app","biaxavier","com","br"] → length=4 → sub="ap
 cliente1.biaxavier.com.br → ["cliente1","biaxavier","com","br"] → length=4 → sub="cliente1" ✅
 ```
 
-**Fix necessário**: Para `.com.br`, exigir `parts.length >= 4`:
+**Fix necessário**: Para `.com.br`, exigir `parts.length >= 4`. **Já implementado no frontend `config.js:34`** — verificar backend `tenantResolver.js`.
 
-```javascript
-// config.js → getTenantSlug()
-const parts = hostname.split('.');
-const isComBr = parts.slice(-2).join('.') === 'com.br';
-const minParts = isComBr ? 4 : 3;
-if (parts.length >= minParts) {
-    const sub = parts[0].toLowerCase();
-    if (!RESERVED_SLUGS.includes(sub)) return sub;
-}
-```
-
-Mesmo fix necessário no backend `tenantResolver.js → extractSubdomain()`.
-
-### 8.2 CORS para subdomínios de tenants
+### 9.2 CORS para subdomínios de tenants
 
 O `CORS_ORIGIN` atual só permite `app.biaxavier.com.br` e `adm.biaxavier.com.br`. Tenants em subdomínios (`cliente1.biaxavier.com.br`) serão bloqueados.
 
@@ -217,11 +217,11 @@ origin: (origin, callback) => {
 }
 ```
 
-### 8.3 VITE_API_URL não configurado
+### 9.3 VITE_API_URL não configurado
 
 O frontend precisa de `VITE_API_URL=https://api.biaxavier.com.br` no build. Sem isso, usa `/api` que só funciona com proxy local.
 
-### 8.4 Frontend não deployado
+### 9.4 Frontend não deployado
 
 O SPA ainda não está em Cloudflare Pages. Passos:
 1. Criar projeto no Cloudflare Pages
@@ -232,13 +232,14 @@ O SPA ainda não está em Cloudflare Pages. Passos:
 
 ---
 
-## 9. Próximos Passos
+## 10. Próximos Passos
 
-1. **DNS**: Adicionar registros A/AAAA para `api.biaxavier.com.br` → Fly.io
-2. **Fix subdomain**: Corrigir detecção de subdomain para `.com.br` (frontend + backend)
-3. **Fix CORS**: Permitir wildcard `*.biaxavier.com.br`
-4. **Deploy frontend**: Cloudflare Pages com `VITE_API_URL`
+1. **Merge PR #10** e rodar `npm run migrate` em produção
+2. **DNS**: Adicionar registros A/AAAA para `api.biaxavier.com.br` → Fly.io
+3. **Fix subdomain backend**: Verificar `tenantResolver.js → extractSubdomain()` para `.com.br`
+4. **Deploy frontend**: Cloudflare Pages com `VITE_API_URL=https://api.biaxavier.com.br`
 5. **Wildcard DNS**: `*.biaxavier.com.br → pages.dev`
-6. **Monitoramento**: UptimeRobot para `api.biaxavier.com.br/api/health`
-7. **Emails**: Integrar Resend para transacionais (welcome, reset password)
+6. **Redis**: Para tenant cache compartilhado em deploy multi-instância
+7. **Emails**: Integrar Resend para transacionais
 8. **Senhas**: Trocar credenciais padrão `123456` por senhas seguras
+9. **CSP**: Habilitar Helmet ContentSecurityPolicy com nonce para SPA

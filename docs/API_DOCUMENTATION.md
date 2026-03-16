@@ -34,6 +34,8 @@
    - [Establishments](#establishments-legacy)
    - [Service Categories](#service-categories)
    - [Payment Settings](#payment-settings)
+   - [LGPD / Privacy](#lgpd--privacy)
+   - [Notifications](#notifications)
 5. [Tabela Resumo](#tabela-resumo)
 6. [Lacunas Identificadas](#lacunas-identificadas)
 
@@ -69,7 +71,7 @@ MASTER > OWNER > ADMIN > PROFESSIONAL > CLIENT
 
 | Escopo | Limite | Janela |
 |--------|--------|--------|
-| Global `/api/*` | 500 requests | 15 min |
+| Global `/api/*` | 100 requests | 15 min |
 | Auth `/api/auth/login` | 20 requests | 15 min |
 | Auth `/api/auth/register` | 20 requests | 15 min |
 
@@ -1731,14 +1733,166 @@ Atualiza as configurações de pagamento e cria/atualiza recipient no Pagar.me.
 
 ---
 
+---
+
+## LGPD / Privacy
+
+> **Base:** `/api/lgpd` (tenant-scoped) e `/api/master/lgpd` (master-only)  
+> **Impl:** PR #10 — `backend/src/modules/lgpd/`
+
+### GET /api/lgpd/export
+
+Exporta todos os dados pessoais do usuário autenticado.  
+**Auth:** Bearer token + X-Tenant-Slug  
+**Compliance:** Art. 18 II da Lei 13.709/2018 (LGPD)
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "data": {
+    "exportedAt": "2026-03-16T14:30:00.000Z",
+    "legalBasis": "Art. 18 II - Lei 13.709/2018 (LGPD)",
+    "data": {
+      "profile": { "id": "uuid", "first_name": "...", "email": "..." },
+      "clientRecord": null,
+      "appointmentsAsProfessional": [],
+      "appointmentsAsClient": []
+    }
+  }
+}
+```
+
+---
+
+### POST /api/lgpd/delete-request
+
+Registra solicitação de exclusão de dados pessoais.  
+**Compliance:** Art. 18 VI da Lei 13.709/2018 (LGPD)  
+**Prazo legal:** 15 dias para processamento
+
+**Request Body:**
+```json
+{ "reason": "Não desejo mais usar o sistema" }
+```
+
+**Response 202:**
+```json
+{
+  "success": true,
+  "message": "Solicitação de exclusão registrada. Será processada em até 15 dias conforme Art. 18 VI da LGPD.",
+  "data": { "id": "uuid", "status": "pending", "requested_at": "..." }
+}
+```
+
+---
+
+### GET /api/master/lgpd/requests
+
+Lista todas as solicitações de exclusão.  
+**Auth:** MASTER role  
+**Query params:** `?page=1&limit=20&status=pending`
+
+---
+
+### POST /api/master/lgpd/requests/:id/process
+
+Processa solicitação de exclusão — anonimiza dados do usuário.  
+**Auth:** MASTER role
+
+**Anonimização realizada:**
+- `first_name = 'Usuário'`, `last_name = 'Removido'`
+- `email = 'deleted_{id}@anonymized.lgpd'`
+- `phone = NULL`, `password_hash = 'ANONYMIZED'`, `is_active = false`
+
+**Response 200:**
+```json
+{ "success": true, "data": { "requestId": "uuid", "anonymizedEmail": "deleted_abc123@anonymized.lgpd" } }
+```
+
+---
+
+## Notifications
+
+> **Base:** `/api/notifications`  
+> **Auth:** Bearer + X-Tenant-Slug + assinatura ativa  
+> **Impl:** PR #10 — `backend/src/modules/notifications/`
+
+### GET /api/notifications
+
+Lista notificações do usuário autenticado.  
+**Query params:** `?page=1&limit=20&unread=true`
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "data": [{ "id": "uuid", "type": "appointment", "title": "...", "message": "...", "read_at": null }],
+  "total": 5,
+  "unread": 3,
+  "page": 1,
+  "limit": 20,
+  "pages": 1
+}
+```
+
+---
+
+### PATCH /api/notifications/read-all
+
+Marca todas as notificações do usuário como lidas.
+
+**Response 200:** `{ "success": true, "data": { "updated": 3 } }`
+
+---
+
+### PATCH /api/notifications/:id/read
+
+Marca uma notificação como lida.
+
+---
+
+### DELETE /api/notifications/:id
+
+Remove uma notificação.  
+**Response:** 204 No Content
+
+---
+
+### POST /api/notifications
+
+Cria notificação para um usuário.  
+**Auth:** ADMIN ou OWNER
+
+**Request Body:**
+```json
+{ "user_id": "uuid", "type": "system", "title": "...", "message": "..." }
+```
+
+---
+
+### POST /api/notifications/broadcast
+
+Envia notificação para múltiplos usuários.  
+**Auth:** ADMIN ou OWNER
+
+**Request Body:**
+```json
+{ "userIds": ["uuid1", "uuid2"], "type": "announcement", "title": "...", "message": "..." }
+```
+
+---
+
 ## Changelog
 
 | Data | Versão | Alteração |
 |------|--------|-----------|
+| 2026-03-16 | 2.3.0 | Adicionados endpoints LGPD (Art. 18 LGPD) e Notifications (PR #10) |
+| 2026-03-16 | 2.2.0 | Security fixes: bruteForce ativo, JWT obrigatório, SQL parametrizado (PRs #6,#7,#8) |
 | 2026-02-26 | 2.1.0 | Adicionados endpoints de categorias de serviços e configurações de pagamento |
 | 2026-02-25 | 2.0.0 | Documentação inicial multi-tenant |
 
 ---
 
-*Documentação atualizada em 26/02/2026*
+*Documentação atualizada em 16/03/2026*
 
