@@ -3,7 +3,7 @@ name: Deploy — BeautyHub SaaS
 on:
   push:
     branches:
-      - main
+      - master
   workflow_dispatch:
 
 concurrency:
