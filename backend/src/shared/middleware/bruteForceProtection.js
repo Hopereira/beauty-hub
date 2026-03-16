@@ -312,13 +312,14 @@ class BruteForceProtection {
    * Cleanup old login attempts
    */
   async cleanup(daysToKeep = 30) {
-    const [result] = await this.sequelize.query(`
-      DELETE FROM ${this.tableName}
-      WHERE created_at < NOW() - INTERVAL '${daysToKeep} days'
-      RETURNING id
-    `, {
-      type: this.sequelize.QueryTypes.DELETE,
-    });
+    const days = parseInt(daysToKeep, 10) || 30;
+    const [result] = await this.sequelize.query(
+      `DELETE FROM ${this.tableName} WHERE created_at < NOW() - ($1 * INTERVAL '1 day') RETURNING id`,
+      {
+        bind: [days],
+        type: this.sequelize.QueryTypes.DELETE,
+      }
+    );
 
     return { deleted: result?.length || 0 };
   }

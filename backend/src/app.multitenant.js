@@ -168,9 +168,10 @@ app.get('/api/health/schema', async (req, res) => {
     
     for (const table of criticalTables) {
       const [rows] = await sequelize.query(
-        `SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = '${table}') as exists`
+        'SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = $1) as exists',
+        { bind: [table], type: sequelize.QueryTypes.SELECT }
       );
-      results[table] = rows[0].exists;
+      results[table] = rows[0]?.exists ?? false;
     }
 
     const allTablesExist = Object.values(results).every(exists => exists);
