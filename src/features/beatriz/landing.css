@@ -559,7 +559,7 @@
     font-size: 0.83rem;
 }
 
-/* ── MOBILE ── */
+/* ── TABLET (960px) ── */
 @media (max-width: 960px) {
     .bx-hero {
         grid-template-columns: 1fr;
@@ -571,22 +571,14 @@
     }
 
     .bx-hero__photo-wrap--left {
-        height: 55vw;
-        min-height: 280px;
-    }
-
-    .bx-hero__center {
-        padding: 3rem 1.5rem;
-    }
-
-    .bx-hero__title {
-        font-size: 1.75rem;
+        height: 60vw;
+        min-height: 300px;
     }
 
     .bx-about {
         grid-template-columns: 1fr;
         gap: 2.5rem;
-        padding: 4rem 1.5rem;
+        padding: 5rem 2rem;
     }
 
     .bx-about__photo {
@@ -603,32 +595,233 @@
 
     .bx-social-grid {
         grid-template-columns: 1fr;
-        max-width: 360px;
+        max-width: 480px;
     }
 }
 
+/* ── MOBILE ACESSÍVEL (640px) ── */
 @media (max-width: 640px) {
-    .bx-nav__links {
-        display: none;
+
+    /* ─ Nav ─ */
+    .bx-nav {
+        padding: 0 1.25rem;
+        height: 64px;
     }
 
+    .bx-nav__links,
     .bx-nav__cta {
         display: none;
     }
 
+    .bx-nav__logo {
+        height: 38px;
+    }
+
     .bx-nav__mobile-cta {
         display: flex;
+        width: 52px;
+        height: 52px;
+        font-size: 1.4rem;
+        flex-shrink: 0;
+    }
+
+    /* ─ Hero ─ */
+    .bx-hero__photo-wrap--left {
+        height: 70vw;
+        min-height: 260px;
+    }
+
+    .bx-hero__center {
+        padding: 2.5rem 1.5rem 3rem;
+    }
+
+    .bx-hero__pretitle {
+        font-size: 0.8rem;
+        letter-spacing: 0.18em;
+        margin-bottom: 1rem;
+    }
+
+    .bx-hero__title {
+        font-size: 2rem;
+        line-height: 1.2;
+        margin-bottom: 1.25rem;
+    }
+
+    .bx-hero__desc {
+        font-size: 1rem;
+        line-height: 1.8;
+        margin-bottom: 2rem;
+    }
+
+    /* ─ Botões ─ */
+    .bx-btn {
+        width: 100%;
+        justify-content: center;
+        padding: 1rem 1.5rem;
+        font-size: 1rem;
+        min-height: 56px;
+        border-radius: 16px;
+    }
+
+    .bx-hero__scroll {
+        font-size: 0.9rem;
+        min-height: 44px;
+        justify-content: center;
+    }
+
+    /* ─ Tags de seção ─ */
+    .bx-section-tag {
+        font-size: 0.82rem;
+        padding: 0.45rem 1.1rem;
+    }
+
+    /* ─ Serviços ─ */
+    .bx-services {
+        padding: 4rem 1.25rem;
+    }
+
+    .bx-services h2 {
+        font-size: 1.85rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .bx-services__subtitle {
+        font-size: 1.05rem;
+        line-height: 1.7;
+        margin-bottom: 2.5rem;
     }
 
     .bx-services__grid {
         grid-template-columns: 1fr;
+        gap: 1.25rem;
+    }
+
+    .bx-service-card {
+        padding: 2rem 1.5rem;
+        text-align: left;
+        display: flex;
+        align-items: flex-start;
+        gap: 1.25rem;
+        border-radius: 16px;
+    }
+
+    .bx-service-card__icon {
+        width: 60px;
+        height: 60px;
+        font-size: 1.5rem;
+        margin: 0;
+        flex-shrink: 0;
+    }
+
+    .bx-service-card h3 {
+        font-size: 1.1rem;
+        margin-bottom: 0.4rem;
+    }
+
+    .bx-service-card p {
+        font-size: 0.97rem;
+        line-height: 1.7;
+    }
+
+    /* ─ Sobre ─ */
+    .bx-about {
+        padding: 4rem 1.25rem;
+        gap: 2rem;
+    }
+
+    .bx-about__photo {
+        aspect-ratio: 4 / 3;
+        border-radius: 16px;
+    }
+
+    .bx-about__text h2 {
+        font-size: 1.85rem;
+        margin-bottom: 1.25rem;
+    }
+
+    .bx-about__text p {
+        font-size: 1rem;
+        line-height: 1.85;
+        color: rgba(255, 255, 255, 0.82);
+    }
+
+    .bx-about__actions {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    /* ─ Galeria ─ */
+    .bx-gallery {
+        padding: 4rem 1.25rem;
+    }
+
+    .bx-gallery h2 {
+        font-size: 1.85rem;
+    }
+
+    .bx-gallery__subtitle {
+        font-size: 1rem;
+        line-height: 1.7;
     }
 
     .bx-gallery__grid {
         grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
     }
 
-    .bx-hero__title {
-        font-size: 1.6rem;
+    .bx-gallery__item {
+        border-radius: 12px;
+    }
+
+    /* ─ Contato ─ */
+    .bx-contact {
+        padding: 4rem 1.25rem;
+    }
+
+    .bx-contact h2 {
+        font-size: 1.85rem;
+    }
+
+    .bx-contact__sub {
+        font-size: 1.05rem;
+        line-height: 1.7;
+        margin-bottom: 2.5rem;
+    }
+
+    .bx-social-grid {
+        grid-template-columns: 1fr;
+        max-width: 100%;
+        gap: 1rem;
+    }
+
+    .bx-social-card {
+        flex-direction: row;
+        align-items: center;
+        justify-content: flex-start;
+        padding: 1.5rem 1.75rem;
+        gap: 1.25rem;
+        text-align: left;
+        min-height: 80px;
+        border-radius: 16px;
+    }
+
+    .bx-social-card__icon {
+        font-size: 2.4rem;
+        margin: 0;
+        flex-shrink: 0;
+    }
+
+    .bx-social-card__name {
+        font-size: 1.05rem;
+    }
+
+    .bx-social-card__handle {
+        font-size: 0.9rem;
+    }
+
+    /* ─ Footer ─ */
+    .bx-footer {
+        font-size: 0.9rem;
+        padding: 2rem 1.5rem;
     }
 }
