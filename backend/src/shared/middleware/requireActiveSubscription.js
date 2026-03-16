@@ -30,8 +30,10 @@ function allowsRead(status) {
  * Middleware factory
  * @param {Object} options - Configuration options
  * @param {boolean} options.allowReadOnly - Allow read operations for PAST_DUE
+ * @param {Object} models - Optional injected models (preferred over legacy require)
+ * @param {Model}  models.Subscription - Sequelize Subscription model
  */
-function requireActiveSubscription(options = {}) {
+function requireActiveSubscription(options = {}, models = null) {
   const { allowReadOnly = false } = options;
 
   return async (req, res, next) => {
@@ -51,8 +53,8 @@ function requireActiveSubscription(options = {}) {
         });
       }
 
-      // Get subscription from tenant
-      const { Subscription } = require('../../models');
+      // Prefer injected Subscription model; fallback to legacy require
+      const { Subscription } = models || require('../../models');
       const subscription = await Subscription.findOne({
         where: { tenant_id: tenant.id },
         order: [['created_at', 'DESC']],
