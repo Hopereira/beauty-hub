@@ -99,7 +99,7 @@ class RegistrationService {
         email:      data.owner.email,
         password:   hashedPassword,
         phone:      data.owner.phone,
-        role:       'OWNER',
+        role:       'owner',
         is_active:  true,
       }, { transaction });
 
