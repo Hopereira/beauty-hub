@@ -65,6 +65,14 @@ jobs:
           VITE_API_URL: https://api.biaxavier.com.br
           VITE_APP_URL: https://app.biaxavier.com.br
 
+      - name: Create Cloudflare Pages project (first deploy only)
+        continue-on-error: true
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CF_API_TOKEN }}
+          accountId: ${{ secrets.CF_ACCOUNT_ID }}
+          command: pages project create beautyhub-frontend --production-branch=master
+
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@v3
         with:
