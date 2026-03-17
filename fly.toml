@@ -22,5 +22,6 @@ primary_region = "gru"
   cpus     = 1
 
 [deploy]
+  release_command = "node_modules/.bin/sequelize db:migrate --env production"
   strategy     = "rolling"
   wait_timeout = "10m"
