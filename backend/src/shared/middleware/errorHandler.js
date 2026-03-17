@@ -67,7 +67,7 @@ function errorHandler(err, req, res, next) {
 
   // Sequelize database errors
   if (err.name === 'SequelizeDatabaseError') {
-    logger.error('Database error', { ...logContext, error: err.message, stack: err.stack });
+    logger.error(`Database error: ${err.parent?.message || err.message} | SQL: ${err.sql || 'n/a'}`, logContext);
     
     return res.status(HTTP_STATUS.INTERNAL_ERROR).json({
       success: false,
