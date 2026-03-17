@@ -59,21 +59,7 @@ const logger = winston.createLogger({
   ],
 });
 
-// Add file transport in production
-if (env.nodeEnv === 'production') {
-  logger.add(new winston.transports.File({
-    filename: 'logs/error.log',
-    level: 'error',
-    maxsize: 5242880, // 5MB
-    maxFiles: 5,
-  }));
-  
-  logger.add(new winston.transports.File({
-    filename: 'logs/combined.log',
-    maxsize: 5242880,
-    maxFiles: 5,
-  }));
-}
+// In containers (production/Fly.io), stdout is captured — no file transports needed
 
 /**
  * Create a child logger with tenant context
