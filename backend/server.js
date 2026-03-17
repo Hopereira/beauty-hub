@@ -1,23 +1,8 @@
 // PRODUCTION APP: Multi-Tenant SaaS Architecture
-const { execSync } = require('child_process');
 const app = require('./src/app.multitenant');
 const { sequelize } = require('./src/models');
 const env = require('./src/config/env');
 const logger = require('./src/utils/logger');
-
-async function runMigrations() {
-  try {
-    logger.info('Running pending database migrations...');
-    execSync('npx sequelize-cli db:migrate --env production', {
-      stdio: 'inherit',
-      cwd: __dirname,
-    });
-    logger.info('Migrations completed.');
-  } catch (err) {
-    logger.error('Migration failed:', err.message);
-    throw err;
-  }
-}
 
 async function start() {
   try {
@@ -25,10 +10,9 @@ async function start() {
     await sequelize.authenticate();
     logger.info('Database connection established successfully.');
 
-    // Run migrations on startup (production) or sync models (development)
-    if (env.nodeEnv === 'production') {
-      await runMigrations();
-    } else {
+    // Sync models (creates tables if they don't exist)
+    // In production, use migrations instead
+    if (env.nodeEnv === 'development') {
       await sequelize.sync({ alter: false });
       logger.info('Database models synchronized.');
     }
