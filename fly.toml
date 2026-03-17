@@ -22,6 +22,5 @@ primary_region = "gru"
   cpus     = 1
 
 [deploy]
-  release_command = "npx sequelize-cli db:migrate --env production"
-  strategy        = "rolling"
-  wait_timeout    = "10m"
+  strategy     = "rolling"
+  wait_timeout = "10m"
