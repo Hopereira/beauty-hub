@@ -71,14 +71,14 @@ jobs:
         with:
           apiToken: ${{ secrets.CF_API_TOKEN }}
           accountId: ${{ secrets.CF_ACCOUNT_ID }}
-          command: pages project create beautyhub-frontend --production-branch=master
+          command: pages project create beauty-hub --production-branch=master
 
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CF_API_TOKEN }}
           accountId: ${{ secrets.CF_ACCOUNT_ID }}
-          command: pages deploy dist --project-name=beautyhub-frontend --commit-dirty=true
+          command: pages deploy dist --project-name=beauty-hub --commit-dirty=true
 
   # ─────────────────────────────────────────────
   # JOB 3: Deploy Backend → Fly.io
