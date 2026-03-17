@@ -1,6 +1,6 @@
 # BeautyHub SaaS — Arquitetura de Produção
 
-> Atualizado: 2026-03-16 (pós PRs #6, #7, #8, #10) | Backend: **LIVE ✅** | Frontend: **Pendente deploy**
+> Atualizado: 2026-03-17 (sessão de deploy completo) | Backend: **LIVE ✅** | Frontend: **LIVE ✅** | CI/CD: **LIVE ✅**
 
 ---
 
@@ -38,23 +38,23 @@
 
 | Domínio | Função | Hosting | Status |
 |---------|--------|---------|--------|
-| `biaxavier.com.br` | Site/Landing da Beatriz | Cloudflare Pages | 🔲 Pendente |
-| `app.biaxavier.com.br` | SPA do SaaS (login, dashboard) | Cloudflare Pages | 🔲 Pendente |
-| `adm.biaxavier.com.br` | Painel Master (mesma SPA, rota /master) | Cloudflare Pages | 🔲 Pendente |
-| `api.biaxavier.com.br` | API Backend Node.js | Fly.io (beautyhub-backend) | ✅ Cert criado, DNS pendente atualização |
-| `*.biaxavier.com.br` | Tenants (multi-tenant) | Cloudflare Pages wildcard | 🔲 Pendente |
+| `biaxavier.com.br` | Site/Landing da Beatriz | Cloudflare Pages | ✅ Live |
+| `app.biaxavier.com.br` | SPA do SaaS (login, dashboard) | Cloudflare Pages | ✅ Live |
+| `adm.biaxavier.com.br` | Painel Master (mesma SPA, rota /master) | Cloudflare Pages | ✅ Live |
+| `api.biaxavier.com.br` | API Backend Node.js | Fly.io (beautyhub-backend) | ✅ Live |
+| `*.biaxavier.com.br` | Tenants (multi-tenant) | Cloudflare Pages wildcard | ✅ Wildcard ativo |
 
 ### DNS Necessários
 
 ```
-# API (Fly.io) — beautyhub-backend
+# API (Fly.io) — beautyhub-backend  ✅ CONFIGURADO
 A     api   → 66.241.125.210
 AAAA  api   → 2a09:8280:1::e4:20f0:0
 
-# Frontend (Cloudflare Pages)
-CNAME app   → <projeto>.pages.dev
-CNAME adm   → <projeto>.pages.dev
-CNAME *     → <projeto>.pages.dev   (wildcard para tenants)
+# Frontend (Cloudflare Pages — projeto: beauty-hub)  ✅ CONFIGURADO
+CNAME app   → beauty-hub.pages.dev   (proxied)
+CNAME adm   → beauty-hub.pages.dev   (proxied)
+CNAME *     → beauty-hub.pages.dev   (proxied, wildcard para tenants)
 ```
 
 ### Slugs Reservados (não são tenants)
@@ -85,11 +85,13 @@ cliente1.biaxavier.com.br
 | Item | Valor |
 |------|-------|
 | App | `beautyhub-backend` |
-| URL | `https://beautyhub-backend.fly.dev` |
-| Custom | `https://api.biaxavier.com.br` (após DNS) |
+| URL | `https://beautyhub-backend.fly.dev` ✅ |
+| Custom | `https://api.biaxavier.com.br` ✅ |
 | Região | `gru` (São Paulo) |
 | Runtime | Node.js 20, Express, Sequelize 6 |
 | Porta | 5001 |
+| Máquinas | 256mb shared CPU, `min_machines_running=1` |
+| Migrations | `release_command = node_modules/.bin/sequelize db:migrate` |
 
 ### Endpoints Principais
 
@@ -146,7 +148,7 @@ VITE_API_URL=https://api.biaxavier.com.br npm run build
 |------|-------|
 | Host | `db.sbidpqhncyqmlbriyroo.supabase.co:5432` |
 | SSL | require |
-| Migrations | 35 ✅ (032-035 adicionadas em PRs #7/#10) |
+| Migrations | 36 ✅ (036 adicionada nesta sessão — coluna `avatar`) |
 | Seeds | subscription_plans + master_and_tenant ✅ |
 
 ### Tabelas Principais
@@ -217,29 +219,20 @@ origin: (origin, callback) => {
 }
 ```
 
-### 9.3 VITE_API_URL não configurado
+### 9.3 Suite de Testes Jest
 
-O frontend precisa de `VITE_API_URL=https://api.biaxavier.com.br` no build. Sem isso, usa `/api` que só funciona com proxy local.
-
-### 9.4 Frontend não deployado
-
-O SPA ainda não está em Cloudflare Pages. Passos:
-1. Criar projeto no Cloudflare Pages
-2. Configurar build: `npm run build`, output `dist/`
-3. Env var: `VITE_API_URL=https://api.biaxavier.com.br`
-4. Custom domains: `app.biaxavier.com.br`, `adm.biaxavier.com.br`
-5. Wildcard domain para tenants
+O job `Test` falha no CI (`continue-on-error: true`). Os testes precisam de variáveis de ambiente de banco de dados para rodar. Solução: criar banco de testes no Supabase ou mockar o Sequelize.
 
 ---
 
 ## 10. Próximos Passos
 
-1. **Merge PR #10** e rodar `npm run migrate` em produção
-2. **DNS**: Adicionar registros A/AAAA para `api.biaxavier.com.br` → Fly.io
-3. **Fix subdomain backend**: Verificar `tenantResolver.js → extractSubdomain()` para `.com.br`
-4. **Deploy frontend**: Cloudflare Pages com `VITE_API_URL=https://api.biaxavier.com.br`
-5. **Wildcard DNS**: `*.biaxavier.com.br → pages.dev`
+1. **Seeds produção**: Rodar `sequelize db:seed:all` para criar master user e planos de assinatura
+2. **Testes Jest**: Corrigir suite de testes no CI (atualmente `continue-on-error`)
+3. **CORS wildcard**: Suportar subdomínios de tenants (`*.biaxavier.com.br`)
+4. **Fix subdomain backend**: Verificar `tenantResolver.js → extractSubdomain()` para `.com.br`
+5. **Senhas padrão**: Alterar credenciais `123456` dos usuários de seed
 6. **Redis**: Para tenant cache compartilhado em deploy multi-instância
-7. **Emails**: Integrar Resend para transacionais
-8. **Senhas**: Trocar credenciais padrão `123456` por senhas seguras
-9. **CSP**: Habilitar Helmet ContentSecurityPolicy com nonce para SPA
+7. **Emails**: Integrar Resend para transacionais (registro, reset senha)
+8. **CSP**: Habilitar Helmet ContentSecurityPolicy com nonce para SPA
+9. **Monitoramento**: Configurar alertas UptimeRobot para `api.biaxavier.com.br/api/health`
