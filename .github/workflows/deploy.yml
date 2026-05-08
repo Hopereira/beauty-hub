@@ -14,10 +14,35 @@ jobs:
   # ─────────────────────────────────────────────
   # JOB 1: Test
   # ─────────────────────────────────────────────
+  # SEGURANÇA: Removido continue-on-error — deploy só ocorre se passar
+  # Adicionado PostgreSQL para testes de integração
+  # ─────────────────────────────────────────────
   test:
     name: Test
     runs-on: ubuntu-latest
-    continue-on-error: true
+    # continue-on-error: REMOVIDO — testes agora bloqueiam deploy
+    
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: beautyhub_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    
+    env:
+      NODE_ENV: test
+      DATABASE_URL: postgresql://test:test@localhost:5432/beautyhub_test
+      JWT_SECRET: test-jwt-secret-do-not-use-in-production
+      JWT_REFRESH_SECRET: test-refresh-secret-do-not-use-in-production
+      
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -34,15 +59,26 @@ jobs:
         working-directory: backend
 
       - name: Run backend tests
-        run: npm test --if-present
+        run: npm test
         working-directory: backend
+        
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-report
+          path: backend/coverage/
+          retention-days: 30
 
   # ─────────────────────────────────────────────
   # JOB 2: Deploy Frontend → Cloudflare Pages
   # ─────────────────────────────────────────────
+  # Só deploya se testes passarem (needs.test.result == 'success')
+  # ─────────────────────────────────────────────
   deploy-frontend:
     name: Deploy Frontend (Cloudflare Pages)
     needs: test
+    if: needs.test.result == 'success'
     runs-on: ubuntu-latest
     environment: production
     steps:
@@ -83,9 +119,13 @@ jobs:
   # ─────────────────────────────────────────────
   # JOB 3: Deploy Backend → Fly.io
   # ─────────────────────────────────────────────
+  # Só deploya se testes passarem
+  # Adicionado healthcheck após deploy
+  # ─────────────────────────────────────────────
   deploy-backend:
     name: Deploy Backend (Fly.io)
-    needs: test
+    needs: [test, deploy-frontend]
+    if: needs.test.result == 'success'
     runs-on: ubuntu-latest
     environment: production
     steps:
@@ -99,3 +139,10 @@ jobs:
         run: flyctl deploy --remote-only --config fly.toml --app beautyhub-backend
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
+      - name: Health Check
+        run: |
+          echo "Aguardando deploy..."
+          sleep 30
+          curl -f https://api.biaxavier.com.br/api/health || exit 1
+          echo "✅ Healthcheck passou"

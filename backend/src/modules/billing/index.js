@@ -8,6 +8,7 @@ const SubscriptionPlanModel = require('./subscriptionPlan.model');
 const SubscriptionModel = require('./subscription.model');
 const InvoiceModel = require('./invoice.model');
 const UsageLogModel = require('./usageLog.model');
+const WebhookEventModel = require('./webhookEvent.model');
 
 // Providers
 const {
@@ -70,6 +71,7 @@ function initBillingModule(sequelize, models = {}, options = {}) {
   const Subscription = SubscriptionModel(sequelize);
   const Invoice = InvoiceModel(sequelize);
   const UsageLog = UsageLogModel(sequelize);
+  const WebhookEvent = WebhookEventModel(sequelize);
 
   // ─────────────────────────────────────────────────────────────────────────────
   // Associations
@@ -108,6 +110,7 @@ function initBillingModule(sequelize, models = {}, options = {}) {
     Subscription,
     Invoice,
     UsageLog,
+    WebhookEvent,
     Tenant: models.Tenant,
   };
 
@@ -133,7 +136,11 @@ function initBillingModule(sequelize, models = {}, options = {}) {
   
   const billingController = new BillingController(services);
   const masterBillingController = new MasterBillingController(services);
-  const webhookController = new WebhookController(services, paymentProvider);
+  // ═══════════════════════════════════════════════════════════════════════════
+  // Controllers — Com models para queries diretas
+  // ═══════════════════════════════════════════════════════════════════════════
+  
+  const webhookController = new WebhookController(services, paymentProvider, billingModels);
   const publicBillingController = new PublicBillingController(services.planService);
 
   const controllers = {

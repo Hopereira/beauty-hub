@@ -32,8 +32,12 @@ const notificationRoutes = require('./routes/notifications');
 
 const app = express();
 
-// Trust proxy (Fly.io runs behind a reverse proxy)
-app.set('trust proxy', 1);
+// Trust proxy (configurable for security)
+// Accept only loopback, link-local, and specific trusted proxies
+const trustProxyList = process.env.TRUSTED_PROXIES 
+  ? process.env.TRUSTED_PROXIES.split(',')
+  : ['loopback', 'linklocal', 'uniquelocal'];
+app.set('trust proxy', trustProxyList);
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Initialize Modules
@@ -41,11 +45,83 @@ app.set('trust proxy', 1);
 const modules = initializeModules();
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Security
+// Security — CSP Gradual Implementation
+// FASE 1: Report-Only para validar sem quebrar
+// FASE 2: Enforcement após validação
+// ROLLBACK: Alterar CSP_ENFORCEMENT=false para voltar ao report-only
 // ─────────────────────────────────────────────────────────────────────────────
-app.use(helmet({
-  contentSecurityPolicy: false, // Adjust for SPA
-}));
+const CSP_ENFORCEMENT = process.env.CSP_ENFORCEMENT === 'true';
+const CSP_REPORT_URI = process.env.CSP_REPORT_URI || '/api/csp-report';
+
+// CSP Policy — Compatível com Vite, Google Fonts, APIs externas
+const cspDirectives = {
+  defaultSrc: ["'self'"],
+  scriptSrc: [
+    "'self'",
+    "'unsafe-inline'", // Necessário para SPA atual (FASE 2 removerá)
+    "'unsafe-eval'",   // Necessário para alguns builds Vite
+  ],
+  styleSrc: [
+    "'self'",
+    "'unsafe-inline'", // Para estilos dinâmicos
+    "https://fonts.googleapis.com",
+  ],
+  fontSrc: [
+    "'self'",
+    "https://fonts.gstatic.com",
+    "data:",
+  ],
+  imgSrc: [
+    "'self'",
+    "data:",
+    "https:",
+    "blob:", // Para previews de imagem futuros
+  ],
+  connectSrc: [
+    "'self'",
+    process.env.CORS_ORIGIN || "https://app.biaxavier.com.br",
+    "https://api.biaxavier.com.br",
+    "https://*.supabase.co", // Para Supabase Storage futuro
+  ],
+  mediaSrc: [
+    "'self'",
+    "https:",
+    "blob:",
+  ],
+  objectSrc: ["'none'"],
+  frameSrc: ["'self'"],
+  frameAncestors: ["'none'"],
+  upgradeInsecureRequests: [],
+};
+
+// Report-Only para validação inicial (não quebra o sistema)
+if (CSP_ENFORCEMENT) {
+  logger.info('[SECURITY] CSP Enforcement ativo');
+  app.use(helmet({
+    contentSecurityPolicy: {
+      directives: {
+        ...cspDirectives,
+        reportUri: CSP_REPORT_URI,
+      },
+    },
+  }));
+} else {
+  logger.info('[SECURITY] CSP Report-Only ativo — violações logadas sem bloquear');
+  app.use(helmet({
+    contentSecurityPolicy: false, // Mantém desativado até validação completa
+  }));
+  
+  // Middleware para logar violações CSP manualmente (report-uri alternativo)
+  app.post('/api/csp-report', express.json({ type: 'application/csp-report' }), (req, res) => {
+    logger.warn('[CSP Violation]', {
+      documentUri: req.body?.['csp-report']?.['document-uri'],
+      blockedUri: req.body?.['csp-report']?.['blocked-uri'],
+      violatedDirective: req.body?.['csp-report']?.['violated-directive'],
+      userAgent: req.headers['user-agent'],
+    });
+    res.status(204).send();
+  });
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // CORS

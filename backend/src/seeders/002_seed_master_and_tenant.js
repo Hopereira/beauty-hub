@@ -2,16 +2,56 @@
 
 const { v4: uuidv4 } = require('uuid');
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 
 // Inline constants for Sequelize CLI
 const TENANT_STATUS = { PENDING: 'pending', ACTIVE: 'active', SUSPENDED: 'suspended', CANCELLED: 'cancelled' };
 const SUBSCRIPTION_STATUS = { TRIAL: 'trial', ACTIVE: 'active', PAST_DUE: 'past_due', CANCELLED: 'cancelled', EXPIRED: 'expired' };
 const ROLES = { CLIENT: 'client', PROFESSIONAL: 'professional', ADMIN: 'admin', OWNER: 'owner', MASTER: 'master' };
 
+/**
+ * Gera senha segura aleatória
+ * @param {number} length - Tamanho da senha (default: 16)
+ * @returns {string} Senha segura
+ */
+function generateSecurePassword(length = 16) {
+  return crypto.randomBytes(length).toString('base64').slice(0, length);
+}
+
 module.exports = {
   async up(queryInterface) {
+    // ────────────────────────────────────────────────────────────────────────────
+    // SEGURANÇA: Proteção contra execução em produção
+    // ────────────────────────────────────────────────────────────────────────────
+    if (process.env.NODE_ENV === 'production' && process.env.ALLOW_SEED_IN_PROD !== 'true') {
+      console.log('[SEEDER] Bloqueado em produção. Use ALLOW_SEED_IN_PROD=true para forçar.');
+      console.log('[SEEDER] Recomendado: criar usuários via API/admin, não seeder.');
+      return;
+    }
+
     const now = new Date();
-    const passwordHash = await bcrypt.hash('123456', 10);
+    
+    // ────────────────────────────────────────────────────────────────────────────
+    // SEGURANÇA: Senhas seguras com bcrypt 12 rounds
+    // ────────────────────────────────────────────────────────────────────────────
+    // 1. Master password: variável de ambiente ou aleatória
+    const masterPassword = process.env.MASTER_SEED_PASSWORD || generateSecurePassword(22);
+    const ownerPassword = process.env.OWNER_SEED_PASSWORD || masterPassword;
+    
+    // Aumentar rounds para 12 (mais seguro que 10)
+    const BCRYPT_ROUNDS = 12;
+    const passwordHash = await bcrypt.hash(masterPassword, BCRYPT_ROUNDS);
+    const ownerPasswordHash = await bcrypt.hash(ownerPassword, BCRYPT_ROUNDS);
+    
+    // Log de senhas (apenas em desenvolvimento)
+    if (process.env.NODE_ENV === 'development' || process.env.LOG_SEED_PASSWORDS === 'true') {
+      console.log('══════════════════════════════════════════════════════════════════');
+      console.log('[SEEDER] ATENÇÃO: Senhas geradas (guarde em local seguro):');
+      console.log(`[SEEDER] Master User (master@beautyhub.com): ${masterPassword}`);
+      console.log(`[SEEDER] Owner User (owner@belezapura.com): ${ownerPassword}`);
+      console.log('[SEEDER] Recomendado: Alterar senhas após primeiro login');
+      console.log('══════════════════════════════════════════════════════════════════');
+    }
 
     // 1. Create MASTER user (no tenant)
     const masterId = uuidv4();
@@ -83,7 +123,7 @@ module.exports = {
       first_name: 'Maria',
       last_name: 'Silva',
       email: 'owner@belezapura.com',
-      password: passwordHash,
+      password: ownerPasswordHash,
       phone: '11987654321',
       role: ROLES.OWNER,
       is_active: true,

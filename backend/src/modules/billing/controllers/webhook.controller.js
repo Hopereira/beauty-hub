@@ -7,10 +7,16 @@ const { HTTP_STATUS } = require('../../../shared/constants');
 const { PaymentProviderInterface } = require('../providers');
 
 class WebhookController {
-  constructor(services, paymentProvider) {
+  constructor(services, paymentProvider, models = {}) {
     this.subscriptionService = services.subscriptionService;
     this.invoiceService = services.invoiceService;
     this.paymentProvider = paymentProvider;
+    
+    // Models for direct queries (passed from billing module)
+    this.models = models;
+    this.Subscription = models.Subscription || null;
+    this.Invoice = models.Invoice || null;
+    this.WebhookEvent = models.WebhookEvent || null;
 
     // Bind methods
     this.handleWebhook = this.handleWebhook.bind(this);
@@ -342,16 +348,124 @@ class WebhookController {
            raw?.data?.object?.metadata?.subscriptionId;
   }
 
+  // ═══════════════════════════════════════════════════════════════════════════
+  // Database Helpers — IMPLEMENTADOS (não retornam null)
+  // ═══════════════════════════════════════════════════════════════════════════
+
   async _findSubscriptionByGatewayId(gatewaySubscriptionId) {
-    // This would need access to the Subscription model
-    // For now, return null - should be implemented with proper model access
-    return null;
+    if (!this.Subscription || !gatewaySubscriptionId) {
+      console.warn('[Webhook] Subscription model not available or invalid gateway ID');
+      return null;
+    }
+    
+    try {
+      const subscription = await this.Subscription.findOne({
+        where: { gateway_subscription_id: gatewaySubscriptionId },
+        include: ['tenant'],
+      });
+      
+      if (subscription) {
+        console.log('[Webhook] Found subscription', {
+          id: subscription.id,
+          tenantId: subscription.tenant_id,
+          gatewayId: gatewaySubscriptionId,
+        });
+      }
+      
+      return subscription;
+    } catch (error) {
+      console.error('[Webhook] Error finding subscription:', error.message);
+      return null;
+    }
   }
 
   async _findInvoiceByGatewayId(gatewayInvoiceId) {
-    // This would need access to the Invoice model
-    // For now, return null - should be implemented with proper model access
-    return null;
+    if (!this.Invoice || !gatewayInvoiceId) {
+      console.warn('[Webhook] Invoice model not available or invalid gateway ID');
+      return null;
+    }
+    
+    try {
+      const invoice = await this.Invoice.findOne({
+        where: { gateway_invoice_id: gatewayInvoiceId },
+        include: ['tenant', 'subscription'],
+      });
+      
+      if (invoice) {
+        console.log('[Webhook] Found invoice', {
+          id: invoice.id,
+          tenantId: invoice.tenant_id,
+          gatewayId: gatewayInvoiceId,
+        });
+      }
+      
+      return invoice;
+    } catch (error) {
+      console.error('[Webhook] Error finding invoice:', error.message);
+      return null;
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // Idempotency — Previne processamento duplicado
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  async _checkIdempotency(provider, eventId) {
+    if (!this.WebhookEvent || !eventId) {
+      return { shouldProcess: true, existingEvent: null };
+    }
+    
+    try {
+      const existing = await this.WebhookEvent.findOne({
+        where: { event_id: eventId },
+      });
+      
+      if (existing) {
+        console.log('[Webhook] Event already processed (idempotency)', {
+          eventId,
+          provider,
+          processedAt: existing.processed_at,
+        });
+        return { shouldProcess: false, existingEvent: existing };
+      }
+      
+      return { shouldProcess: true, existingEvent: null };
+    } catch (error) {
+      console.error('[Webhook] Idempotency check error:', error.message);
+      // Fail open — process anyway if check fails
+      return { shouldProcess: true, existingEvent: null };
+    }
+  }
+
+  async _recordWebhookEvent(data) {
+    if (!this.WebhookEvent) {
+      console.warn('[Webhook] WebhookEvent model not available');
+      return null;
+    }
+    
+    try {
+      return await this.WebhookEvent.create(data);
+    } catch (error) {
+      console.error('[Webhook] Failed to record event:', error.message);
+      return null;
+    }
+  }
+
+  async _markEventProcessed(eventId, error = null) {
+    if (!this.WebhookEvent || !eventId) return;
+    
+    try {
+      await this.WebhookEvent.update(
+        {
+          processed: true,
+          processed_at: new Date(),
+          error: error ? error.message || error : null,
+        },
+        { where: { event_id: eventId } }
+      );
+    } catch (err) {
+      console.error('[Webhook] Failed to mark event processed:', err.message);
+    }
   }
 }
 
