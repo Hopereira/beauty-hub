@@ -10,6 +10,6 @@ module.exports = {
   ],
   testTimeout: 10000,
   // Exclude integration tests that require DB unless RUN_INTEGRATION=true
-  testPathIgnorePatterns: process.env.RUN_INTEGRATION ? [] : [],
+  testPathIgnorePatterns: process.env.RUN_INTEGRATION ? [] : ['tests/integration'],
   setupFiles: ['./tests/setup.js'],
 };
