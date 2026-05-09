@@ -46,8 +46,13 @@ module.exports = {
   db: parseDbConfig(),
 
   jwt: {
-    secret: process.env.JWT_SECRET || 'bh_jwt_secret_dev',
-    refreshSecret: process.env.JWT_REFRESH_SECRET || 'bh_jwt_refresh_secret_dev',
+    // SECURITY: No fallbacks in production - must be set explicitly
+    secret: nodeEnv === 'production' 
+      ? (process.env.JWT_SECRET || (() => { throw new Error('JWT_SECRET is required in production'); })())
+      : (process.env.JWT_SECRET || 'dev_jwt_secret_CHANGE_IN_PRODUCTION'),
+    refreshSecret: nodeEnv === 'production'
+      ? (process.env.JWT_REFRESH_SECRET || (() => { throw new Error('JWT_REFRESH_SECRET is required in production'); })())
+      : (process.env.JWT_REFRESH_SECRET || 'dev_refresh_secret_CHANGE_IN_PRODUCTION'),
     accessTokenExpiration: process.env.JWT_ACCESS_TOKEN_EXPIRATION || '1h',
     refreshTokenExpiration: process.env.JWT_REFRESH_TOKEN_EXPIRATION || '7d',
   },

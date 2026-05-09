@@ -20,6 +20,8 @@ const { createOnboardingRoutes } = require('./modules/tenants/onboarding.routes'
 const { initLgpdModule } = require('./modules/lgpd');
 const { initNotificationsModule } = require('./modules/notifications');
 const requireActiveSubscription = require('./shared/middleware/requireActiveSubscription');
+const requestIdMiddleware = require('./middleware/requestId');
+const healthRoutes = require('./routes/health');
 
 // Legacy routes (until fully migrated to modules)
 const authRoutes = require('./routes/auth');
@@ -173,11 +175,12 @@ app.use(cors({
 // ─────────────────────────────────────────────────────────────────────────────
 // Body Parsing
 // ─────────────────────────────────────────────────────────────────────────────
+// Request ID for tracing
+app.use(requestIdMiddleware);
+
+// Body Parsing
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Logging
 // ─────────────────────────────────────────────────────────────────────────────
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms', {
   stream: { write: (message) => logger.info(message.trim()) },
@@ -224,20 +227,9 @@ app.use('/api/auth/register', authLimiter);
 const { sequelize } = modules;
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Health Check
+// Health Check (Enterprise)
 // ─────────────────────────────────────────────────────────────────────────────
-app.get('/api/health', (req, res) => {
-  res.json({
-    success: true,
-    message: 'Beauty Hub Multi-Tenant API is running.',
-    data: {
-      version: '2.0.0',
-      uptime: process.uptime(),
-      timestamp: new Date().toISOString(),
-      environment: env.nodeEnv,
-    },
-  });
-});
+app.use('/api/health', healthRoutes);
 
 // Schema Health Check
 app.get('/api/health/schema', async (req, res) => {
