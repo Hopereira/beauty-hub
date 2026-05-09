@@ -32,11 +32,11 @@ describe('BaseRepository._scopedWhere', () => {
 
   test('SECURITY: blocks override of tenant_id via additionalWhere', () => {
     // SECURITY FIX: BaseRepository now prevents tenant_id override
-    const result = repo._scopedWhere('real-tenant', { tenant_id: 'hacker-tenant' });
+    const result = repo._scopedWhere('real-tenant', { tenant_id: 'hacker-tenant', status: 'active' });
     // The real tenant_id is enforced, hacker attempt is blocked
     expect(result.tenant_id).toBe('real-tenant');
-    // Hacker tenant_id is removed from where clause
-    expect(result).not.toHaveProperty('tenant_id', 'hacker-tenant');
+    // Other properties are preserved
+    expect(result.status).toBe('active');
   });
 });
 
