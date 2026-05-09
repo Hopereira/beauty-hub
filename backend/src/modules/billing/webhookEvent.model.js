@@ -6,7 +6,9 @@
  * Security: Stores event metadata and payload for debugging and compliance
  */
 
-module.exports = (sequelize, DataTypes) => {
+const { DataTypes } = require('sequelize');
+
+module.exports = (sequelize) => {
   const WebhookEvent = sequelize.define('WebhookEvent', {
     id: {
       type: DataTypes.UUID,
