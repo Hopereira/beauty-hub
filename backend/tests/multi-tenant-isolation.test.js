@@ -30,11 +30,13 @@ describe('BaseRepository._scopedWhere', () => {
     expect(() => repo._scopedWhere(undefined)).toThrow(TenantMismatchError);
   });
 
-  test('does not allow override of tenant_id via additionalWhere', () => {
+  test('SECURITY: blocks override of tenant_id via additionalWhere', () => {
+    // SECURITY FIX: BaseRepository now prevents tenant_id override
     const result = repo._scopedWhere('real-tenant', { tenant_id: 'hacker-tenant' });
-    // tenant_id from _scopedWhere wins because it spreads BEFORE additionalWhere
-    // but additionalWhere overrides — this test documents current behavior
-    expect(result.tenant_id).toBe('hacker-tenant'); // documents risk for future fix
+    // The real tenant_id is enforced, hacker attempt is blocked
+    expect(result.tenant_id).toBe('real-tenant');
+    // Hacker tenant_id is removed from where clause
+    expect(result).not.toHaveProperty('tenant_id', 'hacker-tenant');
   });
 });
 
