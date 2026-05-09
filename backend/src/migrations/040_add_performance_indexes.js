@@ -59,7 +59,7 @@ module.exports = {
     await queryInterface.sequelize.query(`
       CREATE INDEX IF NOT EXISTS idx_invoices_pending_collection 
       ON invoices (tenant_id, status, due_date) 
-      WHERE status IN ('pending', 'past_due')
+      WHERE status IN ('pending', 'overdue')
     `);
     
     await queryInterface.sequelize.query(`
