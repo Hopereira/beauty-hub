@@ -40,11 +40,11 @@ module.exports = {
     // FINANCIAL ENTRIES
     // ──────────────────────────────────────────────────────────────────────────
     
-    await queryInterface.addIndex('financial_entries', ['tenant_id', 'date'], {
+    await queryInterface.addIndex('financial_entries', ['tenant_id', 'entry_date'], {
       name: 'idx_financial_entries_tenant_date',
     });
     
-    await queryInterface.addIndex('financial_entries', ['tenant_id', 'category', 'date'], {
+    await queryInterface.addIndex('financial_entries', ['tenant_id', 'entry_date'], {
       name: 'idx_financial_entries_category_report',
     });
     
