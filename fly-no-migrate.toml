@@ -1,0 +1,31 @@
+# BeautyHub API — Fly.io Configuration (SEM MIGRATION)
+# Use este arquivo para deploy quando houver problema com migrations
+# Depois rode: flyctl ssh console --app beautyhub-backend
+# E: npx sequelize-cli db:migrate
+
+app = "beautyhub-backend"
+primary_region = "gru"
+
+[build]
+  dockerfile = "backend/Dockerfile.prod"
+
+[env]
+  NODE_ENV   = "production"
+  PORT       = "5001"
+
+[http_service]
+  internal_port = 5001
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 1
+
+[[vm]]
+  memory   = "256mb"
+  cpu_kind = "shared"
+  cpus     = 1
+
+# [deploy]
+#   release_command = "node_modules/.bin/sequelize db:migrate --env production"
+#   strategy     = "rolling"
+#   wait_timeout = "10m"
