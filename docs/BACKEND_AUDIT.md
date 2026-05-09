@@ -1,7 +1,7 @@
 # ⚙️ BACKEND AUDIT — BeautyHub SaaS
-**Data:** 08 de Maio de 2026  
+**Data:** 09 de Maio de 2026 (atualizado)  
 **Auditor:** Cascade AI  
-**Status:** 🟡 BOM — Arquitetura sólida, dívidas técnicas em módulos legacy  
+**Status:** � BOM — Fases 1–7 deployadas em produção  
 **Stack:** Node.js 20 + Express + Sequelize 6 + PostgreSQL 15
 
 ---
@@ -18,9 +18,12 @@
 | **Validação** | 🟢 Bom | Joi schemas em todas as rotas |
 | **Error Handling** | 🟢 Bom | Middleware global, tipos de erro |
 | **Logging** | 🟢 Bom | Winston estruturado com contexto |
-| **Testes** | 🔴 Crítico | Apenas 14 testes unitários, 0 integração |
+| **Testes** | � Regular | Unitários + integração (FASE 3, desativados no CI) |
 | **Módulos Legacy** | 🟡 Regular | Controllers antigos ainda existem |
 | **Workers/Filas** | ⚠️ Ausente | Não implementado |
+| **LGPD Compliance** | 🟢 Implementado | Módulo LGPD + AuditLog (FASE 5) |
+| **Observabilidade** | 🟢 Implementado | Sentry + RequestId + Health endpoints (FASE 6) |
+| **Feature Flags** | 🟢 Implementado | 8 flags configuradas (FASE 7) |
 | **Websocket** | ⚠️ Ausente | Não implementado |
 | **Uploads** | ✅ N/A | Não há upload de arquivos |
 
@@ -571,7 +574,7 @@ logger.error(err.message, { ...logContext, stack: err.stack });
 **Avaliação:**
 - ✅ Estruturado (JSON)
 - ✅ Contexto rich (tenant, user, IP)
-- ⚠️ Não há correlation ID para tracing
+- ✅ Correlação ID para tracing
 - ⚠️ Não há log levels dinâmicos
 
 ---
@@ -741,14 +744,15 @@ test:
 **[B-004] Migrar Controllers Legacy**
 Criar plano de migração para mover endpoints para módulos.
 
-**[B-005] Adicionar Correlation ID**
+**[B-005] ~~Adicionar Correlation ID~~ ✅ RESOLVIDO (FASE 6)**
 ```javascript
-// middleware/requestContext.js
-app.use((req, res, next) => {
-  req.correlationId = uuidv4();
-  res.setHeader('X-Correlation-Id', req.correlationId);
+// backend/src/middleware/requestId.js (implementado)
+function requestIdMiddleware(req, res, next) {
+  const requestId = req.headers['x-request-id'] || uuidv4();
+  req.requestId = requestId;
+  res.setHeader('x-request-id', requestId);
   next();
-});
+}
 ```
 
 ### 🟢 P2 — MÉDIO
@@ -761,10 +765,14 @@ app.use((req, res, next) => {
 // - Processamento de webhooks
 ```
 
-**[B-007] Implementar Health Check Detalhado**
-```javascript
-// /api/health/deep
-// Verifica: DB, Redis (se houver), fila, pagamento provider
+**[B-007] ~~Implementar Health Check Detalhado~~ ✅ RESOLVIDO (FASE 6)**
+```bash
+# backend/src/routes/health.js (implementado)
+GET /api/health           # status, uptime, version
+GET /api/health/deep      # DB latency, memory
+GET /api/health/ready     # k8s readiness probe
+GET /api/health/live      # k8s liveness probe
+GET /api/health/metrics   # Prometheus format
 ```
 
 ---
@@ -790,4 +798,14 @@ npx depcheck
 
 ---
 
-*Auditoria concluída em 08/05/2026. Análise de ~280 arquivos JavaScript.*
+## 🚀 DEPLOY EM PRODUÇÃO (09/05/2026)
+
+**Bug crítico corrigido:** `webhookEvent.model.js` não recebia `DataTypes`, causando crash no startup.  
+Detalhes: [`SESSION_REPORT_2026-05-09.md`](./SESSION_REPORT_2026-05-09.md)
+
+```
+✅ https://api.biaxavier.com.br/api/health → {"status":"healthy"}
+✅ https://beautyhub-backend.fly.dev/api/health → {"status":"healthy"}
+```
+
+*Auditoria concluída em 08/05/2026. Atualizada em 09/05/2026. Análise de ~280 arquivos JavaScript.*
