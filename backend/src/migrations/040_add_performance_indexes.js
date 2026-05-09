@@ -9,115 +9,128 @@
 
 module.exports = {
   async up(queryInterface, Sequelize) {
-    const { Op } = Sequelize;
-    
-    console.log('[MIGRATION] Adding performance indexes...');
+    console.log('[MIGRATION] Adding performance indexes with IF NOT EXISTS...');
     
     // ──────────────────────────────────────────────────────────────────────────
     // APPOINTMENTS — Most queried table
     // ──────────────────────────────────────────────────────────────────────────
     
-    await queryInterface.addIndex('appointments', ['tenant_id', 'start_time'], {
-      name: 'idx_appointments_tenant_start_time',
-      where: { deleted_at: null },
-    });
+    await queryInterface.sequelize.query(`
+      CREATE INDEX IF NOT EXISTS idx_appointments_tenant_start_time 
+      ON appointments (tenant_id, start_time) 
+      WHERE deleted_at IS NULL
+    `);
     
-    await queryInterface.addIndex('appointments', ['tenant_id', 'professional_id', 'start_time'], {
-      name: 'idx_appointments_professional_schedule',
-      where: { deleted_at: null },
-    });
+    await queryInterface.sequelize.query(`
+      CREATE INDEX IF NOT EXISTS idx_appointments_professional_schedule 
+      ON appointments (tenant_id, professional_id, start_time) 
+      WHERE deleted_at IS NULL
+    `);
     
-    await queryInterface.addIndex('appointments', ['tenant_id', 'client_id'], {
-      name: 'idx_appointments_client_history',
-      where: { deleted_at: null },
-    });
+    await queryInterface.sequelize.query(`
+      CREATE INDEX IF NOT EXISTS idx_appointments_client_history 
+      ON appointments (tenant_id, client_id) 
+      WHERE deleted_at IS NULL
+    `);
     
-    await queryInterface.addIndex('appointments', ['status'], {
-      name: 'idx_appointments_status',
-    });
+    await queryInterface.sequelize.query(`
+      CREATE INDEX IF NOT EXISTS idx_appointments_status 
+      ON appointments (status)
+    `);
     
     // ──────────────────────────────────────────────────────────────────────────
     // FINANCIAL ENTRIES
     // ──────────────────────────────────────────────────────────────────────────
     
-    await queryInterface.addIndex('financial_entries', ['tenant_id', 'entry_date'], {
-      name: 'idx_financial_entries_tenant_date',
-    });
+    await queryInterface.sequelize.query(`
+      CREATE INDEX IF NOT EXISTS idx_financial_entries_tenant_date 
+      ON financial_entries (tenant_id, entry_date)
+    `);
     
-    await queryInterface.addIndex('financial_entries', ['tenant_id', 'entry_date'], {
-      name: 'idx_financial_entries_category_report',
-    });
+    await queryInterface.sequelize.query(`
+      CREATE INDEX IF NOT EXISTS idx_financial_entries_category_report 
+      ON financial_entries (tenant_id, entry_date)
+    `);
     
     // ──────────────────────────────────────────────────────────────────────────
     // INVOICES (Billing)
     // ──────────────────────────────────────────────────────────────────────────
     
-    await queryInterface.addIndex('invoices', ['tenant_id', 'status', 'due_date'], {
-      name: 'idx_invoices_pending_collection',
-      where: { status: ['pending', 'past_due'] },
-    });
+    await queryInterface.sequelize.query(`
+      CREATE INDEX IF NOT EXISTS idx_invoices_pending_collection 
+      ON invoices (tenant_id, status, due_date) 
+      WHERE status IN ('pending', 'past_due')
+    `);
     
-    await queryInterface.addIndex('invoices', ['gateway_invoice_id'], {
-      name: 'idx_invoices_gateway_lookup',
-    });
+    await queryInterface.sequelize.query(`
+      CREATE INDEX IF NOT EXISTS idx_invoices_gateway_lookup 
+      ON invoices (gateway_invoice_id)
+    `);
     
     // ──────────────────────────────────────────────────────────────────────────
     // SUBSCRIPTIONS
     // ──────────────────────────────────────────────────────────────────────────
     
-    await queryInterface.addIndex('subscriptions', ['gateway_subscription_id'], {
-      name: 'idx_subscriptions_gateway_lookup',
-    });
+    await queryInterface.sequelize.query(`
+      CREATE INDEX IF NOT EXISTS idx_subscriptions_gateway_lookup 
+      ON subscriptions (gateway_subscription_id)
+    `);
     
-    await queryInterface.addIndex('subscriptions', ['tenant_id', 'status'], {
-      name: 'idx_subscriptions_tenant_status',
-    });
+    await queryInterface.sequelize.query(`
+      CREATE INDEX IF NOT EXISTS idx_subscriptions_tenant_status 
+      ON subscriptions (tenant_id, status)
+    `);
     
     // ──────────────────────────────────────────────────────────────────────────
     // USERS
     // ──────────────────────────────────────────────────────────────────────────
     
-    await queryInterface.addIndex('users', ['email'], {
-      name: 'idx_users_email_lookup',
-      unique: false, // Email único por tenant, mas indexado globalmente
-    });
+    await queryInterface.sequelize.query(`
+      CREATE INDEX IF NOT EXISTS idx_users_email_lookup 
+      ON users (email)
+    `);
     
-    await queryInterface.addIndex('users', ['tenant_id', 'role'], {
-      name: 'idx_users_tenant_role',
-    });
+    await queryInterface.sequelize.query(`
+      CREATE INDEX IF NOT EXISTS idx_users_tenant_role 
+      ON users (tenant_id, role)
+    `);
     
     // ──────────────────────────────────────────────────────────────────────────
     // LOGIN ATTEMPTS (Security)
     // ──────────────────────────────────────────────────────────────────────────
     
-    await queryInterface.addIndex('login_attempts', ['identifier', 'created_at'], {
-      name: 'idx_login_attempts_brute_force_check',
-    });
+    await queryInterface.sequelize.query(`
+      CREATE INDEX IF NOT EXISTS idx_login_attempts_brute_force_check 
+      ON login_attempts (identifier, created_at)
+    `);
     
     // ──────────────────────────────────────────────────────────────────────────
     // WEBHOOK EVENTS
     // ──────────────────────────────────────────────────────────────────────────
     
-    await queryInterface.addIndex('webhook_events', ['event_id'], {
-      name: 'idx_webhook_events_idempotency',
-      unique: true,
-    });
+    await queryInterface.sequelize.query(`
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_webhook_events_idempotency 
+      ON webhook_events (event_id)
+    `);
     
-    await queryInterface.addIndex('webhook_events', ['provider', 'processed', 'created_at'], {
-      name: 'idx_webhook_events_processing_queue',
-    });
+    await queryInterface.sequelize.query(`
+      CREATE INDEX IF NOT EXISTS idx_webhook_events_processing_queue 
+      ON webhook_events (provider, processed, created_at)
+    `);
     
     // ──────────────────────────────────────────────────────────────────────────
     // USER SESSIONS
     // ──────────────────────────────────────────────────────────────────────────
     
-    await queryInterface.addIndex('user_sessions', ['refresh_token_hash'], {
-      name: 'idx_sessions_token_lookup',
-    });
+    await queryInterface.sequelize.query(`
+      CREATE INDEX IF NOT EXISTS idx_sessions_token_lookup 
+      ON user_sessions (refresh_token_hash)
+    `);
     
-    await queryInterface.addIndex('user_sessions', ['user_id', 'is_valid', 'expires_at'], {
-      name: 'idx_sessions_active_user',
-    });
+    await queryInterface.sequelize.query(`
+      CREATE INDEX IF NOT EXISTS idx_sessions_active_user 
+      ON user_sessions (user_id, is_valid, expires_at)
+    `);
     
     console.log('[MIGRATION] Performance indexes added successfully');
   },
