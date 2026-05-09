@@ -22,6 +22,7 @@ class BaseRepository {
 
   /**
    * Get base query options with tenant scope
+   * SECURITY: Prevents tenant_id override via additionalWhere
    * @param {string} tenantId - Tenant UUID
    * @param {object} additionalWhere - Additional where conditions
    * @returns {object} Query options
@@ -30,9 +31,22 @@ class BaseRepository {
     if (!tenantId) {
       throw new TenantMismatchError();
     }
+    
+    // SECURITY: Remove any attempt to override tenant_id
+    // This prevents bypass of tenant isolation
+    const { tenant_id, tenantId: _, ...safeWhere } = additionalWhere;
+    
+    if (tenant_id) {
+      // Log security attempt but don't expose to user
+      console.warn(`[SECURITY] Attempted tenant_id override blocked in ${this.modelName}`, {
+        attemptedTenant: tenant_id,
+        enforcedTenant: tenantId,
+      });
+    }
+    
     return {
       tenant_id: tenantId,
-      ...additionalWhere,
+      ...safeWhere,
     };
   }
 
