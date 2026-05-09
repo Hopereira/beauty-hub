@@ -4,7 +4,7 @@
  * and that BaseRepository _scopedWhere enforces tenant boundaries
  */
 
-const BaseRepository = require('../src/shared/database/baseRepository');
+const BaseRepository = require('../src/shared/database/BaseRepository');
 const { ROLE_HIERARCHY, ROLES } = require('../src/shared/constants');
 const { generateAccessToken, verifyAccessToken } = require('../src/shared/utils/jwt');
 const { TenantMismatchError } = require('../src/shared/errors');
